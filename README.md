@@ -3,7 +3,6 @@
 A foundational Go library containing universal utilities and reusable building blocks for all `abtransitionit` projects.
 
 [![Go CI](https://github.com/abtransitionit/gocore/actions/workflows/ci.yaml/badge.svg)](https://github.com/abtransitionit/gocore/actions/workflows/ci.yaml)
-
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
 
 ----
