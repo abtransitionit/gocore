@@ -1,4 +1,4 @@
-# gocore
+# Gocore
 
 A foundational Go library containing universal utilities and reusable building blocks for all `abtransitionit` projects.
 
