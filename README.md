@@ -1,7 +1,8 @@
-# template-repository  
+# gocore
 
-This repository serves as a standardized template for all future GitHub projects within the organization.  
+A foundational Go library containing universal utilities and reusable building blocks for all `abtransitionit` projects.
 
+![Go CI](https://github.com/abtransitionit/gocore/actions/workflows/ci.yaml/badge.svg)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
 
 ----
@@ -17,14 +18,23 @@ This project template includes the following components:
 |Code of Conduct| Ensures a welcoming and inclusive environment for all contributors.|  
 |README|Structured documentation template for clear project onboarding.|  
 
+This repository contains core packages designed to be used across all of our services, such as:
+
+- `errorx`: A package for structured error handling.
+- `logx`: A package for consistent logging.
+- `filex`: Utilities for common file system operations.
 
 
 ---
 
-# Getting Started  
 
-## Create a Repository from This Template  
-To use this template, follow GitHub’s official guide:  [Creating a repository from a template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)  
+## Installation
+
+To use this library in your project, run:
+
+```bash
+go get [github.com/abtransitionit/gocore](https://github.com/abtransitionit/gocore)
+```
 
 ---
 
