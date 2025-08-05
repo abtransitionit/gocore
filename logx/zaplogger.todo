@@ -1,0 +1,16 @@
+package logx
+
+import "go.uber.org/zap"
+
+// zapLogger is our implementation that wraps the zap library.
+type zapLogger struct {
+	zap *zap.SugaredLogger
+}
+
+func (z *zapLogger) Info(format string, v ...any) {
+	z.zap.Infof(format, v...)
+}
+
+func (z *zapLogger) Error(format string, v ...any) {
+	z.zap.Errorf(format, v...)
+}

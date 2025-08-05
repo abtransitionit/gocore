@@ -1,0 +1,15 @@
+package logx
+
+// standardLogger is our implementation that wraps the standard library logger.
+type standardLogger struct {
+	// Our actual logger instance
+	// We'll use the log.Logger from Go's standard library here
+}
+
+func (s *standardLogger) Info(format string, v ...any) {
+	// Implementation for the standard logger
+}
+
+func (s *standardLogger) Error(format string, v ...any) {
+	// Implementation for the standard logger
+}
