@@ -1,0 +1,21 @@
+name: Dev CI
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  code-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'  # or your target Go version
+
+      - name: Run go vet
+        run: go vet ./...
