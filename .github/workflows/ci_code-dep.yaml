@@ -1,4 +1,4 @@
-# shared/common piece of code to check tha code and of a Go project
+# shared/common piece of code to check/install the dependency of a Go project
 name: Common/Shared Code Checks modules
 
 on:
@@ -6,13 +6,13 @@ on:
   workflow_call:
 
 jobs:
-  test-code:
+  install-dependency:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run the test
+      - name: Install Go dependencies
         run: |
-          # find and run tests recursively from the current directory
-          go test -v ./...
+          # do add Go dependencies from analysis of the go.mod file
+          go mod tidy
