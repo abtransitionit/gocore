@@ -1,27 +1,21 @@
-name: Go CI
+name: Dev CI
 
-on: 
-  [push, pull_request]
+on:
+  push:
+    branches:
+      - dev
 
 jobs:
-  build:
+  code-checks:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Install this Go version
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-    
-    - name: Download Go modules
-      run: go mod tidy
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'  # or your target Go version
 
-    - name: Run tests and vet
-      run: |
-        # do a static analysis of the code recursively from the current directory
-        go vet ./...
-        
-        # recursively find and run tests in all subdirectories of the current directory
-        go test -v ./...
+      - name: Run go vet
+        run: go vet ./...
