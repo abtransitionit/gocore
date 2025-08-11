@@ -11,6 +11,6 @@ jobs:
   install-go:
     uses: ./.github/workflows/ci_go-install.yaml
 
-  code-check:
+  check-code:
     needs: install-go
     uses: ./.github/workflows/ci_code-check.yaml
