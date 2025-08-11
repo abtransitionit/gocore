@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Do the checks
+      - name: Run the test
         run: |
           # recursively find and run tests in all subdirectories of the current directory
           go test -v ./...
