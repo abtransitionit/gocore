@@ -1,4 +1,6 @@
-name: Dev CI
+# toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
+# purpose: CI specific to dev branches
+name: CI for dev branch
 
 on:
   push:
@@ -6,16 +8,9 @@ on:
       - dev
 
 jobs:
-  code-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  install-go:
+    uses: ./.github/workflows/ci_go-install.yaml
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'  # or your target Go version
-
-      - name: Run go vet
-        run: go vet ./...
+  code-check:
+    needs: install-go
+    uses: ./.github/workflows/ci_code-check.yaml

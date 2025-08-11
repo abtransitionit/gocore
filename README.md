@@ -4,7 +4,8 @@ A foundational Go library containing low level universal cross-platform utilitie
 
 ---
 
-[![Go CI](https://github.com/abtransitionit/gocore/actions/workflows/ci.yaml/badge.svg)](https://github.com/abtransitionit/gocore/actions/workflows/ci.yaml)
+[![Dev CI](https://github.com/abtransitionit/gocore/actions/workflows/ci-dev.yaml/badge.svg?branch=dev)](https://github.com/abtransitionit/gocore/actions/workflows/ci-dev.yaml)
+[![Main CI](https://github.com/abtransitionit/gocore/actions/workflows/ci-main.yaml/badge.svg?branch=main)](https://github.com/abtransitionit/gocore/actions/workflows/ci-main.yaml)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
 
 ----

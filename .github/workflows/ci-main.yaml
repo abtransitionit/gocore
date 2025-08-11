@@ -1,4 +1,4 @@
-name: Dev CI
+name: CI for main branch
 
 on:
   push:
@@ -6,16 +6,13 @@ on:
       - main
 
 jobs:
-  code-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  install-go:
+    uses: ./.github/workflows/ci_go-install.yaml
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'  # or your target Go version
+  code-check:
+    needs: install-go
+    uses: ./.github/workflows/ci_code-check.yaml
 
-      - name: Run go vet
-        run: go vet ./...
+  code-test:
+    needs: test-code
+    uses: ./.github/workflows/ci_code-test.yaml
