@@ -7,7 +7,7 @@ import (
 )
 
 // Name: errorWithStack
-// Purpose: To represent an error that includes a stack trace for enhanced debugging.
+// Description: represent an error that includes a stack trace for enhanced debugging.
 // Notes:
 //   - By implementing the `Unwrap()` method, it becomes compatible with Go's
 //     error wrapping and inspection functions like `errors.Is()` and `errors.As()`.
@@ -17,8 +17,11 @@ type errorWithStack struct {
 	frames *runtime.Frames
 }
 
-// Error returns the formatted error message, including the stack trace.
-// It fulfills the `error` interface.
+// Name: Error
+// Return:
+// - string: the formatted error message, including the stack trace
+// Note:
+//   - It fulfills the `error` interface.
 func (e *errorWithStack) Error() string {
 	var sb strings.Builder
 	sb.WriteString(e.err.Error())

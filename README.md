@@ -1,6 +1,6 @@
 # Gocore
 
-A foundational Go library containing universal cross-platform utilities and reusable building blocks for all `abtransitionit` projects.
+A foundational Go library containing low level universal cross-platform utilities and reusable building blocks for all `abtransitionit` GO projects.
 
 ---
 
@@ -34,9 +34,7 @@ This repository contains core packages designed to be used across all of our ser
 
 To use this library in your project, run:
 
-```bash
-go get [github.com/abtransitionit/gocore](https://github.com/abtransitionit/gocore)
-```
+- `go` `get` [github.com/abtransitionit/gocore](https://github.com/abtransitionit/gocore)
 
 ---
 
