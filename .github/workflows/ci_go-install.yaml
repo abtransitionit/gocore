@@ -3,7 +3,6 @@
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
 name: Install Go toolchain
-
 on:
   workflow_call:
 

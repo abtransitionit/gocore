@@ -2,8 +2,7 @@
 # Note: 
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
-name: Common/Shared Code Checks modules
-
+name: Install Go dependencies
 on:
   workflow_call:
 
@@ -11,7 +10,4 @@ jobs:
   install-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go dependencies
-        run: |
-          # do add Go dependencies from analysis of the go.mod file
-          go mod tidy
+      - run: go mod tidy

@@ -2,7 +2,6 @@
 # Note:
 # -  CI specific to main branch
 name: CI for main branch
-
 on:
   push:
     branches:
@@ -12,12 +11,16 @@ jobs:
   install-go:
     uses: ./.github/workflows/ci_go-install.yaml
 
-  check-code:
+  checkout-code:
     needs: install-go
+    uses: ./.github/workflows/ci_code-checkout.yaml
+
+  check-code:
+    needs: checkout-code
     uses: ./.github/workflows/ci_code-check.yaml
 
   install-code-dependencies:
-    needs: install-dependency
+    needs: checkout-code
     uses: ./.github/workflows/ci_code-dep.yaml
 
   test-code:

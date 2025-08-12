@@ -2,8 +2,7 @@
 # Note: 
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
-name: Common/Shared Code Checks modules
-
+name: Checkout code
 on:
   workflow_call:
 
@@ -11,5 +10,4 @@ jobs:
   checkout-code:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
