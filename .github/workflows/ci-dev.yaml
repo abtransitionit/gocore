@@ -10,15 +10,8 @@ on:
       - dev
 
 jobs:
-  install-go:
-     uses: abtransitionit/cicd-templates/.github/workflows/go-install.yaml@main
-     with:
-        go-version: '1.24'
-
-  checkout-code:
-    needs: install-go
-    uses: abtransitionit/cicd-templates/.github/workflows/code-checkout.yaml@main
 
   check-code:
-    needs: checkout-code
     uses: abtransitionit/cicd-templates/.github/workflows/go-code-check.yaml@main
+    with:
+      go-version: '1.24'
