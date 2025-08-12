@@ -2,15 +2,21 @@
 # Note: 
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
-name: Install Go toolchain
+name: Install Go Toolchain
+
 on:
   workflow_call:
+    inputs:
+      go-version:
+        description: 'The version of Go to install'
+        required: true
+        type: string
 
 jobs:
   install-go-toolchain:
     runs-on: ubuntu-latest
     steps:
-      - name: Install this Go version
+      - name: Install specified Go version
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: ${{ inputs.go-version }}

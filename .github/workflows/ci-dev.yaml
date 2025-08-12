@@ -2,6 +2,7 @@
 # Note:
 # -  CI specific to dev branch
 name: CI for dev branch
+
 on:
   push:
     branches:
@@ -9,7 +10,9 @@ on:
 
 jobs:
   install-go:
-    uses: ./.github/workflows/ci_go-install.yaml
+     uses: ./.github/workflows/ci_go-install.yaml
+     with:
+        go-version: '1.24'
 
   checkout-code:
     needs: install-go
@@ -19,6 +22,6 @@ jobs:
     needs: checkout-code
     uses: ./.github/workflows/ci_code-check.yaml
 
-  install-code-dependencies:
-    needs: checkout-code
-    uses: ./.github/workflows/ci_code-dep.yaml
+  # install-code-dependencies:
+  #   needs: check-code
+  #   uses: ./.github/workflows/ci_code-dep.yaml

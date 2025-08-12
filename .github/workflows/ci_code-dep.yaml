@@ -3,6 +3,7 @@
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
 name: Install Go dependencies
+
 on:
   workflow_call:
 
@@ -10,4 +11,6 @@ jobs:
   install-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - run: go mod tidy
+      - name: Install Go dependencies
+        run: |
+          go mod tidy

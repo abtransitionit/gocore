@@ -2,7 +2,8 @@
 # Note: 
 #  - shared/common piece of code to 
 #  - This workflow can be called from other workflows.
-name: Run tests
+name: Run Go tests
+
 on:
   workflow_call:
 
@@ -10,6 +11,7 @@ jobs:
   test-code:
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Run Go tests
+        run: |
           # find and run tests recursively from the current directory
           go test -v ./...
