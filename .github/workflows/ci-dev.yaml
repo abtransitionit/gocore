@@ -1,12 +1,10 @@
 # toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
-# Note:
-# -  CI specific to dev branch
 name: CI for dev branch
 
 on:
   # manual trigger
   workflow_dispatch: 
-  # push on branch
+  # trigger when push on branch
   push:
     branches:
       - dev
