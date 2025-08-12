@@ -15,7 +15,7 @@ jobs:
     uses: abtransitionit/cicd-templates/.github/workflows/runner-vm-info.yaml@main
 
   display-info-container:
-    uses: abtransitionit/cicd-templates/.github/workflows/runner-vm-info.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/runner-container-info.yaml@main
 
   check-code:
     uses: abtransitionit/cicd-templates/.github/workflows/code-check.yaml@main
