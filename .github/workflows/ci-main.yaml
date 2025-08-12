@@ -36,14 +36,7 @@ jobs:
       go-version: '1.24'
 
   create-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Get current version
-        id: get_version
-        run: |
-            echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+    uses: abtransitionit/cicd-templates/.github/workflows/code-tag.yaml@main
                   
   # build-code:
   #   needs: install-dependencies
