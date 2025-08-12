@@ -16,16 +16,16 @@ jobs:
 
   checkout-code:
     needs: install-go
-    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-checkout.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-checkout.yaml@main
 
   check-code:
     needs: checkout-code
-    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-check.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-check.yaml@main
 
   install-code-dependencies:
     needs: check-code
-    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-dep.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-dep.yaml@main
 
   test-code:
     needs: install-code-dependencies
-    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-test.yaml@main
+    uses: abtransitionit/cicd-templates/.github/workflows/go-code-test.yaml@main
