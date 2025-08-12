@@ -10,22 +10,22 @@ on:
 
 jobs:
   install-go:
-     uses: ./.github/workflows/ci_go-install.yaml
+     uses: abtransitionit/cicd-templates/.github/workflows/install-go-toolchain.yaml@main
      with:
         go-version: '1.24'
 
   checkout-code:
     needs: install-go
-    uses: ./.github/workflows/ci_code-checkout.yaml
+    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-checkout.yaml@main
 
   check-code:
     needs: checkout-code
-    uses: ./.github/workflows/ci_code-check.yaml
+    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-check.yaml@main
 
   install-code-dependencies:
     needs: check-code
-    uses: ./.github/workflows/ci_code-dep.yaml
+    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-dep.yaml@main
 
   test-code:
     needs: install-code-dependencies
-    uses: ./.github/workflows/ci_code-test.yaml
+    uses: abtransitionit/cicd-templates/.github/workflows/ci_code-test.yaml@main
