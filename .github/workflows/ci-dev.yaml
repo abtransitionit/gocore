@@ -4,6 +4,9 @@
 name: CI for dev branch
 
 on:
+  # manual trigger
+  workflow_dispatch: 
+  # push on branch
   push:
     branches:
       - dev
