@@ -1,17 +1,16 @@
-# shared/common piece of code to check/install the dependency of a Go project
+# description: check/install the dependency of a Go project
+# Note: 
+#  - shared/common piece of code to 
+#  - This workflow can be called from other workflows.
 name: Common/Shared Code Checks modules
 
 on:
-  # so it can be called from other workflows.
   workflow_call:
 
 jobs:
-  install-dependency:
+  install-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Install Go dependencies
         run: |
           # do add Go dependencies from analysis of the go.mod file

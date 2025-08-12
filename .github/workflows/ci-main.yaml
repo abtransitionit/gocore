@@ -1,5 +1,6 @@
 # toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
-# purpose: CI specific to main branche
+# Note:
+# -  CI specific to main branch
 name: CI for main branch
 
 on:
