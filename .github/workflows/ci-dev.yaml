@@ -17,7 +17,11 @@ jobs:
   display-info-container:
     uses: abtransitionit/cicd-go/.github/workflows/runner-container-info.yaml@main
 
+  get-go-version:
+    uses: abtransitionit/cicd-go/.github/workflows/go-version.yaml@main
+
   check-code:
+    needs: get-go-version
     uses: abtransitionit/cicd-go/.github/workflows/code-check.yaml@main
     with:
-      go-version: '1.24'
+      go-version: ${{ needs.get-go-version.outputs.go-version }}
