@@ -1,7 +1,7 @@
 # Toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
 # Note: 
 #  - No build cause this is a library of code
-name: CI for main branch
+name: Main branch CI
 
 on:
   # manual trigger
