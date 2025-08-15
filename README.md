@@ -1,6 +1,6 @@
 # Gocore
 
-A foundational Go library containing low level universal cross-platform utilities and reusable building blocks for all `abtransitionit` GO projects.
+A foundational Go library (i.e. no `main()`) containing low level universal cross-platform reusable building blocks, and utilities for all `abtransitionit` GO projects.
 
 ---
 
@@ -53,6 +53,9 @@ To use this library in your project, run:
     - To get your code to compile quickly: providing a method stubs
         - that have the correct signature but contain minimal logic.
         - this allows you to restore a working build and then implement the full functionality later.
+## Howto test the code
+- For `GO` a test file is simply any file in a **package** that ends with `_test.go`
+- For `GO` a way to play any **unit** test is : `go test ./...`
 
 # Contributing  
 
@@ -60,7 +63,7 @@ We welcome contributions! Before participating, please review:
 - **[Code of Conduct](.github/CODE_OF_CONDUCT.md)** – Our community guidelines.  
 - **[Contributing Guide](.github/CONTRIBUTING.md)** – How to submit issues, PRs, and more.  
 
-
+## Local development env Vs. Shared development env
 ----
 
 
@@ -70,6 +73,3 @@ Track version updates and changes:
 - **📦 Latest Release**: `vX.X.X` ([GitHub Releases](#))  
 - **📄 Full Changelog**: See [CHANGELOG.md](CHANGELOG.md) for detailed version history.  
 
----
-
-# Todo

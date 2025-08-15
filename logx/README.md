@@ -1,5 +1,5 @@
 # Intro
-The purpose of logging is
+This package defines library to manage Logging. The purpose of logging is
   - to record **events** (aka. **logs**) that occur in a **software system**
   - essential for:
     - **Debugging**: Identifying the root cause of issues.

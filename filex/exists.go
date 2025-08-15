@@ -23,15 +23,23 @@ import (
 //
 //	A boolean indicating if a file exists and an error if a problem occurred.
 func ExistsFile(filePath string) (bool, error) {
+
+	// Check inputs
+	if filePath == "" {
+		return false, errorx.New("path cannot be empty")
+	}
+
+	// Does the file exist?
 	info, err := os.Stat(filePath)
 	if err != nil {
+		// The path does not exist, which is a specific, expected error.
 		if os.IsNotExist(err) {
 			return false, nil
 		}
+		// Any other error: is an unexpected error that needs to be reported.
 		return false, errorx.Wrap(err, "failed to check status of file at %s", filePath)
 	}
-
-	// The path exists, now check if it's a regular file.
+	// The path exists. check it's a regular file and not a directory.
 	return info.Mode().IsRegular(), nil
 }
 
@@ -48,13 +56,15 @@ func ExistsFile(filePath string) (bool, error) {
 func ExistsFolder(folderPath string) (bool, error) {
 	info, err := os.Stat(folderPath)
 	if err != nil {
+		// The path does not exist, which is a specific, expected error.
 		if os.IsNotExist(err) {
 			return false, nil
 		}
+		// Any other error: is an unexpected error that needs to be reported.
 		return false, errorx.Wrap(err, "failed to check status of folder at %s", folderPath)
 	}
 
-	// The path exists, now check if it's a directory.
+	// The path exists. Check if it's a directory.
 	return info.IsDir(), nil
 }
 
