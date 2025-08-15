@@ -40,7 +40,7 @@ To use this library in your project, run:
 ---
 
 # Getting started
-## Howto modify interfaces
+## modify `interface`
 1. **Modify the Interface Definition**: 
     - define and/or update the method signature. 
     - This change will immediately break the build for all code that uses a type that implements this interface.
@@ -53,9 +53,16 @@ To use this library in your project, run:
     - To get your code to compile quickly: providing a method stubs
         - that have the correct signature but contain minimal logic.
         - this allows you to restore a working build and then implement the full functionality later.
-## Howto test the code
-- For `GO` a test file is simply any file in a **package** that ends with `_test.go`
-- For `GO` a way to play any **unit** test is : `go test ./...`
+## Testing the code
+As the Go community, we are using the **white-box testing** by **keeping** test files **alongside** the code. It promote a **strong unit testing culture** 
+
+This approach allows to test all functions, including private ones, for complete code validation.
+
+A test in `Go` is just a **function** that starts with the string `Test` and takes `*testing.T` as an argument. 
+
+A `GO` test file 
+  - is simply any file in a **package** that ends with `_test.go`
+  - is played whenever this cli occur : `go test ./...`
 
 # Contributing  
 
