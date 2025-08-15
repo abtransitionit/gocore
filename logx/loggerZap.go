@@ -10,6 +10,7 @@ package logx
 import (
 	"fmt"
 
+	"github.com/abtransitionit/gocore/errorx"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +36,7 @@ func NewZapLogger(config zap.Config) Logger {
 // Name: Info
 // Description: logs a message with the zap logger at Info level.
 // Notes:
-// - implementation for the method in the Logger interface.
+// - implements the method of the same name in the Logger interface.
 func (z *zapLogger) Info(format string, v ...any) {
 	z.logger.Info(fmt.Sprintf(format, v...))
 }
@@ -43,7 +44,33 @@ func (z *zapLogger) Info(format string, v ...any) {
 // Name: Error
 // Description: logs a message with the zap logger at Error level.
 // Notes:
-// - implementation for the method in the Logger interface.
-func (z *zapLogger) Error(format string, v ...any) {
-	z.logger.Error(fmt.Sprintf(format, v...))
+// - implements the method of the same name in the Logger interface.
+func (l *zapLogger) Error(format string, v ...any) {
+	l.logger.Error(fmt.Sprintf(format, v...))
+}
+
+// Name: ErrorWithStack
+// Description: logs an error, including a stack trace if one is available.
+// Notes:
+// - implements the method of the same name in the Logger interface.
+func (l *zapLogger) ErrorWithStack(err error, format string, v ...any) {
+	// create a slice of zap.Field and append the error and stack trace to the original error (zap.Error(err)).
+	fields := []zap.Field{
+		zap.Error(err),
+	}
+
+	// Use GetStack from your errorx package to check for a stack trace.
+	if stack := errorx.GetStack(err); stack != nil {
+		fields = append(fields, zap.String("stack_trace", errorx.FormatStack(stack)))
+	}
+
+	l.logger.Error(fmt.Sprintf(format, v...), fields...)
+}
+
+// Name: ErrorWithNoStack
+// Description: logs an error without including a stack trace.
+// Notes:
+// - implements the method of the same name in the Logger interface.
+func (l *zapLogger) ErrorWithNoStack(err error, format string, v ...any) {
+	l.logger.Error(fmt.Sprintf(format, v...), zap.Error(err))
 }

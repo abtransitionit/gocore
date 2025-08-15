@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-This file defines the different config concerning the Zap driver for the different env we want: dev or prod.
+This file defines the different config concerning the Zap logging driver for the different env we want: dev or prod.
 
 */
 

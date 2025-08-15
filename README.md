@@ -39,6 +39,21 @@ To use this library in your project, run:
 
 ---
 
+# Getting started
+## Howto modify interfaces
+1. **Modify the Interface Definition**: 
+    - define and/or update the method signature. 
+    - This change will immediately break the build for all code that uses a type that implements this interface.
+1. **Identify Implementing Types**: 
+    - launch a `go vet` or `go build`
+    - failures allows to identify code to update
+1. **Update the Implementing Types**: 
+    - For each of the types you identified
+    - add/update the new method to match the updated interface signature
+    - To get your code to compile quickly: providing a method stubs
+        - that have the correct signature but contain minimal logic.
+        - this allows you to restore a working build and then implement the full functionality later.
+
 # Contributing  
 
 We welcome contributions! Before participating, please review:  

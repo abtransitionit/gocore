@@ -36,13 +36,20 @@ func Init() {
 			GlobalLogger = NewZapLogger(NewDevConfig())
 		}
 	default:
-		// Default to the standard logger driver if the variable is not set or unknown.
-		GlobalLogger = NewStdLogger()
+		if appEnv == "prod" {
+			// Default logger driver if only this variable is set (Std logger driver and prod config).
+			GlobalLogger = NewStdLogger(NewStdProdConfig())
+		} else {
+			// Default logger driver if both variables are not set or unknown (Std logger driver and dev config).
+			GlobalLogger = NewStdLogger(NewStdDevConfig())
+		}
 	}
 }
 
 // Name: Info
 // Description:  a convenience function that delegates to the global logger's Info method.
+// Notes:
+// - a convenience for the function of the same name in the interface
 func Info(format string, v ...any) {
 	if GlobalLogger == nil {
 		Init() // Ensure logger is initialized if not already
@@ -52,9 +59,33 @@ func Info(format string, v ...any) {
 
 // Name: Error
 // Description: a convenience function that delegates to the global logger's Error method.
+// Notes:
+// - a convenience for the function of the same name in the interface
 func Error(format string, v ...any) {
 	if GlobalLogger == nil {
 		Init() // Ensure logger is initialized if not already
 	}
 	GlobalLogger.Error(format, v...)
+}
+
+// Name: ErrorWithStack
+// Description: is a convenience function that delegates to the global logger's ErrorWithStack method.
+// Notes:
+// - a convenience for the function of the same name in the interface
+func ErrorWithStack(err error, format string, v ...any) {
+	if GlobalLogger == nil {
+		Init()
+	}
+	GlobalLogger.ErrorWithStack(err, format, v...)
+}
+
+// Name: ErrorWithNoStack
+// Description: is a convenience function that delegates to the global logger's ErrorWithNoStack method.
+// Notes:
+// - a convenience for the function of the same name in the interface
+func ErrorWithNoStack(err error, format string, v ...any) {
+	if GlobalLogger == nil {
+		Init()
+	}
+	GlobalLogger.ErrorWithNoStack(err, format, v...)
 }
