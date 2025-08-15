@@ -1,7 +1,0 @@
-package logx
-
-// Logger defines the interface that all loggers must satisfy.
-type Logger interface {
-	Info(format string, v ...any)
-	Error(format string, v ...any)
-}
