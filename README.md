@@ -31,16 +31,26 @@ This repository contains core packages designed to be used across all of our ser
 ---
 
 
-## Installation
 
-To use this library in your project, run:
+
+# Getting started
+To use this module (library) in your project, run:
+
 
 - `go` `get` [github.com/abtransitionit/gocore](https://github.com/abtransitionit/gocore)
 
----
+# Contributing  
 
-# Getting started
-## modify `interface`
+We welcome contributions! Before participating, please review:  
+- **[Code of Conduct](.github/CODE_OF_CONDUCT.md)** – Our community guidelines.  
+- **[Contributing Guide](.github/CONTRIBUTING.md)** – How to submit issues, PRs, and more.  
+
+
+# Contributing as developer
+
+## Local development env Vs. Shared development env
+
+## modifying an `interface`
 1. **Modify the Interface Definition**: 
     - define and/or update the method signature. 
     - This change will immediately break the build for all code that uses a type that implements this interface.
@@ -53,13 +63,151 @@ To use this library in your project, run:
     - To get your code to compile quickly: providing a method stubs
         - that have the correct signature but contain minimal logic.
         - this allows you to restore a working build and then implement the full functionality later.
+
+Here’s a polished, professional, and production-ready version of your text with consistent tone, grammar, and clarity:
+
+
+## Testing Code
+
+As the Go community, we follow a **white-box testing** approach, which allows us to test not only public but also private functions. This is achieved by:
+
+* **Keeping test files alongside the source code**, ensuring maintainability and readability.
+* **Promoting a strong unit testing culture**, where tests are considered a first-class part of the codebase.
+
+
+### Go Test Files
+
+A Go test file:
+
+* Is any file within a package whose name ends with `_test.go`.
+* Is executed when running the command:
+
+```bash
+go test ./...
+```
+
+### Go Test Functions
+
+A Go test function:
+
+* Must start with the prefix `Test`.
+* Must take a single parameter of type `*testing.T`.
+
+Example:
+
+```go
+func TestExample(t *testing.T) {
+    // test logic here
+}
+```
+
+### table-driven testing approach
+
+We also adopt a **table-driven testing approach**, which makes tests more scalable, consistent, and easier to extend.
+
+**Example01**
+```go
+package mathutils
+
+import "testing"
+
+// Function under test
+func Add(a, b int) int {
+    return a + b
+}
+
+// Table-driven test
+func TestAdd(t *testing.T) {
+    // Define test cases
+    tests := []struct {
+        name     string
+        a, b     int
+        expected int
+    }{
+        {"positive numbers", 2, 3, 5},
+        {"with a negative number", -1, 4, 3},
+        {"both negative numbers", -2, -3, -5},
+    }
+
+    // Run test cases
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            result := Add(tt.a, tt.b)
+            if result != tt.expected {
+                t.Errorf("Add(%d, %d) = %d; want %d", tt.a, tt.b, result, tt.expected)
+            }
+        })
+    }
+}
+
+```
+**Example02**
+```go
+func TestHelloHandler(t *testing.T) {
+    tests := []struct {
+        name       string
+        url        string
+        wantStatus int
+        wantBody   string
+    }{
+        {"valid request", "/hello?name=Go", 200, "Hello, Go!"},
+        {"missing name", "/hello", 400, "missing name"},
+        {"not found", "/invalid", 404, "404 page not found"},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            req := httptest.NewRequest("GET", tt.url, nil)
+            w := httptest.NewRecorder()
+
+            router().ServeHTTP(w, req)
+
+            if w.Code != tt.wantStatus {
+                t.Errorf("status = %d; want %d", w.Code, tt.wantStatus)
+            }
+            if !strings.Contains(w.Body.String(), tt.wantBody) {
+                t.Errorf("body = %q; want %q", w.Body.String(), tt.wantBody)
+            }
+        })
+    }
+}
+```
+
+
+
+### What is a Test?
+
+At its core, a test consists of three steps:
+
+1. **Arrange** – provide **known inputs** and define the **expected outcome**.
+2. **Act** – execute the **function or code** under test with the known inputs.
+3. **Assert** – compare the **obtained result** with the **expected result**.
+
+A test can:
+- **pass**: if the **obtained result** and **expected result** match.
+- **fail**: if they don’t, signaling a potential bug or unexpected behavior.
+
+Depending on the context, the “obtained result” of a test might be:
+
+- **A return value** (e.g., `Add(2,3)` should return `5`).
+- **An error** (e.g., dividing by zero should return an error).
+- **A side effect** (e.g., a file is created, a log message is written).
+- **A performance constraint** (e.g., execution must complete under 100 ms).
+- **A system state** (e.g., a flag is set, a resource is locked).
+- **A performance metric** (e.g., memory usage or throughput).
+
+
+
+
+<!-- 
+
 ## Testing the code
 As the Go community, we are using the **white-box testing** framework, allowing to test also private functions: 
 - By **keeping** test files **alongside** the code. 
 - It promote a **strong unit testing culture** 
 
+we also use a table-driven approach by ...
 
-A test in `Go` 
 
 A `GO` test file 
   - is simply any file in a **package** that ends with `_test.go`
@@ -67,15 +215,9 @@ A `GO` test file
 
 A `GO` test is a function that:
   - starts with the string `Test` 
-  - takes `*testing.T` as an argument. 
+  - takes `*testing.T` as an argument.  -->
 
-# Contributing  
 
-We welcome contributions! Before participating, please review:  
-- **[Code of Conduct](.github/CODE_OF_CONDUCT.md)** – Our community guidelines.  
-- **[Contributing Guide](.github/CONTRIBUTING.md)** – How to submit issues, PRs, and more.  
-
-## Local development env Vs. Shared development env
 ----
 
 

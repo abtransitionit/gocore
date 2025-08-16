@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
-
 */
 
 package filex
@@ -9,122 +8,278 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Name: TestExistsFile
 //
 // Cases:
-// - 0 - filepath is not provided
-// - 1 - filepath is empty
-// - 2 - filepath is not empty
-// - 3 - filepath does not exist.
-// - 4 - filepath exist.
-// - 5 - filepath is a file that exists
-// - 6 - filepath is a directory that exists
-// The TestExistsFile function now uses a table-driven test approach.
-// This makes the test cases more organized and easier to add to in the future.
+//
+//  1. Path is an empty string (invalid input).
+//  2. Path is non-empty but does not exist as any OS object.
+//  3. Path is non-empty and exists as a regular file.
+//  4. Path is non-empty and exists as an OS object that is not a regular file (e.g., directory, symlink).
 func TestExistsFile(t *testing.T) {
-	// Create a temporary directory for test files and directories.
-	// This ensures a clean test environment.
+	// Setup isolated test environment
 	tempDir := t.TempDir()
 
-	// Setup our test environment:
-	// Create a temporary file.
+	// - create inputs for the test : a regular file.
 	tempFile := filepath.Join(tempDir, "testfile.txt")
 	err := os.WriteFile(tempFile, []byte("hello"), 0644)
 	if err != nil {
-		t.Fatalf("setup failed: could not create temp file: %v", err)
+		t.Fatalf("failed to create temporary file: %v", err) // exit immediately if test setup fails
+	}
+
+	// - create inputs for the test : a folder.
+	tempSubDir := filepath.Join(tempDir, "subdir")
+	err = os.Mkdir(tempSubDir, 0755)
+	if err != nil {
+		t.Fatalf("failed to create temporary directory: %v", err) // exit immediately if test setup fails
+	}
+
+	// - create inputs for the test : a symlink pointing to a regular file.
+	tempSymlink := filepath.Join(tempDir, "symlink")
+	err = os.Symlink(tempFile, tempSymlink)
+	if err != nil {
+		t.Fatalf("failed to create temporary symlink: %v", err) // exit immediately if test setup fails
+	}
+
+	// Define test cases.
+	tests := []struct {
+		name    string // test case name
+		path    string // the input
+		want    bool   // expected result
+		wantErr bool   // expected error
+	}{
+		{
+			name:    "Case 1: nominal: existing regular file",
+			path:    tempFile,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Case 2: empty path string",
+			path:    "",
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name:    "Case 3: non-empty string pointing to a non-existent object",
+			path:    filepath.Join(tempDir, "nonexistent.file"),
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:    "Case 4a: existing non-regular file (directory)",
+			path:    tempSubDir,
+			want:    false,
+			wantErr: false,
+		},
+		// {
+		// 	name:    "Case 4b: existing non-regular file (symlink)",
+		// 	path:    tempSymlink,
+		// 	want:    false,
+		// 	wantErr: false,
+		// },
+		{
+			name:    "Case 4c: existing non-regular file (symlink)",
+			path:    tempSymlink,
+			want:    true, // os.Stat will follow the symlink and see it as a file.
+			wantErr: false,
+		},
+	}
+
+	// Iterate through the test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// -------------------------------
+			// 1. run the fucntion under test with the provided inputs for this test case
+			// -------------------------------
+			got, err := ExistsFile(tc.path)
+
+			// -------------------------------
+			// 2. Assertions
+			// -------------------------------
+
+			// 2a. Check if an error is expected
+			if tc.wantErr {
+				assert.Error(t, err, "expected an error but got none") // An error should occur
+			} else {
+				assert.NoError(t, err, "unexpected error") // No error should occur
+				// 2b. Compare the actual return value with the expected one
+				// The returned message should be empty if no error occurred
+				assert.Equal(t, tc.want, got, "ExistsFile(%q) returned %v, expected %v", tc.path, got, tc.want)
+				// assert.Equal(t, tc.want, exists, "Incorrect boolean result")
+
+			}
+
+		})
+	}
+}
+
+// Name: TestExistsFolder
+func TestExistsFolder(t *testing.T) {
+	// Setup isolated test environment.
+	tempDir := t.TempDir()
+
+	// Create a temporary regular file.
+	tempFile := filepath.Join(tempDir, "testfile.txt")
+	err := os.WriteFile(tempFile, []byte("hello"), 0644)
+	if err != nil {
+		t.Fatalf("failed to create temporary file: %v", err)
 	}
 
 	// Create a temporary directory.
-	tempDirSub := filepath.Join(tempDir, "testdir")
-	err = os.Mkdir(tempDirSub, 0755)
+	tempSubDir := filepath.Join(tempDir, "subdir")
+	err = os.Mkdir(tempSubDir, 0755)
 	if err != nil {
-		t.Fatalf("setup failed: could not create temp directory: %v", err)
+		t.Fatalf("failed to create temporary directory: %v", err)
 	}
 
-	// Define the test cases in a slice of structs.
-	// This is the core of the table-driven test pattern.
+	// Create a symlink to the directory.
+	tempSymlink := filepath.Join(tempDir, "symlink-dir")
+	err = os.Symlink(tempSubDir, tempSymlink)
+	if err != nil {
+		t.Fatalf("failed to create temporary symlink: %v", err)
+	}
+
+	// Define test cases in a slice of structs.
 	tests := []struct {
 		name    string
 		path    string
 		want    bool
 		wantErr bool
-		caseID  int
 	}{
-		// Case 0: filepath is not provided (should be handled as empty).
 		{
-			name:    "Case 0: filepath not provided (empty)",
+			name:    "case 1: nominal: existing directory",
+			path:    tempSubDir,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Case 2: empty path string",
 			path:    "",
 			want:    false,
 			wantErr: true,
-			caseID:  0,
 		},
-		// Case 1: filepath is empty.
 		{
-			name:    "Case 1: filepath is empty",
-			path:    "",
-			want:    false,
-			wantErr: true,
-			caseID:  1,
-		},
-		// Case 2: filepath is not empty (tested implicitly by other cases).
-		// We'll add a specific case to show it's covered.
-		{
-			name:    "Case 2: filepath is not empty (valid)",
-			path:    tempFile,
-			want:    true,
-			wantErr: false,
-			caseID:  2,
-		},
-		// Case 3: filepath does not exist.
-		{
-			name:    "Case 3: filepath does not exist",
-			path:    filepath.Join(tempDir, "nonexistent.file"),
+			name:    "non-existent path",
+			path:    filepath.Join(tempDir, "nonexistent.dir"),
 			want:    false,
 			wantErr: false,
-			caseID:  3,
 		},
-		// Case 4: filepath exists (implicitly covered by 5 and 6, but we'll add a check).
 		{
-			name:    "Case 4: filepath exists (implicitly covered by case 5)",
+			name:    "existing regular file",
 			path:    tempFile,
-			want:    true,
-			wantErr: false,
-			caseID:  4,
-		},
-		// Case 5: filepath is a file that exists.
-		{
-			name:    "Case 5: filepath is an existing file",
-			path:    tempFile,
-			want:    true,
-			wantErr: false,
-			caseID:  5,
-		},
-		// Case 6: filepath is a directory that exists.
-		{
-			name:    "Case 6: filepath is an existing directory",
-			path:    tempDirSub,
 			want:    false,
 			wantErr: false,
-			caseID:  6,
+		},
+		{
+			name:    "symlink to directory",
+			path:    tempSymlink,
+			want:    true, // os.Stat will follow the symlink and see it as a directory.
+			wantErr: false,
 		},
 	}
 
-	// Iterate through the test cases and run a sub-test for each.
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			exists, err := ExistsFile(tc.path)
+			exists, err := ExistsFolder(tc.path)
 
-			// Check for the expected error.
-			if (err != nil) != tc.wantErr {
-				t.Errorf("ExistsFile() error = %v, wantErr %v", err, tc.wantErr)
-				return
-			}
-			// If no error was expected, check the return value.
-			if err == nil && exists != tc.want {
-				t.Errorf("ExistsFile() got = %v, want %v", exists, tc.want)
+			if tc.wantErr {
+				assert.Error(t, err, "expected an error but got none")
+			} else {
+				assert.NoError(t, err, "unexpected error")
+				assert.Equal(t, tc.want, exists, "Incorrect boolean result")
 			}
 		})
 	}
 }
+
+// Name: TestExistsPath
+func TestExistsPath(t *testing.T) {
+	// Setup isolated test environment
+	tempDir := t.TempDir()
+
+	// Create inputs for the test - a regular file
+	tempFile := filepath.Join(tempDir, "testfile.txt")
+	err := os.WriteFile(tempFile, []byte("hello"), 0644)
+	if err != nil {
+		t.Fatalf("failed to create temporary file for test setup: %v", err)
+	}
+
+	// Create inputs for the test - a folder
+	tempSubDir := filepath.Join(tempDir, "subdir")
+	err = os.Mkdir(tempSubDir, 0755)
+	if err != nil {
+		t.Fatalf("failed to create temporary directory for test setup: %v", err)
+	}
+
+	// Create inputs for the test - a symlink
+	tempSymlink := filepath.Join(tempDir, "symlink-file")
+	err = os.Symlink(tempFile, tempSymlink)
+	if err != nil {
+		t.Fatalf("failed to create temporary symlink for test setup: %v", err)
+	}
+
+	// Define test cases.
+	tests := []struct {
+		name    string // test case name
+		path    string // the input
+		want    bool   // expected result
+		wantErr bool   // expected error
+	}{
+		{
+			name:    "Case 1a: nominal: existing regular file",
+			path:    tempFile,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Case 1b: nominal: existing folder",
+			path:    tempSubDir,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Case 1c: nominal: existing symlink",
+			path:    tempSymlink,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Case 2: empty path string",
+			path:    "",
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name:    "Case 3: non-existent path",
+			path:    filepath.Join(tempDir, "nonexistent.file"),
+			want:    false,
+			wantErr: false,
+		},
+	}
+
+	// Iterate through the test cases
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// 1. run the function under test with the provided inputs for this test case
+			exists, err := ExistsPath(tc.path)
+
+			// 2. Assertions
+			if tc.wantErr {
+				assert.Error(t, err, "expected an error but got none")
+			} else {
+				assert.NoError(t, err, "unexpected error")
+				assert.Equal(t, tc.want, exists, "Incorrect boolean result")
+			}
+		})
+	}
+}
+
+// Assertions
+// assert.NoError(t, err, "failed to create temporary file") // No error should occur while creating it
+// assert.NoError(t, err, "failed to create temporary directory") // No error should occur while creating it
+// assert.NoError(t, err, "failed to create temporary symlink") // No error should occur while creating it

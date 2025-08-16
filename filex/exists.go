@@ -21,29 +21,36 @@ import (
 //
 // Returns:
 //
-//	A boolean indicating if a file exists and an error if a problem occurred.
+//   - bool:  indicating if the file exists.
+//   - error: if a problem occurred.
+//
+// ExistsFile checks if a path exists and is a regular file
 func ExistsFile(filePath string) (bool, error) {
 
-	// Check inputs
-	if filePath == "" {
-		return false, errorx.New("path cannot be empty")
+	// === Input validation and path existence check ===
+	exists, err := ExistsPath(filePath)
+	if err != nil || !exists {
+		return false, err
 	}
 
-	// Does the file exist?
+	// === Path exists — get file info ===
 	info, err := os.Stat(filePath)
 	if err != nil {
-		// The path does not exist, which is a specific, expected error.
-		if os.IsNotExist(err) {
-			return false, nil
+		// Specific error: permission denied — handle explicitly
+		if os.IsPermission(err) {
+			return false, errorx.Wrap(err, "permission denied accessing %s", filePath)
 		}
-		// Any other error: is an unexpected error that needs to be reported.
-		return false, errorx.Wrap(err, "failed to check status of file at %s", filePath)
+		// Specific error: any other (unexpected) error — handle explicitly
+		return false, errorx.Wrap(err, "failed to get info of path at %s", filePath)
 	}
-	// The path exists. check it's a regular file and not a directory or symlink.
-	return info.Mode().IsRegular(), nil
+
+	// === Path exists — check that it is a regular file ===
+	isFile := info.Mode().IsRegular() // true if regular file, false if other type (e.g., directory, symlink)
+	return isFile, nil
 }
 
 // Name: ExistsFolder
+//
 // Description: checks if a folder exists at the given path.
 //
 // Parameters:
@@ -52,23 +59,34 @@ func ExistsFile(filePath string) (bool, error) {
 //
 // Returns:
 //
-//	A boolean indicating if a folder exists and an error if a problem occurred.
+//   - bool:  indicating if the folder exists.
+//   - error: if a problem occurred.
 func ExistsFolder(folderPath string) (bool, error) {
-	info, err := os.Stat(folderPath)
-	if err != nil {
-		// The path does not exist, which is a specific, expected error.
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		// Any other error: is an unexpected error that needs to be reported.
-		return false, errorx.Wrap(err, "failed to check status of folder at %s", folderPath)
+
+	// === Input validation and path existence check ===
+	exists, err := ExistsPath(folderPath)
+	if err != nil || !exists {
+		return false, err
 	}
 
-	// The path exists. Check if it's a directory.
-	return info.IsDir(), nil
+	// === Path exists — get file info ===
+	info, err := os.Stat(folderPath)
+	if err != nil {
+		// Specific error: permission denied — handle explicitly
+		if os.IsPermission(err) {
+			return false, errorx.Wrap(err, "permission denied accessing %s", folderPath)
+		}
+		// Specific error: any other (unexpected) error — handle explicitly
+		return false, errorx.Wrap(err, "failed to get info of path at %s", folderPath)
+	}
+
+	// === Path exists — check that it is a directory ===
+	isDir := info.IsDir() // true if directory, false if other type (e.g., file, symlink)
+	return isDir, nil
 }
 
 // Name: ExistsPath
+//
 // Description: checks if an OS given path exists.
 //
 // Parameters:
@@ -81,41 +99,29 @@ func ExistsFolder(folderPath string) (bool, error) {
 //
 // Notes::
 // - The check doesn't distinguish between a file and a folder.
-func ExistsPath(filePath string) (bool, error) {
-	_, err := os.Stat(filePath)
+func ExistsPath(path string) (bool, error) {
+
+	// === Input validation ===
+	if path == "" {
+		// Expected error: user provided an empty path
+		return false, errorx.New("path cannot be empty")
+	}
+
+	// === Check if the path exists ===
+	_, err := os.Stat(path)
 	if err != nil {
+		// Specific error: path does not exist — expected behavior
 		if os.IsNotExist(err) {
 			return false, nil
 		}
-		return false, errorx.Wrap(err, "failed to check status of path at %s", filePath)
-	}
-
-	return true, nil
-}
-
-// Name: FileOrFolderExists
-//
-// Description: checks for the existence of a file or directory at the given path.
-//
-// Parameters:
-//
-//	filePath: The path to the file or directory.
-//
-// Returns:
-// - bool:  the file exists
-// - error: a problem occurred
-func FileExists(filePath string) (bool, error) {
-	_, err := os.Stat(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// File does not exist, which is not an error for this function.
-			return false, nil
+		// Specific error: permission denied — handle explicitly
+		if os.IsPermission(err) {
+			return false, errorx.Wrap(err, "permission denied accessing %s", path)
 		}
-		// A different error occurred (e.g., permissions).
-		// We wrap it to add a stack trace.
-		return false, errorx.Wrap(err, "failed to check status of file at %s", filePath)
+		// Specific error: any other (unexpected) error — handle explicitly
+		return false, errorx.Wrap(err, "failed to check status of path at %s", path)
 	}
 
-	// The file or directory exists.
+	// === Path exists ===
 	return true, nil
 }

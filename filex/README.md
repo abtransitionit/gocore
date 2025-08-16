@@ -7,62 +7,55 @@ This package defines a library (i.e. no `main()`) to manage
 # The code
 
 ## `exists.go`
-Usage for file:
+
+Example usage for a path:
 ```go
 pathFile := "/path/to/a/file"
-exists, err := ExistsFile(pathFile)
+exists, err := ExistsPath(path)
 if err != nil {
-    // Check if the error is specific: a permissions error
-    if os.IsPermission(err) {
-        fmt.Println("Error: Not enough permissions to access the file.")
-    } else {
-        fmt.Println("An unexpected error occurred:", err)
-    }
+    // Unexpected error
+    return err
+}
+if !exists {
+    // Path not found (expected case)
+    return nil
+}
+// Path exists — proceed
+```
+
+Example usage for a file:
+```go
+exists, err := ExistsFile(filePath)
+if err != nil {
+    // Unexpected error, e.g., permission denied
+    return err
+}
+if !exists {
+    // File does not exist (expected case)
+    return nil
+}
+// File exists — proceed
+...
+```
+
+Example usage for a folder:
+```go
+folderPath := "/tmp/myfolder"
+exists, err := ExistsFolder(folderPath)
+if err != nil {
+    // Handle unexpected or permission errors
+    fmt.Printf("Error checking folder: %v\n", err)
     return
+}
+
+// Check the boolean result
+if exists {
+    fmt.Println("Folder exists!")
+} else {
+    fmt.Println("Folder does not exist.")
 }
 ```
 
-Usage for folder:
-```go
-pathDir := "/path/to/a/folder"	
-isFolder, err := ExistsFolder(pathDir)
-if err != nil {
-    // Check if the error is specific: a permissions error
-		if os.IsPermission(err) {
-			fmt.Println("Error: Not enough permissions to access the path.")
-		} else {
-			fmt.Println("An unexpected error occurred:", err)
-		}
-		return
-	}
-	
-	if isFolder {
-		fmt.Printf("The path '%s' is an existing folder.\n", pathDir)
-	} else {
-		fmt.Printf("The path '%s' is not an existing folder.\n", pathDir)
-	}
-
-	// Now let's try a path that is a file
-	filePath := "/path/to/my/file.txt"
-	isFolder, err = ExistsFolder(filePath)
-
-	if err != nil {
-		// Error handling for the file path
-		if os.IsPermission(err) {
-			fmt.Println("Error: Not enough permissions to access the file.")
-		} else {
-			fmt.Println("An unexpected error occurred:", err)
-		}
-		return
-	}
-
-	if isFolder {
-		fmt.Printf("The path '%s' is an existing folder.\n", filePath)
-	} else {
-		fmt.Printf("The path '%s' is not an existing folder.\n", filePath)
-	}
-}
-```go
 
 
 

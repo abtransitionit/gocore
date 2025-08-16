@@ -1,0 +1,93 @@
+package errorx_test
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/abtransitionit/gocore/errorx"
+	"github.com/stretchr/testify/assert"
+)
+
+// Name: TestNew
+//
+// Description: validates that New() creates a new error with the correct message and a captured stack trace.
+func TestNew(t *testing.T) {
+	// Define the test case.
+	testName := "should create a new error with a stack trace"
+	expectedMsg := "an error occurred"
+
+	t.Run(testName, func(t *testing.T) {
+		err := errorx.New(expectedMsg)
+
+		// Assert that the error is not nil.
+		assert.NotNil(t, err, "Expected an error, but got nil")
+
+		// Assert that the error message is correct.
+		assert.True(t, strings.Contains(err.Error(), expectedMsg), "Error message should contain the expected message")
+
+		// Assert that the stack trace is captured.
+		// We expect the stack trace to have at least a few frames.
+		assert.True(t, len(err.Error()) > len(expectedMsg), "Stack trace should be included in the error string")
+	})
+}
+
+// TestWrap validates the Wrap() function's behavior for various cases.
+func TestWrap(t *testing.T) {
+	// Define test cases in a table.
+	tests := []struct {
+		name     string
+		original error
+		message  string
+		wantNil  bool
+	}{
+		{
+			name:     "Case 1: wrapping a nil error",
+			original: nil,
+			message:  "this should not wrap",
+			wantNil:  true,
+		},
+		{
+			name:     "Case 2: wrapping a standard error",
+			original: fmt.Errorf("original standard error"),
+			message:  "failed to perform operation",
+			wantNil:  false,
+		},
+		{
+			name:     "Case 3: wrapping an os.IsNotExist error",
+			original: os.ErrNotExist,
+			message:  "file not found",
+			wantNil:  false,
+		},
+		{
+			name:     "Case 4: wrapping an existing errorx error",
+			original: errorx.New("original root error"),
+			message:  "contextual message",
+			wantNil:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			wrappedErr := errorx.Wrap(tc.original, tc.message)
+
+			if tc.wantNil {
+				assert.Nil(t, wrappedErr, "Expected nil error when wrapping a nil error")
+				return
+			}
+
+			assert.NotNil(t, wrappedErr, "Expected a non-nil wrapped error")
+
+			// Check if the wrapped error contains both messages.
+			assert.True(t, strings.Contains(wrappedErr.Error(), tc.message), "Wrapped error should contain the new message")
+			assert.True(t, strings.Contains(wrappedErr.Error(), tc.original.Error()), "Wrapped error should contain the original error message")
+
+			// Use errors.Is to check for the original error.
+			assert.True(t, os.Is(wrappedErr, tc.original), "errors.Is should find the original error")
+
+			// Check the Unwrap method.
+			assert.Equal(t, tc.original, wrappedErr.Unwrap(), "Unwrap() should return the original error")
+		})
+	}
+}

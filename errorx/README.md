@@ -1,6 +1,6 @@
 # Intro
 
-This package defines library to manage **Errors**. An error is an **event** that
+This package defines library to manage **errors**. An error is an **event** that:
  - indicates something has gone wrong during the **execution of some code**
  - must be **logged**
  - can be due to 
