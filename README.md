@@ -54,15 +54,20 @@ To use this library in your project, run:
         - that have the correct signature but contain minimal logic.
         - this allows you to restore a working build and then implement the full functionality later.
 ## Testing the code
-As the Go community, we are using the **white-box testing** by **keeping** test files **alongside** the code. It promote a **strong unit testing culture** 
+As the Go community, we are using the **white-box testing** framework, allowing to test also private functions: 
+- By **keeping** test files **alongside** the code. 
+- It promote a **strong unit testing culture** 
 
-This approach allows to test all functions, including private ones, for complete code validation.
 
-A test in `Go` is just a **function** that starts with the string `Test` and takes `*testing.T` as an argument. 
+A test in `Go` 
 
 A `GO` test file 
   - is simply any file in a **package** that ends with `_test.go`
   - is played whenever this cli occur : `go test ./...`
+
+A `GO` test is a function that:
+  - starts with the string `Test` 
+  - takes `*testing.T` as an argument. 
 
 # Contributing  
 

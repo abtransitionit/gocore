@@ -13,67 +13,118 @@ import (
 
 // Name: TestExistsFile
 //
-// Description: unit test file
-//
-// Case:
-// - 1 - filepath does not exist.
-// - 2 - filepath exist.
-// - 3 - filepath is a file that exists
-// - 4 - filepath is a directory that exists
+// Cases:
+// - 0 - filepath is not provided
+// - 1 - filepath is empty
+// - 2 - filepath is not empty
+// - 3 - filepath does not exist.
+// - 4 - filepath exist.
+// - 5 - filepath is a file that exists
+// - 6 - filepath is a directory that exists
+// The TestExistsFile function now uses a table-driven test approach.
+// This makes the test cases more organized and easier to add to in the future.
 func TestExistsFile(t *testing.T) {
-	// Create a temporary directory for our test files and folders.
-	// This ensures our test is clean and doesn't affect the user's filesystem.
+	// Create a temporary directory for test files and directories.
+	// This ensures a clean test environment.
 	tempDir := t.TempDir()
 
-	// --- Case 1: file exists ---
-	// Create a temporary file inside our temporary directory.
-	filePath := filepath.Join(tempDir, "test-file.txt")
-	err := os.WriteFile(filePath, []byte("test content"), 0644)
+	// Setup our test environment:
+	// Create a temporary file.
+	tempFile := filepath.Join(tempDir, "testfile.txt")
+	err := os.WriteFile(tempFile, []byte("hello"), 0644)
 	if err != nil {
-		t.Fatalf("failed to create test file: %v", err)
+		t.Fatalf("setup failed: could not create temp file: %v", err)
 	}
 
-	exists, err := ExistsFile(filePath)
+	// Create a temporary directory.
+	tempDirSub := filepath.Join(tempDir, "testdir")
+	err = os.Mkdir(tempDirSub, 0755)
 	if err != nil {
-		t.Fatalf("ExistsFile returned an unexpected error for an existing file: %v", err)
-	}
-	if !exists {
-		t.Errorf("ExistsFile should have returned true for an existing file, but got false")
+		t.Fatalf("setup failed: could not create temp directory: %v", err)
 	}
 
-	// --- Case 2: path is a directory ---
-	// This is a crucial check for your function's logic.
-	dirPath := filepath.Join(tempDir, "test-dir")
-	err = os.Mkdir(dirPath, 0755)
-	if err != nil {
-		t.Fatalf("failed to create test directory: %v", err)
+	// Define the test cases in a slice of structs.
+	// This is the core of the table-driven test pattern.
+	tests := []struct {
+		name    string
+		path    string
+		want    bool
+		wantErr bool
+		caseID  int
+	}{
+		// Case 0: filepath is not provided (should be handled as empty).
+		{
+			name:    "Case 0: filepath not provided (empty)",
+			path:    "",
+			want:    false,
+			wantErr: true,
+			caseID:  0,
+		},
+		// Case 1: filepath is empty.
+		{
+			name:    "Case 1: filepath is empty",
+			path:    "",
+			want:    false,
+			wantErr: true,
+			caseID:  1,
+		},
+		// Case 2: filepath is not empty (tested implicitly by other cases).
+		// We'll add a specific case to show it's covered.
+		{
+			name:    "Case 2: filepath is not empty (valid)",
+			path:    tempFile,
+			want:    true,
+			wantErr: false,
+			caseID:  2,
+		},
+		// Case 3: filepath does not exist.
+		{
+			name:    "Case 3: filepath does not exist",
+			path:    filepath.Join(tempDir, "nonexistent.file"),
+			want:    false,
+			wantErr: false,
+			caseID:  3,
+		},
+		// Case 4: filepath exists (implicitly covered by 5 and 6, but we'll add a check).
+		{
+			name:    "Case 4: filepath exists (implicitly covered by case 5)",
+			path:    tempFile,
+			want:    true,
+			wantErr: false,
+			caseID:  4,
+		},
+		// Case 5: filepath is a file that exists.
+		{
+			name:    "Case 5: filepath is an existing file",
+			path:    tempFile,
+			want:    true,
+			wantErr: false,
+			caseID:  5,
+		},
+		// Case 6: filepath is a directory that exists.
+		{
+			name:    "Case 6: filepath is an existing directory",
+			path:    tempDirSub,
+			want:    false,
+			wantErr: false,
+			caseID:  6,
+		},
 	}
 
-	exists, err = ExistsFile(dirPath)
-	if err != nil {
-		t.Fatalf("ExistsFile returned an unexpected error for a directory: %v", err)
-	}
-	if exists {
-		t.Errorf("ExistsFile should have returned false for a directory, but got true")
-	}
+	// Iterate through the test cases and run a sub-test for each.
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			exists, err := ExistsFile(tc.path)
 
-	// --- Case 3: path does not exist ---
-	nonExistentPath := filepath.Join(tempDir, "non-existent-file.txt")
-	exists, err = ExistsFile(nonExistentPath)
-	if err != nil {
-		t.Fatalf("ExistsFile returned an unexpected error for a non-existent path: %v", err)
-	}
-	if exists {
-		t.Errorf("ExistsFile should have returned false for a non-existent path, but got true")
-	}
-
-	// --- Case 4: path is empty ---
-	// Your code has a specific check for this. We need to test it.
-	exists, err = ExistsFile("")
-	if err == nil {
-		t.Errorf("ExistsFile should have returned an error for an empty path, but it did not")
-	}
-	if exists {
-		t.Errorf("ExistsFile should have returned false for an empty path, but got true")
+			// Check for the expected error.
+			if (err != nil) != tc.wantErr {
+				t.Errorf("ExistsFile() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+			// If no error was expected, check the return value.
+			if err == nil && exists != tc.want {
+				t.Errorf("ExistsFile() got = %v, want %v", exists, tc.want)
+			}
+		})
 	}
 }

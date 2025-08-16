@@ -39,7 +39,7 @@ func ExistsFile(filePath string) (bool, error) {
 		// Any other error: is an unexpected error that needs to be reported.
 		return false, errorx.Wrap(err, "failed to check status of file at %s", filePath)
 	}
-	// The path exists. check it's a regular file and not a directory.
+	// The path exists. check it's a regular file and not a directory or symlink.
 	return info.Mode().IsRegular(), nil
 }
 
