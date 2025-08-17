@@ -212,6 +212,20 @@ Depending on the context, the “obtained result” of a test might be:
 - **A performance metric** (e.g., memory usage or throughput).
 
 
+
+## Commiting
+
+Git commit messages, follows a [conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) style:
+
+| Prefix      | Description                                      | Example                                       |
+| ----------- | ------------------------------------------------ | --------------------------------------------- |
+| `chore:`    | Maintenance or tooling work, no behavior change  | `chore: update CI workflow`                   |
+| `feat:`     | Adds a new feature                               | `feat: add user login functionality`          |
+| `fix:`      | Bug fix                                          | `fix: correct typo in API response`           |
+| `docs:`     | Documentation changes                            | `docs: update README with setup instructions` |
+| `refactor:` | Code changes that don’t add features or fix bugs | `refactor: simplify helper functions`         |
+| `test:`     | Adding or updating tests                         | `test: add unit tests for file parser`        |
+
 ## TODO: Local Development vs. Shared Development environment
 
 
@@ -242,4 +256,5 @@ A `GO` test is a function that:
 Track version updates and changes:  
 - **📦 Latest Release**: `vX.X.X` ([GitHub Releases](#))  
 - **📄 Full Changelog**: See [CHANGELOG.md](CHANGELOG.md) for detailed version history.  
+
 
