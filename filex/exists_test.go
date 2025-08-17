@@ -85,7 +85,7 @@ func TestExistsFile(t *testing.T) {
 		{
 			name:    "Case 6: symlink to a folder",
 			path:    tempSymlinkDir,
-			want:    true,
+			want:    false,
 			wantErr: false,
 		},
 	}
@@ -279,7 +279,7 @@ func TestExistsPath(t *testing.T) {
 	for _, tc := range tests {
 		// Run the function under test with the current test case data
 		t.Run(tc.name, func(t *testing.T) {
-			obtainedResult, err := ExistsFile(tc.path)
+			obtainedResult, err := ExistsPath(tc.path)
 			expectedResult := tc.want
 
 			// Assertion for expected error state
