@@ -227,7 +227,7 @@ Git commit messages, follows a [conventional Commits](https://www.conventionalco
 | `test:`     | Adding or updating tests                         | `test: add unit tests for file parser`        |
 
 ## TODO: Local Development vs. Shared Development environment
-
+ 
 
 <!-- 
 
