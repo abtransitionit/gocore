@@ -152,3 +152,37 @@ These are not a type of failure themselves, but a **method of handling** them. A
 
 * **Example:** A function that calls `os.ReadFile` and fails. You don't just return the `os.ReadFile` error; you wrap it with context, like `errorx.Wrap(err, "failed to read config file")`. The caller then sees both your descriptive message and the original error (`file not found`, `permission denied`, etc.).
 
+# Todo
+
+### 1. Start with **“failed to …”**
+
+* Always start with `failed to` + action.
+* Examples:
+
+  * `failed to open file %s`
+  * `failed to read config %s`
+  * `failed to connect to database %s`
+
+---
+
+### 2. Use **infinitive verbs**, not gerunds
+
+* ✅ `failed to get file info`
+* ❌ `failed getting file info`
+
+Infinitive verbs keep messages concise and consistent.
+
+---
+
+### 3. Include **context / identifier**
+
+* Always mention what caused the error, e.g., filename, path, or operation:
+
+  * `failed to write to %s`
+  * `failed to parse JSON from %s`
+
+---
+
+### 4. Keep it **short and clear**
+
+* Avoid extra words. Focus on action + target + context.

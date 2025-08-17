@@ -13,45 +13,54 @@ import (
 
 // Name: ExistsFile
 //
-// Description: checks if a file exists at the given path.
+// Description: Checks if the path exists and is a regular file.
 //
 // Parameters:
 //
-//	filePath: The path to the file.
+//	filePath: The file path.
 //
 // Returns:
 //
-//   - bool:  indicating if the file exists.
-//   - error: if a problem occurred.
+//   - bool:  True if the path exists and is a regular file.
+//   - error: If an error occurred other than "file not found."
 //
-// ExistsFile checks if a path exists and is a regular file
+// Notes:
+//
+//   - This function follows symbolic links to their target.
 func ExistsFile(filePath string) (bool, error) {
-
-	// === Input validation and path existence check ===
-	exists, err := ExistsPath(filePath)
-	if err != nil || !exists {
-		return false, err
+	// === Input validation ===
+	if filePath == "" {
+		return false, errorx.New("path cannot be empty")
 	}
 
-	// === Path exists — get file info ===
+	// Use os.Stat to get file info and follow symlinks. This is the most efficient - way to check for both existence and file type with a single system call.
 	info, err := os.Stat(filePath)
 	if err != nil {
-		// Specific error: permission denied — handle explicitly
+		// If the file already exists
+		if os.IsNotExist(err) {
+			// handle specific error explicitly: expected outcome : file not found
+			return false, nil
+		}
+
+		// If there is a permission error
 		if os.IsPermission(err) {
+			// handle specific error explicitly: unexpected failure
 			return false, errorx.Wrap(err, "permission denied accessing %s", filePath)
 		}
-		// Specific error: any other (unexpected) error — handle explicitly
-		return false, errorx.Wrap(err, "failed to get info of path at %s", filePath)
+
+		// handle generic errors explicitly: unexpected  errors
+		return false, errorx.Wrap(err, "failed to get file info for %s", filePath)
 	}
 
 	// === Path exists — check that it is a regular file ===
-	isFile := info.Mode().IsRegular() // true if regular file, false if other type (e.g., directory, symlink)
+	isFile := info.Mode().IsRegular() // true if regular file, false if other type (e.g., directory, symlinkdir, symlinkfile)
 	return isFile, nil
+
 }
 
 // Name: ExistsFolder
 //
-// Description: checks if a folder exists at the given path.
+// Description: Checks if a folder exists at the given path.
 //
 // Parameters:
 //
@@ -59,29 +68,38 @@ func ExistsFile(filePath string) (bool, error) {
 //
 // Returns:
 //
-//   - bool:  indicating if the folder exists.
-//   - error: if a problem occurred.
+//   - bool:  True if the path exists and is a directory.
+//   - error: If an error occurred other than "file not found."
+//
+// Notes:
+//
+//   - This function follows symbolic links to their target.
 func ExistsFolder(folderPath string) (bool, error) {
-
-	// === Input validation and path existence check ===
-	exists, err := ExistsPath(folderPath)
-	if err != nil || !exists {
-		return false, err
+	// === Input validation ===
+	if folderPath == "" {
+		return false, errorx.New("path cannot be empty")
 	}
 
-	// === Path exists — get file info ===
+	// Use os.Stat to get file info and follow symlinks. This is the most efficient - way to check for both existence and file type with a single system call.
 	info, err := os.Stat(folderPath)
 	if err != nil {
-		// Specific error: permission denied — handle explicitly
+		if os.IsNotExist(err) {
+			// handle specific error explicitly: expected outcome : file not found
+			return false, nil
+		}
+
+		// If there is a permission error
 		if os.IsPermission(err) {
+			// handle specific error explicitly: unexpected failure
 			return false, errorx.Wrap(err, "permission denied accessing %s", folderPath)
 		}
-		// Specific error: any other (unexpected) error — handle explicitly
-		return false, errorx.Wrap(err, "failed to get info of path at %s", folderPath)
+
+		// handle generic errors explicitly: unexpected  errors
+		return false, errorx.Wrap(err, "failed to get file info for %s", folderPath)
 	}
 
 	// === Path exists — check that it is a directory ===
-	isDir := info.IsDir() // true if directory, false if other type (e.g., file, symlink)
+	isDir := info.IsDir() // true if directory, false if other type (e.g., directory, symlinkdir, symlinkfile)
 	return isDir, nil
 }
 
