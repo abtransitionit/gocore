@@ -48,9 +48,24 @@ We welcome contributions! Before participating, please review:
 
 # Contributing as developer
 
-## Local development env Vs. Shared development env
 
-## modifying an `interface`
+
+## updating the `go/mod`
+
+
+During local development, we use the `replace` directive in `go.mod` to simplify dependency management when working with multiple interdependent Go projects.
+
+For promotion to production:
+
+* The `go.mod` file is committed **as-is** into all branches: feature and dev branches.
+* When code reaches the `main` (or any production) branch, the CI pipeline automatically removes all `replace` directives before building and/or generating the release artifacts.
+
+This approach ensures that:
+
+* Developers benefit from faster iteration and easier local linking during development.
+* Production releases builds always rely on published module versions, ensuring stability and reproducibility.
+
+## Updating an `interface`
 1. **Modify the Interface Definition**: 
     - define and/or update the method signature. 
     - This change will immediately break the build for all code that uses a type that implements this interface.
@@ -197,6 +212,7 @@ Depending on the context, the “obtained result” of a test might be:
 - **A performance metric** (e.g., memory usage or throughput).
 
 
+## TODO: Local Development vs. Shared Development environment
 
 
 <!-- 

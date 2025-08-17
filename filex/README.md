@@ -62,6 +62,43 @@ if exists {
 
 
 ## `touch.go`
+Example usage 1
+```go
+// Assume the file not exists
+filePath := "/path/to/my-new-file.txt"
+created, err := filex.Touch(filePath)
+if err != nil {
+	log.Fatalf("unexpected error: %v", err)
+}
+fmt.Printf("File was created: %v\n", created)
+// Expected output: File was created: true
+```
+
+Example usage 2
+```go
+// Assume a file already exists at this path
+filePath := "/path/to/existing-file.txt"
+created, err := filex.Touch(filePath)
+if err != nil {
+	log.Fatalf("unexpected error: %v", err)
+}
+fmt.Printf("File was created: %v\n", created)
+// Expected output: File was created: false
+```
+
+Example usage 3
+```go
+// Assume this path is a directory
+dirPath := "/path/to/my-directory"
+created, err := filex.Touch(dirPath)
+if err != nil {
+	fmt.Printf("Error: %v\n", err)
+}
+fmt.Printf("File was created: %v\n", created)
+// Expected output:
+// Error: path is a directory, not a file at /path/to/my-directory
+// File was created: false
+```
 
 # Todo
 - use `go-playground/validator` to validate each time parameters/argument provoded to a function

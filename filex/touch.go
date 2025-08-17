@@ -9,12 +9,11 @@ import (
 	"os"
 
 	"github.com/abtransitionit/gocore/errorx"
-	"github.com/abtransitionit/gocore/logx"
 )
 
 // Name: Touch
 //
-// Description: creates a file at the given path if it does not exist.
+// Description: creates an empty file at the given path if it does not exist.
 //
 // Parameters:
 //
@@ -27,30 +26,52 @@ import (
 //
 // Notes:
 // - If the file already exists, this function does nothing and returns successfully.
+// - If the path is a directory, this function returns an error.
 func Touch(filePath string) (bool, error) {
-	// First, check if the file already exists.
-	// os.Stat returns information about the file.
-	_, err := os.Stat(filePath)
-	if err != nil {
-		// If the file does not exist, we need to create it.
-		if os.IsNotExist(err) {
-			file, createErr := os.Create(filePath)
-			if createErr != nil {
-				// Log a warning if the file cannot be created.
-				// This is a critical failure, so we'll use our ErrorWithStack method.
-				logx.ErrorWithStack(createErr, "failed to create file at %s", filePath)
 
-				// Return false for the bool and wrap the creation error.
-				return false, errorx.Wrap(createErr, "failed to create file at %s", filePath)
-			}
-			// It is crucial to close the file to release system resources.
-			defer file.Close()
-			return true, nil
-		}
-		// If the error is not 'file not exist', it's a different, unexpected error.
-		return false, errorx.Wrap(err, "failed to check status of file at %s", filePath)
+	// === Input validation ===
+	if filePath == "" {
+		return false, errorx.New("path cannot be empty")
 	}
 
-	// The file already exists, so we do nothing as requested.
-	return false, nil
+	// Check if the path already exists.
+	exists, err := ExistsPath(filePath)
+	if err != nil {
+		// Specific error: any other (unexpected) error — handle explicitly
+		return false, errorx.Wrap(err, "failed to check if file exists at %s", filePath)
+	}
+
+	// The path exists.
+	if exists {
+		// check if it is a directory.
+		isDir, err := ExistsFolder(filePath)
+
+		if err != nil {
+			// Specific error: any other (unexpected) error — handle explicitly
+			return false, errorx.Wrap(err, "failed to check if path is a folder at %s", filePath)
+		}
+
+		if isDir {
+			// Specific error: path is a directory — handle explicitly
+			return false, errorx.New("path is a directory, not a file at %s", filePath)
+		}
+
+		// === File already exists ===
+		return false, nil
+	}
+
+	// The path does not exist - create it.
+	file, err := os.Create(filePath)
+	if err != nil {
+		// Specific error: permission denied — handle explicitly
+		if os.IsPermission(err) {
+			return false, errorx.Wrap(err, "permission denied to create file at %s", filePath)
+		}
+		// Specific error: any other (unexpected) error — handle explicitly
+		return false, errorx.Wrap(err, "failed to create file at %s", filePath)
+	}
+	defer file.Close()
+
+	// === File created ===
+	return true, nil
 }
