@@ -10,7 +10,6 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/shirou/gopsutil/v3/net"
 )
 
 // Name: PropertyHandler
@@ -19,15 +18,15 @@ import (
 type PropertyHandler func(...string) (string, error)
 
 var coreProperties = map[string]PropertyHandler{
-	"ostype":     getOsType, // e.g. linux, windows, darwin
-	"osarch":     getOsArch, // e.g. arm64, amd64
-	"cpu":        getCpu,
-	"path":       getPath,
-	"osversion":  getOsVersion,
-	"osuser":     getOsUser,
-	"ram":        getRam,
-	"netip":      getNetIp,      // code change from original
-	"netgateway": getNetGateway, // code change from original
+	"ostype":    getOsType, // e.g. linux, windows, darwin
+	"osarch":    getOsArch, // e.g. arm64, amd64
+	"cpu":       getCpu,
+	"path":      getPath,
+	"osversion": getOsVersion,
+	"osuser":    getOsUser,
+	"ram":       getRam,
+	// "netip":      getNetIp,      // code change from original
+	// "netgateway": getNetGateway, // code change from original
 	"oskversion": getOsKernelVersion,
 }
 
@@ -92,28 +91,28 @@ func getRam(_ ...string) (string, error) {
 }
 
 // getNetIp retrieves the system's public IP address.
-func getNetIp(_ ...string) (string, error) {
-	addrs, err := net.Addrs(true)
-	if err != nil {
-		return "", err
-	}
-	if len(addrs) > 0 {
-		return addrs[0].Addr, nil
-	}
-	return "unknown", nil
-}
+// func getNetIp(_ ...string) (string, error) {
+// 	addrs, err := net.Addrs(true)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if len(addrs) > 0 {
+// 		return addrs[0].Addr, nil
+// 	}
+// 	return "unknown", nil
+// }
 
 // getNetGateway retrieves the default network gateway.
-func getNetGateway(_ ...string) (string, error) {
-	routes, err := net.Routes(true)
-	if err != nil {
-		return "", err
-	}
-	if len(routes) > 0 {
-		return routes[0].Gateway, nil
-	}
-	return "unknown", nil
-}
+// func getNetGateway(_ ...string) (string, error) {
+// 	routes, err := net.Routes(true)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if len(routes) > 0 {
+// 		return routes[0].Gateway, nil
+// 	}
+// 	return "unknown", nil
+// }
 
 // getOsKernelVersion retrieves the OS kernel version.
 func getOsKernelVersion(_ ...string) (string, error) {

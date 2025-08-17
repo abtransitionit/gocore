@@ -113,7 +113,8 @@ func ExistsFolder(folderPath string) (bool, error) {
 //
 // Returns:
 //
-//	A boolean indicating if the path exists and an error if a problem occurred.
+//	bool: indicating if the path exists and an error if a problem occurred.
+//	error: if an error occurred.
 //
 // Notes::
 // - The check doesn't distinguish between a file and a folder.
@@ -142,4 +143,29 @@ func ExistsPath(path string) (bool, error) {
 
 	// === Path exists ===
 	return true, nil
+}
+
+// Name: IsFilePresent
+//
+// Description: checks if a file exists at the given path.
+//
+// Parameters:
+//
+//	filePath: The path to the file.
+//
+// Returns:
+//
+//	bool: true if the file exists, false otherwise.
+//	error: if an error occurred.
+func IsFilePresent(filePath string) (bool, error) {
+	if _, err := os.Stat(filePath); err == nil {
+		// handle specific error explicitly: expected outcome: The file exists
+		return true, nil
+	} else if os.IsNotExist(err) {
+		// handle specific error explicitly: expected outcome: The file does not exists
+		return false, nil
+	} else {
+		// handle generic errors explicitly: unexpected  errors
+		return false, errorx.Wrap(err, "failed to get file info for %s", filePath)
+	}
 }
