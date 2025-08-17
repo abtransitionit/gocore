@@ -1,6 +1,6 @@
 # Toknow: by default, multiple jobs inside the same xx.yaml file run concurrently, unless explicitly dependencies is defined.
-# Note: 
-#  - No build cause this is a library of code
+# Notes: 
+#  - No build is needed and no artifact is generated because this is a library of code
 name: Main branch CI
 
 on:
@@ -29,21 +29,21 @@ jobs:
     with:
       go-version: ${{ needs.get-go-version.outputs.go-version }}
   
-  test-code:
+  run-test:
     needs: get-go-version
     uses: abtransitionit/cicd-go/.github/workflows/code-test.yaml@main
     with:
       go-version: ${{ needs.get-go-version.outputs.go-version }}
 
   install-dependencies:
-    needs: [get-go-version, test-code]
+    needs: [get-go-version, run-test]
     uses: abtransitionit/cicd-go/.github/workflows/code-dep.yaml@main
     with:
       go-version: ${{ needs.get-go-version.outputs.go-version }}
 
 
-  create-tag:
-    uses: abtransitionit/cicd-go/.github/workflows/code-tag.yaml@main
+  # create-tag:
+  #   uses: abtransitionit/cicd-go/.github/workflows/code-tag.yaml@main
                   
   # build-code:
   #   needs: install-dependencies
