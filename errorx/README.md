@@ -117,3 +117,38 @@ INFO	logx/loggerZap.go:40	Test some code.
 logx.Infof("installing %s", cliConf.Name)
 logx.Errorf("Error: %v", err)
 ```
+
+# Todo
+
+
+Here are the four key categories of Go errors:
+
+### 1. **Expected Outcomes (or "Sentinel" Errors)** 🎯
+
+These are predictable failures that are a normal part of your program's logic. You explicitly check for them and handle them. The error message is often clean and simple, without a full stack trace.
+
+* **Example:** A `os.IsNotExist` error when checking for a file. The file's absence is a known possibility that your code is designed to handle gracefully.
+
+### 2. **Unexpected Failures (or "Opaque" Errors)** 👻
+
+These are errors you didn't anticipate. They often indicate a bug, an incorrect assumption, or an unrecoverable state. You should never ignore them.
+
+* **Example:** A `os.IsPermission` error when you have a valid user and path. This suggests a deeper problem, like a misconfiguration, that needs to be debugged. You wrap these errors with context to trace the original cause.
+
+***
+
+### 3. **Validation Errors** 📝
+
+These errors occur when a function's input is invalid. They are a subset of "expected outcomes" but are so common they warrant their own category. The goal is to immediately inform the user or caller about what they did wrong.
+
+* **Example:** A function that takes a file path and returns an error if the path is an empty string. The caller needs to provide a valid path, and the error should be clear about this.
+* **Best Practice:** These errors often don't need wrapping and should be created at the point of validation.
+
+***
+
+### 4. **Wrapped Errors** 🎁
+
+These are not a type of failure themselves, but a **method of handling** them. A wrapped error is an error that contains another error inside of it. This is crucial for creating an error chain, which provides a full trace of where a problem originated and what a function was trying to do when it failed.
+
+* **Example:** A function that calls `os.ReadFile` and fails. You don't just return the `os.ReadFile` error; you wrap it with context, like `errorx.Wrap(err, "failed to read config file")`. The caller then sees both your descriptive message and the original error (`file not found`, `permission denied`, etc.).
+

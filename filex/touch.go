@@ -13,7 +13,7 @@ import (
 
 // Name: Touch
 //
-// Description: creates an empty file at the given path if it does not exist.
+// Description: creates a file at the given path.
 //
 // Parameters:
 //
@@ -22,54 +22,38 @@ import (
 // Returns:
 //
 //   - bool:  if a new file was created.
-//   - error: if an error occured.
+//   - error: if an error occurred.
 //
 // Notes:
-// - If the file already exists, this function does nothing and returns successfully.
-// - If the path is a directory, this function returns an error.
+//
+//   - If the path already exists, the function returns a specific error without changing anything.
+//   - It does not differentiate between existing files, directories, or symlinks.
 func Touch(filePath string) (bool, error) {
-
 	// === Input validation ===
 	if filePath == "" {
 		return false, errorx.New("path cannot be empty")
 	}
 
-	// Check if the path already exists.
-	exists, err := ExistsPath(filePath)
+	// Attempt to create the file.
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
-		// Specific error: any other (unexpected) error — handle explicitly
-		return false, errorx.Wrap(err, "failed to check if file exists at %s", filePath)
-	}
-
-	// The path exists.
-	if exists {
-		// check if it is a directory.
-		isDir, err := ExistsFolder(filePath)
-
-		if err != nil {
-			// Specific error: any other (unexpected) error — handle explicitly
-			return false, errorx.Wrap(err, "failed to check if path is a folder at %s", filePath)
+		// If the file already exists
+		if os.IsExist(err) {
+			// handle specific error explicitly: expected outcome
+			return false, errorx.New("path already exists: %s", filePath)
 		}
 
-		if isDir {
-			// Specific error: path is a directory — handle explicitly
-			return false, errorx.New("path is a directory, not a file at %s", filePath)
-		}
-
-		// === File already exists ===
-		return false, nil
-	}
-
-	// The path does not exist - create it.
-	file, err := os.Create(filePath)
-	if err != nil {
-		// Specific error: permission denied — handle explicitly
+		// If there is a permission error
 		if os.IsPermission(err) {
+			// handle specific error explicitly: unexpected failure
 			return false, errorx.Wrap(err, "permission denied to create file at %s", filePath)
 		}
-		// Specific error: any other (unexpected) error — handle explicitly
+
+		// handle generic errors explicitly: unexpected  errors
 		return false, errorx.Wrap(err, "failed to create file at %s", filePath)
 	}
+
+	// Ensure the file is closed.
 	defer file.Close()
 
 	// === File created ===
