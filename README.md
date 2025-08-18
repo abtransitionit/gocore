@@ -212,7 +212,88 @@ Depending on the context, the “obtained result” of a test might be:
 - **A performance metric** (e.g., memory usage or throughput).
 
 
+## Verify the behavior and side effects of a function
 
+**ObtainedResult** and **ExpectedResult** are not sufficient for a test.
+
+the primary function of a test is to verify **behavior**, not just return values. 
+
+Many functions don't return a value but instead produce **side effects** like 
+  - writing a file, 
+  - making a network call, 
+  - **logging a message**.
+
+    - In these cases, the `obtainedResult` of a return value is meaningless.
+    - For this type of functions, the test's assertion must be directed at the side effect itself. 
+    - Using a **mock logger** that captures log messages instead of printing them, allows to assert that the correct messages were logged.
+
+This allows you to:
+
+
+* **Confirm that warnings and errors were reported correctly**, even if the function didn't fail. For example, a function that gracefully handles a file not found error and logs a warning can be tested to ensure the warning was, in fact, logged.
+* **Debug complex failures**. When a test fails, the captured logs provide a chronological record of the program's execution leading up to the failure. This gives you a clear and immediate understanding of *why* the test failed, which is invaluable for debugging.
+
+
+### Use case
+- This example demonstrates how to test a logging side effect. 
+- It shows a `MockLogger` implementation and a test that uses it to verify a function's logging behavior.
+
+```go
+// logger.go
+package main
+
+import "fmt"
+
+// Logger is an interface for a basic logging service.
+type Logger interface {
+    Info(format string, v ...any)
+}
+
+// processData is the function we want to test.
+// It performs some action and logs a success message.
+func processData(l Logger) {
+    // some logic here
+    l.Info("Data processing successful.")
+}
+
+// mock_logger.go
+package main
+
+// MockLogger is a fake logger for testing.
+// It captures log messages instead of printing them.
+type MockLogger struct {
+    Logs []string
+}
+
+func (m *MockLogger) Info(format string, v ...any) {
+    // Instead of printing to stdout, we append the message to our log slice.
+    msg := fmt.Sprintf(format, v...)
+    m.Logs = append(m.Logs, msg)
+}
+
+// process_data_test.go
+package main
+
+import "testing"
+
+func TestProcessData(t *testing.T) {
+    // 1. Arrange: Create a mock logger instance.
+    mockLogger := &MockLogger{}
+
+    // 2. Act: Call the function under test, passing the mock logger.
+    processData(mockLogger)
+
+    // 3. Assert: Verify that the mock logger captured the expected log message.
+    if len(mockLogger.Logs) != 1 {
+        t.Errorf("expected 1 log message, got %d", len(mockLogger.Logs))
+    }
+
+    expected := "Data processing successful."
+    if mockLogger.Logs[0] != expected {
+        t.Errorf("expected log message '%s', got '%s'", expected, mockLogger.Logs[0])
+    }
+}
+```
 ## Commiting
 
 Git commit messages, follows a [conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) style:

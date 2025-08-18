@@ -38,8 +38,23 @@ import "github.com/abtransitionit/gocore/logx
 ```
 
 ## Use the logger in the code
+### use it directly
 ```go
 logx.Info(...)
+```
+### Get it to pass it to a function
+```go
+func testPhase() {
+	// Get the global logger instance.
+	log := logx.GetLogger()
+
+	// Run the entire sequence using the new method.
+	if err := mySequence.Run(log); err != nil {
+		log.ErrorWithNoStack(err, "Workflow execution failed.")
+		return
+	}
+}
+
 ```
 ## See it in action
   
