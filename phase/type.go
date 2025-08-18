@@ -1,19 +1,25 @@
 package phase
 
+import "context"
+
+// Name: PhaseFunc
+//
+// Description: a type that represents a function to be executed as a phase.
+//
+// Notes:
+// - The function is designed to accept a context and a variable number of string arguments
+type PhaseFunc func(ctx context.Context, cmd ...string) (string, error)
+
 // Name: Phase
 //
-// Description: Phase represents a single, executable step in a workflow.
-//
-// It is a concrete type that encapsulates a Go function, its name,
-// and a description of its purpose.  and return a string result
-// along with an error for robust failure handling.
+// Description: denotes a function (with signature define by PhaseFunc) to be executed with meta data
 //
 // Notes:
 // - The function is designed to accept a variable number of string arguments
 type Phase struct {
 	Name        string
 	Description string
-	Func        func(arg ...string) (string, error) // go function, code, that perfomrs actions and accepts 0..N arguments
+	fn          PhaseFunc
 }
 
 // Name: PhaseList
