@@ -29,16 +29,20 @@ func (p Phase) Run(ctx context.Context, cmd ...string) (string, error) {
 
 // Name: Run
 //
-// Description:
-// Run executes each phase in the PhaseList sequentially.
-// It logs the start and end of each phase and handles errors.
-// It now also accepts a context for handling timeouts and cancellations.
+// Description: executes each phase in the PhaseList sequentially.
 //
 // Parameters:
 // - l: A logger instance to be used for logging progress and errors.
 //
 // Returns:
+//
 // An error if any phase fails or the context is canceled.
+//
+// Notes:
+//
+// - It uses a context for handling timeouts and cancellations.
+// - It logs the start and end of each phase and handles errors.
+// - It now also accepts a context for handling timeouts and cancellations.
 func (pl PhaseList) Run(l logx.Logger) error {
 	// Create a context with a 15-minute timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
@@ -47,6 +51,10 @@ func (pl PhaseList) Run(l logx.Logger) error {
 	// Listen for OS signals to cancel the context (e.g., Ctrl+C).
 	// This is important for graceful shutdown.
 	go func() {
+		// this goroutine runs concurrently to handles the external event (Ctrl+C),
+		// the context is the communication channel that the goroutine uses to tell the main workflow to stop.
+		// The goroutine handles the signal, and the context propagates that signal to all the phases.
+		// Without the context, the goroutine wouldn't have a clean, standard way to tell the rest of the application to stop its work.
 		// Example: you would listen for signals here
 		// sigs := make(chan os.Signal, 1)
 		// signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
