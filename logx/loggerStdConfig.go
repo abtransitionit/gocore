@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-This file defines the different config concerning the GO standard logging driver for the different env we want: dev or prod.
+gocore/logx/interfaceLogger.go defines the different config concerning the GO standard logging driver for the different env we want: dev or prod.
 
 */
 

@@ -1,7 +1,8 @@
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-This file implements each method of the interface.
+gocore/errorx/utils.go implements each method of the interface.
+
 */
 
 package errorx

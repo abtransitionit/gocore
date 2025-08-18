@@ -1,7 +1,8 @@
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-This file defines the interface any xx must implements.
+gocore/errorx/interfaceError.go  defines the interface any xx must implements.
+
 */
 
 package errorx
