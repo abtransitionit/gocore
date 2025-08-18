@@ -339,3 +339,21 @@ Track version updates and changes:
 - **📄 Full Changelog**: See [CHANGELOG.md](CHANGELOG.md) for detailed version history.  
 
 
+# Todo
+
+## Use case
+
+**Goal**: Capture a working state across multiple Git repos in dev mode and revert if needed.
+
+- At a specific **point in time**
+    - I have a working state for an app I'm working on.
+    - That app 
+        - involves several git repo in dev mode
+        - each repo in different git branches
+- I want to move forward with new development that involves these repos and their branches.
+    - I creates git branches
+    - I update the code
+- I want If all the new changes don't work out, 
+    - get back to that exact point in time with
+        - new branches deleted
+        - code unchanged
