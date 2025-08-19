@@ -11,9 +11,7 @@ import (
 
 // Name: Execute
 //
-// Description: a minimal implementation that displays the
-//
-//	topologically sorted list of phases to be executed.
+// Description: a minimal implementation that executes phases sequentially.
 //
 // Parameters:
 //
@@ -26,19 +24,30 @@ import (
 //
 // Notes:
 //
-//   - For now, it simply logs a message and shows the execution plan.
-//   - It does not yet execute the phases.
-//   - will execute each phase in the workflow sequentially.
-
+//   - This version executes all phases sequentially, tier by tier.
+//   - It stops execution on the first error it encounters.
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 	log.Println("Starting workflow execution...")
 
-	sortedPhases, err := w.topologicalSort()
+	sortedTiers, err := w.topologicalSort()
 	if err != nil {
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	w.ShowPhaseList(sortedPhases, logger)
+	w.ShowPhaseList(sortedTiers, logger)
+	log.Println("--- Starting sequential execution ---")
+
+	for tierID, tier := range sortedTiers {
+		log.Printf("Executing Tier %d with %d phases...", tierID+1, len(tier))
+		for _, phase := range tier {
+			log.Printf("  -> Executing phase '%s'...", phase.Name)
+			err := phase.run(ctx) // Pass a nil slice for args
+			if err != nil {
+				return err
+			}
+			log.Printf("  -> Phase '%s' finished.", phase.Name)
+		}
+	}
 
 	log.Println("Workflow execution finished.")
 	return nil
@@ -69,7 +78,9 @@ func (p *Phase) run(ctx context.Context, args ...string) error {
 
 // Name: topologicalSort
 //
-// Description: Performs a topological sort on the workflow's phases
+// Description:
+//
+//   - Performs a topological sort on the workflow's phases
 //
 // Parameters:
 //
@@ -84,9 +95,9 @@ func (p *Phase) run(ctx context.Context, args ...string) error {
 //
 //   - Uses Kahn's algorithm for topological sorting.
 //   - This function is a helper for the `Execute` method.
+//   - The output is used by Execute method to run each phases of a workflow
+//   - tthe method determine the correct execution order and group phases (tier) that can be run in parallel.
 //   - a circular dependency is detected.
-//
-// .  - The output is used by Execute to decide the phases that can be run in parallel in goroutine according the dependency.
 func (w *Workflow) topologicalSort() ([][]Phase, error) {
 	inDegree := make(map[string]int)
 	graph := make(map[string][]string)
