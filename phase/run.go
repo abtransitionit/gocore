@@ -39,10 +39,21 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	w.ShowPhaseList(sortedTiers, logger)
+	// Filter out the phases to be skipped.
+	filteredTiers, err := w.filterPhases(sortedTiers, skipPhases)
+	if err != nil {
+		return fmt.Errorf("failed to filter phases: %w", err)
+	}
+
+	// This temporary log shows the result of the filter.
+	logger.Info("Phases after filtering: %v", filteredTiers)
+
+	// Show the final phase list
+	w.ShowPhaseList(filteredTiers, logger)
+
 	logger.Info("--- Starting concurrent execution ---")
 
-	for tierID, tier := range sortedTiers {
+	for tierID, tier := range filteredTiers {
 		// Before starting a new tier, check if the context has been canceled.
 		if ctx.Err() != nil {
 			logger.Info("Workflow canceled by user.")
@@ -81,11 +92,13 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			switch errs[0] {
 			case context.Canceled:
 				logger.Info("Context activation: canceled by user (e.g., via Ctrl+C).")
+				return errs[0]
 			case context.DeadlineExceeded:
 				logger.Info("Context activation: deadline exceeded (e.g., via timeout).")
+				return errs[0]
 			}
 
-			// For all other errors, we log and return the failure.
+			// Log all collected errors and return the first one to stop the workflow.
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
 			for _, e := range errs {
@@ -98,6 +111,59 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 
 	logger.Info("Workflow execution finished.")
 	return nil
+}
+
+// Name: filterPhases
+// Description: Returns a new set of tiers with specified phases removed.
+// Parameters:
+//   - sortedPhases: The full list of topologically sorted phases.
+//   - skipIDs: A map of integer IDs to be skipped.
+//
+// Returns:
+//   - [][]Phase: A new list of tiers with the skipped phases removed.
+//   - error: Returns an error if a requested ID does not exist.
+//
+// Notes:
+//   - This does not re-run the topological sort.
+func (w *Workflow) filterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
+	skippedIDs := make(map[int]struct{})
+	for _, id := range skipPhases {
+		skippedIDs[id] = struct{}{}
+	}
+
+	// Check if requested IDs are valid.
+	idToPhaseMap := make(map[int]Phase)
+	idCounter := 1
+	for _, tier := range sortedPhases {
+		for _, phase := range tier {
+			idToPhaseMap[idCounter] = phase
+			idCounter++
+		}
+	}
+	for _, id := range skipPhases {
+		if _, exists := idToPhaseMap[id]; !exists {
+			return nil, fmt.Errorf("phase ID %d does not exist in the workflow", id)
+		}
+	}
+
+	newSortedPhases := make([][]Phase, 0)
+
+	idCounter = 1
+	for _, tier := range sortedPhases {
+		newTier := make([]Phase, 0)
+		for _, phase := range tier {
+			// Check if the current phase's ID is in the map of skipped IDs.
+			if _, isSkipped := skippedIDs[idCounter]; !isSkipped {
+				newTier = append(newTier, phase)
+			}
+			idCounter++
+		}
+		if len(newTier) > 0 {
+			newSortedPhases = append(newSortedPhases, newTier)
+		}
+	}
+
+	return newSortedPhases, nil
 }
 
 // Name: run
@@ -145,6 +211,14 @@ func (p *Phase) run(ctx context.Context, args ...string) error {
 //   - The output is used by Execute method to run each phases of a workflow
 //   - tthe method determine the correct execution order and group phases (tier) that can be run in parallel.
 //   - a circular dependency is detected.
+//
+// Example of output:
+//
+//   - sortedTiers = [][]Phase{tier1, tier2, tier3, tier4}
+//   - tier1 = [phase1, phase2]
+//   - tier2 = [phase3, phase4]
+//   - tier3 = [phase5, phase6]
+//   - tier4 = [phase7, phase8]
 func (w *Workflow) topologicalSort() ([][]Phase, error) {
 	inDegree := make(map[string]int)
 	graph := make(map[string][]string)
