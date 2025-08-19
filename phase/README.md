@@ -33,6 +33,8 @@ This package defines the following concepts
 
 - an **adapater** that allows each phases to potentially run concurently using the package `syncx` 
 - a **context** that allows to interact with long running process
+- a **tier** is a set of phase that runs concurently
+  - a tier can start only when all phases of the previous tier have finished running.
 
 
 
@@ -75,5 +77,64 @@ if err := mySequence.Run(log); err != nil {
 - the syncx.RunConcurrently function will watch the context for a cancellation signal. 
 - If the context is canceled, it will stop launching new goroutines and handle any currently running ones.
 
+
+
+# The execute function
+This is the cornerstone of the process that execute all phases of a worflow:
+
+- From a set of phases (ie. a worflow):
+
+| ID  | PHASE     | DESCRIPTION                                                        | DEPENDENCIES |
+|-----|-----------|--------------------------------------------------------------------|--------------|
+| 1   | checklist | check VMs are SSH reachable.                                       | none         |
+| 2   | cpluc     | provision LUC CLI                                                  | none         |
+| 3   | dapack1   | provision standard/required/missing OS CLI (via dnfapt packages).  | [upgrade]    |
+| 4   | dapack2   | provision OS dnfapt package(s) on VM(s).                           | [upgrade]    |
+| 5   | gocli     | provision Go toolchain                                             | [dapack1]    |
+| 6   | linger    | Allow non-root user to run OS services.                            | [dapack1]    |
+| 7   | path      | configure OS PATH envvar.                                          | [dapack1]    |
+| 8   | rc        | Add a line to non-root user RC file.                               | [dapack1]    |
+| 9   | service   | configure OS services on Kind VMs.                                 | [dapack1]    |
+| 10  | show      | display the desired KIND Cluster's configuration                   | none         |
+| 11  | upgrade   | provision OS nodes with latest dnfapt packages and repositories.   | [cpluc]      |
+
+- It creates a set of tiers:
+
+| Tier | PHASE     | DESCRIPTION                                                        | DEPENDENCIES |
+|------|-----------|--------------------------------------------------------------------|--------------|
+| 1    | checklist | check VMs are SSH reachable.                                       | none         |
+| 1    | **cpluc**     | provision LUC CLI                                                  | none         |
+| 1    | show      | display the desired KIND Cluster's configuration                   | none         |
+| 2    | upgrade   | provision OS nodes with latest dnfapt packages and repositories.   | [cpluc]      |
+| 3    | dapack1   | provision standard/required/missing OS CLI (via dnfapt packages).  | [upgrade]    |
+| 3    | dapack2   | provision OS dnfapt package(s) on VM(s).                           | [upgrade]    |
+| 4    | gocli     | provision Go toolchain                                             | [dapack1]    |
+| 4    | **linger**    | Allow non-root user to run OS services.                            | [dapack1]    |
+| 4    | path      | configure OS PATH envvar.                                          | [dapack1]    |
+| 4    | rc        | Add a line to non-root user RC file.                               | [dapack1]    |
+| 4    | service   | configure OS services on Kind VMs.                                 | [dapack1]    |
+
+- some phases of the worflow can be skipped thus building a **filtered** set of tiers.
+- suppose we want to **skip the phases**: `cpluc` and `linger`. the **filtered** set of tiers would be:
+
+
+| Tier | PHASE     | DESCRIPTION                                                        | DEPENDENCIES |
+|------|-----------|--------------------------------------------------------------------|--------------|
+| 1    | checklist | check VMs are SSH reachable.                                       | none         |
+| 1    | show      | display the desired KIND Cluster's configuration                   | none         |
+| 2    | **upgrade**   | provision OS nodes with latest dnfapt packages and repositories.   | **[cpluc]**      |
+| 3    | dapack1   | provision standard/required/missing OS CLI (via dnfapt packages).  | [upgrade]    |
+| 3    | dapack2   | provision OS dnfapt package(s) on VM(s).                           | [upgrade]    |
+| 4    | gocli     | provision Go toolchain                                             | [dapack1]    |
+| 4    | path      | configure OS PATH envvar.                                          | [dapack1]    |
+| 4    | rc        | Add a line to non-root user RC file.                               | [dapack1]    |
+| 4    | service   | configure OS services on Kind VMs.                                 | [dapack1]    |
+
+- There is a potential pbs with **upgrade** that originally depend on **cpluc**
+- Now each tier is executed sequentially. this mean:
+  - in a tier, all phases run **concurently**
+  - For a **next** tier to start, all the phases of the **previous** tier must have finished running.
+	- a phase is bind to a GO function that is wrapped into a `func() error` 
+	- this func() is executed 
 
 
