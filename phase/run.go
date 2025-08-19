@@ -18,6 +18,7 @@ import (
 //
 //   - ctx: The context for the workflow. This allows for cancellation and timeouts.
 //   - logger: The logger to use for printing messages.
+//   - skipPhases: A slice of integer IDs representing the phases to be skipped.
 //
 // Returns:
 //
@@ -27,8 +28,11 @@ import (
 //
 //   - This version executes all phases in a tier concurrently.
 //   - It stops execution on the first error it encounters.
-func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
+func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int) error {
 	logger.Info("Starting workflow execution...")
+
+	// Logging the received IDs, as requested.
+	logger.Info("Received phase IDs to skip: %v", skipPhases)
 
 	sortedTiers, err := w.topologicalSort()
 	if err != nil {
