@@ -4,7 +4,6 @@ package phase
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/abtransitionit/gocore/logx"
 )
@@ -27,7 +26,7 @@ import (
 //   - This version executes all phases sequentially, tier by tier.
 //   - It stops execution on the first error it encounters.
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
-	log.Println("Starting workflow execution...")
+	logger.Info("Starting workflow execution...")
 
 	sortedTiers, err := w.topologicalSort()
 	if err != nil {
@@ -35,21 +34,21 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 	}
 
 	w.ShowPhaseList(sortedTiers, logger)
-	log.Println("--- Starting sequential execution ---")
+	logger.Info("--- Starting sequential execution ---")
 
 	for tierID, tier := range sortedTiers {
-		log.Printf("Executing Tier %d with %d phases...", tierID+1, len(tier))
+		logger.Info("Executing Tier %d with %d phases...", tierID+1, len(tier))
 		for _, phase := range tier {
-			log.Printf("  -> Executing phase '%s'...", phase.Name)
-			err := phase.run(ctx) // Pass a nil slice for args
+			logger.Info("  -> Executing phase '%s'...", phase.Name)
+			err := phase.run(ctx)
 			if err != nil {
 				return err
 			}
-			log.Printf("  -> Phase '%s' finished.", phase.Name)
+			logger.Info("  -> Phase '%s' finished.", phase.Name)
 		}
 	}
 
-	log.Println("Workflow execution finished.")
+	logger.Info("Workflow execution finished.")
 	return nil
 }
 
