@@ -21,7 +21,8 @@ type zapLogger struct {
 // Return:
 // - Logger: an instance to the zapLogger configured for an env (dev, prod, ..) and that satisfies the Logger interface.
 func NewZapLogger(config zap.Config) Logger {
-	l, _ := config.Build()
+	// We need to tell Zap to skip two frames: one for the Info/Error method itself and one for the NewZapLogger wrapper.
+	l, _ := config.Build(zap.AddCallerSkip(1)) // <--- ADDED LINE
 	return &zapLogger{
 		logger: l,
 	}
