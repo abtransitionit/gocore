@@ -70,7 +70,8 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 		}
 
 		// Use the new syncx package to run all tasks in the tier concurrently.
-		if errs := syncx.RunConcurrently(concurrentTasks); errs != nil {
+		// Corrected: Pass the context as the first argument.
+		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
 			for _, e := range errs {

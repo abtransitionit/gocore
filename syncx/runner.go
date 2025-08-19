@@ -2,6 +2,7 @@
 package syncx
 
 import (
+	"context"
 	"sync"
 )
 
@@ -19,28 +20,49 @@ type Func func() error
 //
 // Returns:
 // []error: a slice of all errors encountered, or nil if no errors occurred.
-func RunConcurrently(funcs []Func) []error {
+func RunConcurrently(ctx context.Context, funcs []Func) []error {
 	var wg sync.WaitGroup
-	var mu sync.Mutex // A mutex to protect the errors slice
+	var mu sync.Mutex
 	var errs []error
 
 	for _, fn := range funcs {
+		// Stop if the context is already canceled.
+		if ctx.Err() != nil {
+			return []error{ctx.Err()}
+		}
+
 		wg.Add(1)
 		go func(fn Func) {
 			defer wg.Done()
-			if err := fn(); err != nil {
-				mu.Lock()
-				errs = append(errs, err)
-				mu.Unlock()
+			select {
+			case <-ctx.Done():
+				// Do not run the function if the context is canceled.
+				return
+			default:
+				if err := fn(); err != nil {
+					mu.Lock()
+					errs = append(errs, err)
+					mu.Unlock()
+				}
 			}
 		}(fn)
 	}
 
-	wg.Wait()
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
 
-	if len(errs) > 0 {
-		return errs
+	select {
+	case <-ctx.Done():
+		// Context was canceled; return the cancellation error.
+		return []error{ctx.Err()}
+	case <-done:
+		// All goroutines finished; return any collected errors.
+		if len(errs) > 0 {
+			return errs
+		}
+		return nil
 	}
-
-	return nil
 }
