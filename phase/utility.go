@@ -2,6 +2,7 @@
 package phase
 
 import (
+	"context"
 	"fmt"
 	"sort"
 )
@@ -19,28 +20,46 @@ import (
 // Notes:
 //   - This does not re-run the topological sort.
 func (w *Workflow) filterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
-	skipSet := make(map[int]struct{}, len(skipPhases))
-	for _, id := range skipPhases {
-		skipSet[id] = struct{}{}
+	// Count total number of phases
+	totalPhases := 0
+	for _, tier := range sortedPhases {
+		totalPhases += len(tier)
 	}
 
-	newSorted := make([][]Phase, 0, len(sortedPhases))
-	idCounter := 1
+	// Check if skip IDs are in range
+	for _, id := range skipPhases {
+		if id < 1 || id > totalPhases {
+			return nil, fmt.Errorf("phase ID %d does not exist in the workflow", id)
+		}
+	}
 
+	skippedIDs := make(map[int]struct{})
+	for _, id := range skipPhases {
+		skippedIDs[id] = struct{}{}
+	}
+
+	// Filter phases
+	newSortedPhases := make([][]Phase, 0)
+	idCounter := 1
 	for _, tier := range sortedPhases {
 		newTier := make([]Phase, 0, len(tier))
 		for _, phase := range tier {
-			if _, skip := skipSet[idCounter]; !skip {
+			if _, skip := skippedIDs[idCounter]; !skip {
 				newTier = append(newTier, phase)
 			}
 			idCounter++
 		}
 		if len(newTier) > 0 {
-			newSorted = append(newSorted, newTier)
+			newSortedPhases = append(newSortedPhases, newTier)
 		}
 	}
 
-	return newSorted, nil
+	return newSortedPhases, nil
+}
+
+// exported wrapper
+func (w *Workflow) FilterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
+	return w.filterPhases(sortedPhases, skipPhases)
 }
 
 // Name: topologicalSort
@@ -135,4 +154,38 @@ func (w *Workflow) topologicalSort() ([][]Phase, error) {
 	}
 
 	return sortedTiers, nil
+}
+
+// Name: SortedPhases
+//
+// Description:
+//
+//   - Returns a slice of slices, where each inner slice represents a tier of phases that can be run in parallel.
+//
+// Parameters:
+//
+//   - ctx: The context for the workflow. This allows for cancellation and timeouts.
+//
+// Returns:
+//
+//   - [][]Phase: A slice of slices, where each inner slice represents a tier of phases that can be run in parallel.
+//   - error: An error if a circular dependency is detected.
+//
+// Notes:
+//
+//   - Uses Kahn's algorithm for topological sorting.
+//   - This function is a helper for the `Execute` method.
+//   - The output is used by Execute method to run each phases of a workflow
+func (w *Workflow) SortedPhases(ctx context.Context) ([][]Phase, error) {
+	sortedTiers, err := w.topologicalSort()
+	if err != nil {
+		return nil, fmt.Errorf("failed to sort phases: %w", err)
+	}
+
+	filteredTiers, err := w.filterPhases(sortedTiers, []int{}) // no skipped phases
+	if err != nil {
+		return nil, fmt.Errorf("failed to filter phases: %w", err)
+	}
+
+	return filteredTiers, nil
 }
