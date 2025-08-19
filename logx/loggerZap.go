@@ -1,10 +1,4 @@
-/*
-Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
-
-This file defines a specific implementation using the Zap package.
-
-*/
-
+// File to create in gocore/logx/loggerZap.go
 package logx
 
 import (
