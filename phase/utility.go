@@ -19,44 +19,28 @@ import (
 // Notes:
 //   - This does not re-run the topological sort.
 func (w *Workflow) filterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
-	skippedIDs := make(map[int]struct{})
+	skipSet := make(map[int]struct{}, len(skipPhases))
 	for _, id := range skipPhases {
-		skippedIDs[id] = struct{}{}
+		skipSet[id] = struct{}{}
 	}
 
-	// Check if requested IDs are valid.
-	idToPhaseMap := make(map[int]Phase)
+	newSorted := make([][]Phase, 0, len(sortedPhases))
 	idCounter := 1
-	for _, tier := range sortedPhases {
-		for _, phase := range tier {
-			idToPhaseMap[idCounter] = phase
-			idCounter++
-		}
-	}
-	for _, id := range skipPhases {
-		if _, exists := idToPhaseMap[id]; !exists {
-			return nil, fmt.Errorf("phase ID %d does not exist in the workflow", id)
-		}
-	}
 
-	newSortedPhases := make([][]Phase, 0)
-
-	idCounter = 1
 	for _, tier := range sortedPhases {
-		newTier := make([]Phase, 0)
+		newTier := make([]Phase, 0, len(tier))
 		for _, phase := range tier {
-			// Check if the current phase's ID is in the map of skipped IDs.
-			if _, isSkipped := skippedIDs[idCounter]; !isSkipped {
+			if _, skip := skipSet[idCounter]; !skip {
 				newTier = append(newTier, phase)
 			}
 			idCounter++
 		}
 		if len(newTier) > 0 {
-			newSortedPhases = append(newSortedPhases, newTier)
+			newSorted = append(newSorted, newTier)
 		}
 	}
 
-	return newSortedPhases, nil
+	return newSorted, nil
 }
 
 // Name: topologicalSort
