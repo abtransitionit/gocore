@@ -1,3 +1,4 @@
+// File to create in gocore/phase/define.go
 package phase
 
 import "fmt"

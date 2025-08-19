@@ -1,7 +1,4 @@
-// File to create in gocore/phase/display.go
-/*
-Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
-*/
+// File to create in gocore/phase/show.go
 package phase
 
 import (
