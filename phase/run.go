@@ -39,6 +39,12 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 	logger.Info("--- Starting concurrent execution ---")
 
 	for tierID, tier := range sortedTiers {
+		// Before starting a new tier, check if the context has been canceled.
+		if ctx.Err() != nil {
+			logger.Info("Workflow canceled by user.")
+			return ctx.Err()
+		}
+
 		logger.Info("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
 
 		// Create a slice of functions that fit the syncx.Func signature.

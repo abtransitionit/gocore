@@ -32,6 +32,7 @@ This package defines the following concepts
 	- manage any concurency run of phases
 
 - an **adapater** that allows each phases to potentially run concurently using the package `syncx` 
+- a **context** that allows to interact with long running process
 
 
 
@@ -52,3 +53,27 @@ if err := mySequence.Run(log); err != nil {
     return
 }
 ```
+
+
+# Implemennting a Graceful Shutdown
+**without context**
+ - if your application is interrupted (e.g., via Ctrl+C)
+ - the workflow will stop abruptly: potentially creating data corruption or orphaned processes
+
+
+**improvemnt** 
+ - add a mechanism to capture the interrupt signal
+ - use the context.Context to stop all running Goroutines cleanly.
+ - Prevent data corruption or orphaned processes for any long-running application.
+
+
+**with context**
+- We add a context that listens for an interrupt signal (like Ctrl+C). 
+- When the signal is received, the context will be canceled.
+- Propagate the context: The cancellable context will be passed to the workflow
+- the Execute method will then pass the context to the syncx.RunConcurrently function.
+- the syncx.RunConcurrently function will watch the context for a cancellation signal. 
+- If the context is canceled, it will stop launching new goroutines and handle any currently running ones.
+
+
+
