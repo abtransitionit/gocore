@@ -17,7 +17,7 @@ func (w *Workflow) Show(l logx.Logger) {
 	// Create a new table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Phase", "Description", "Dependencies"})
+	t.AppendHeader(table.Row{"ID", "Phase", "Description", "Dependencies"}) // Changed Header
 
 	// Get phase names and sort them
 	names := make([]string, 0, len(w.Phases))
@@ -27,13 +27,13 @@ func (w *Workflow) Show(l logx.Logger) {
 	sort.Strings(names)
 
 	// Append rows
-	for _, name := range names {
+	for i, name := range names { // Added counter 'i'
 		phase := w.Phases[name]
 		deps := "none"
 		if len(phase.Dependencies) > 0 {
 			deps = fmt.Sprintf("%v", phase.Dependencies)
 		}
-		t.AppendRow(table.Row{phase.Name, phase.Description, deps})
+		t.AppendRow(table.Row{i + 1, phase.Name, phase.Description, deps}) // Added ID
 	}
 	l.Info("Available phases:")
 	// Render the table
