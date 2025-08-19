@@ -1,19 +1,12 @@
+// File to create in gocore/syncx/runner.go
 package syncx
 
 import (
 	"sync"
 )
 
-// Name: Func
-//
-// Description: represents a function that can be executed in a concurrent group.
-//
-// Parameters:
-//
-//   - none
-//
-// Returns:
-//   - error: Returns an error if the function fails.
+// Func represents a function that can be executed in a concurrent group.
+// It returns an error to indicate failure.
 type Func func() error
 
 // Name: RunConcurrently
@@ -25,32 +18,29 @@ type Func func() error
 //   - funcs: A slice of Funcs to be executed concurrently.
 //
 // Returns:
-//
-//   - error: Returns an error if any of the functions fails.
-func RunConcurrently(funcs []Func) error {
+// []error: a slice of all errors encountered, or nil if no errors occurred.
+func RunConcurrently(funcs []Func) []error {
 	var wg sync.WaitGroup
-	errs := make(chan error, len(funcs))
+	var mu sync.Mutex // A mutex to protect the errors slice
+	var errs []error
 
 	for _, fn := range funcs {
 		wg.Add(1)
 		go func(fn Func) {
 			defer wg.Done()
 			if err := fn(); err != nil {
-				errs <- err
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
 			}
 		}(fn)
 	}
 
 	wg.Wait()
-	close(errs)
 
 	if len(errs) > 0 {
-		return <-errs
+		return errs
 	}
 
 	return nil
 }
-
-// TODO:
-// - Implement a function to return all errors.
-// - Implement a function to add a context with a timeout/deadline.

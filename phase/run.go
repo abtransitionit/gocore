@@ -4,6 +4,7 @@ package phase
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/syncx"
@@ -63,8 +64,14 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 		}
 
 		// Use the new syncx package to run all tasks in the tier concurrently.
-		if err := syncx.RunConcurrently(concurrentTasks); err != nil {
-			return err
+		if errs := syncx.RunConcurrently(concurrentTasks); errs != nil {
+			var sb strings.Builder
+			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
+			for _, e := range errs {
+				sb.WriteString(fmt.Sprintf("\n- %v", e))
+			}
+			logger.ErrorWithNoStack(errs[0], "%s", sb.String())
+			return errs[0]
 		}
 	}
 
