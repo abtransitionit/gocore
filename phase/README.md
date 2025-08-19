@@ -31,6 +31,9 @@ This package defines the following concepts
 	- manage dependencies if any between phases
 	- manage any concurency run of phases
 
+- an **adapater** that allows each phases to potentially run concurently using the package `syncx` 
+
+
 
 # How it works
 - define a logger for your application that imlplements 

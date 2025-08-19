@@ -6,11 +6,12 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/syncx"
 )
 
 // Name: Execute
 //
-// Description: a minimal implementation that executes phases sequentially.
+// Description: a minimal implementation that executes phases concurrently, tier by tier.
 //
 // Parameters:
 //
@@ -23,7 +24,7 @@ import (
 //
 // Notes:
 //
-//   - This version executes all phases sequentially, tier by tier.
+//   - This version executes all phases in a tier concurrently.
 //   - It stops execution on the first error it encounters.
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 	logger.Info("Starting workflow execution...")
@@ -34,17 +35,36 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 	}
 
 	w.ShowPhaseList(sortedTiers, logger)
-	logger.Info("--- Starting sequential execution ---")
+	logger.Info("--- Starting concurrent execution ---")
 
 	for tierID, tier := range sortedTiers {
-		logger.Info("Executing Tier %d with %d phases...", tierID+1, len(tier))
+		logger.Info("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
+
+		// Create a slice of functions that fit the syncx.Func signature.
+		concurrentTasks := make([]syncx.Func, 0, len(tier))
 		for _, phase := range tier {
-			logger.Info("  -> Executing phase '%s'...", phase.Name)
-			err := phase.run(ctx)
-			if err != nil {
-				return err
-			}
-			logger.Info("  -> Phase '%s' finished.", phase.Name)
+			// Use the new adapter function to convert our PhaseFunc into a syncx.Func.
+			// Corrected: Add the '...' to unpack the empty slice.
+			task := adaptToSyncxFunc(phase.fn, ctx, []string{}...)
+
+			// Wrap the task to add logging for this specific phase.
+			wrappedTask := func(phaseName string) syncx.Func {
+				return func() error {
+					logger.Info("  -> Executing phase '%s'...", phaseName)
+					if err := task(); err != nil {
+						return err
+					}
+					logger.Info("  -> Phase '%s' finished.", phaseName)
+					return nil
+				}
+			}(phase.Name)
+
+			concurrentTasks = append(concurrentTasks, wrappedTask)
+		}
+
+		// Use the new syncx package to run all tasks in the tier concurrently.
+		if err := syncx.RunConcurrently(concurrentTasks); err != nil {
+			return err
 		}
 	}
 
