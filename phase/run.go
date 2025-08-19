@@ -85,7 +85,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 				logger.Info("Context activation: deadline exceeded (e.g., via timeout).")
 			}
 
-			// Log all collected errors and return the first one to stop the workflow.
+			// For all other errors, we log and return the failure.
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
 			for _, e := range errs {
