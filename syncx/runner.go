@@ -3,27 +3,41 @@ package syncx
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"time" // Added for demonstration of a timeout context.
 )
 
 // Func represents a function that can be executed in a concurrent group.
 // It returns an error to indicate failure.
 type Func func() error
 
-// Name: RunConcurrently
-//
-// Description: executes a slice of Funcs concurrently.
-//
-// Parameters:
-//
-//   - funcs: A slice of Funcs to be executed concurrently.
-//
-// Returns:
-// []error: a slice of all errors encountered, or nil if no errors occurred.
+// RunConcurrently executes a slice of Funcs concurrently.
+// It returns a slice of all errors encountered, or a context cancellation error.
 func RunConcurrently(ctx context.Context, funcs []Func) []error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var errs []error
+
+	// Start a goroutine to log the cancellation reason.
+	// This goroutine will wait until the context is done and then log the reason.
+	go func() {
+		<-ctx.Done()
+		// Determine the reason for the cancellation and log it.
+		select {
+		case <-time.After(50 * time.Millisecond): // A small delay to allow other goroutines to log their status.
+		default:
+		}
+
+		switch ctx.Err() {
+		case context.Canceled:
+			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled by user (e.g., via Ctrl+C).")
+		case context.DeadlineExceeded:
+			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled due to timeout.")
+		default:
+			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled for an unknown reason.")
+		}
+	}()
 
 	for _, fn := range funcs {
 		// Stop if the context is already canceled.

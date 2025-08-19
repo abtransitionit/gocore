@@ -69,9 +69,19 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 			concurrentTasks = append(concurrentTasks, wrappedTask)
 		}
 
-		// Use the new syncx package to run all tasks in the tier concurrently.
+		// Use syncx package to run all tasks in the tier concurrently.
 		// Corrected: Pass the context as the first argument.
 		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
+			// Check the first error to determine the reason for cancellation.
+			// This is the correct place to log the cancellation event.
+			switch errs[0] {
+			case context.Canceled:
+				logger.Info("Context activation: canceled by user (e.g., via Ctrl+C).")
+			case context.DeadlineExceeded:
+				logger.Info("Context activation: deadline exceeded (e.g., via timeout).")
+			}
+
+			// Log all collected errors and return the first one to stop the workflow.
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
 			for _, e := range errs {
