@@ -69,9 +69,7 @@ func (p *Phase) run(ctx context.Context, args ...string) error {
 
 // Name: topologicalSort
 //
-// Description: Performs a topological sort on the workflow's phases to determine
-//
-//	the correct execution order.
+// Description: Performs a topological sort on the workflow's phases
 //
 // Parameters:
 //
@@ -79,13 +77,17 @@ func (p *Phase) run(ctx context.Context, args ...string) error {
 //
 // Returns:
 //
-//   - []Phase: A slice of phases in the correct execution order.
+//   - [][]Phase: A slice of slices, where each inner slice represents a tier of phases that can be run in parallel.
 //   - error: An error if a circular dependency is detected.
 //
 // Notes:
 //
 //   - Uses Kahn's algorithm for topological sorting.
-func (w *Workflow) topologicalSort() ([]Phase, error) {
+//   - This function is a helper for the `Execute` method.
+//   - a circular dependency is detected.
+//
+// .  - The output is used by Execute to decide the phases that can be run in parallel in goroutine according the dependency.
+func (w *Workflow) topologicalSort() ([][]Phase, error) {
 	inDegree := make(map[string]int)
 	graph := make(map[string][]string)
 
@@ -111,23 +113,35 @@ func (w *Workflow) topologicalSort() ([]Phase, error) {
 		}
 	}
 
-	sortedList := make([]Phase, 0, len(w.Phases))
+	sortedTiers := make([][]Phase, 0)
 	for len(queue) > 0 {
-		name := queue[0]
-		queue = queue[1:]
-		sortedList = append(sortedList, w.Phases[name])
+		tierSize := len(queue)
+		currentTier := make([]Phase, 0, tierSize)
+		nextQueue := make([]string, 0)
 
-		for _, neighbor := range graph[name] {
-			inDegree[neighbor]--
-			if inDegree[neighbor] == 0 {
-				queue = append(queue, neighbor)
+		for i := 0; i < tierSize; i++ {
+			name := queue[i]
+			currentTier = append(currentTier, w.Phases[name])
+			for _, neighbor := range graph[name] {
+				inDegree[neighbor]--
+				if inDegree[neighbor] == 0 {
+					nextQueue = append(nextQueue, neighbor)
+				}
 			}
+		}
+		sortedTiers = append(sortedTiers, currentTier)
+		queue = nextQueue
+	}
+
+	if len(sortedTiers) > 0 {
+		totalSortedPhases := 0
+		for _, tier := range sortedTiers {
+			totalSortedPhases += len(tier)
+		}
+		if totalSortedPhases != len(w.Phases) {
+			return nil, fmt.Errorf("circular dependency detected in workflow")
 		}
 	}
 
-	if len(sortedList) != len(w.Phases) {
-		return nil, fmt.Errorf("circular dependency detected in workflow")
-	}
-
-	return sortedList, nil
+	return sortedTiers, nil
 }

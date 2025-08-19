@@ -43,27 +43,31 @@ func (w *Workflow) Show(l logx.Logger) {
 
 // Name: ShowPhaseList
 //
-// Description: Displays a given list of phases in a pretty, human-readable table.
+// Description: Displays a comprehensive human-readable table of phases to be executed for a workflow,
+//
+//	with an ID column indicating parallel execution tiers.
 //
 // Parameters:
-//   - phases: The slice of phases to be displayed.
+//   - sortedPhases: The slice of slices of phases to be displayed.
 //   - l: The logger to use for printing information.
 //
 // Notes:
-//   - This function is reusable and can display any slice of Phase objects.
-func (w *Workflow) ShowPhaseList(phases []Phase, l logx.Logger) {
+//   - It display a comprehensive list of all phases that will run in parallel.
+func (w *Workflow) ShowPhaseList(sortedPhases [][]Phase, l logx.Logger) {
 	// Create a new table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Phase", "Description", "Dependencies"})
+	t.AppendHeader(table.Row{"ID", "Phase", "Description", "Dependencies"})
 
 	// Append rows from the provided phase list
-	for _, phase := range phases {
-		deps := "none"
-		if len(phase.Dependencies) > 0 {
-			deps = fmt.Sprintf("%v", phase.Dependencies)
+	for id, tier := range sortedPhases {
+		for _, phase := range tier {
+			deps := "none"
+			if len(phase.Dependencies) > 0 {
+				deps = fmt.Sprintf("%v", phase.Dependencies)
+			}
+			t.AppendRow(table.Row{id + 1, phase.Name, phase.Description, deps})
 		}
-		t.AppendRow(table.Row{phase.Name, phase.Description, deps})
 	}
 	l.Info("Phases to be executed in order:")
 	// Render the table
