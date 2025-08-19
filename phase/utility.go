@@ -1,7 +1,10 @@
 // File to create in gocore/phase/run.go
 package phase
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // Name: filterPhases
 // Description: Returns a new set of tiers with specified phases removed.
@@ -111,6 +114,8 @@ func (w *Workflow) topologicalSort() ([][]Phase, error) {
 			queue = append(queue, name)
 		}
 	}
+	// Ensure deterministic ordering of phases in the same tier
+	sort.Strings(queue)
 
 	sortedTiers := make([][]Phase, 0)
 	for len(queue) > 0 {
@@ -128,6 +133,9 @@ func (w *Workflow) topologicalSort() ([][]Phase, error) {
 				}
 			}
 		}
+
+		// Sort again to keep deterministic order across tiers
+		sort.Strings(nextQueue)
 		sortedTiers = append(sortedTiers, currentTier)
 		queue = nextQueue
 	}
