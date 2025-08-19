@@ -38,7 +38,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger) error {
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	ShowPhaseList(sortedPhases, logger)
+	w.ShowPhaseList(sortedPhases, logger)
 
 	log.Println("Workflow execution finished.")
 	return nil

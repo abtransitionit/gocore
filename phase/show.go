@@ -51,7 +51,7 @@ func (w *Workflow) Show(l logx.Logger) {
 //
 // Notes:
 //   - This function is reusable and can display any slice of Phase objects.
-func ShowPhaseList(phases []Phase, l logx.Logger) {
+func (w *Workflow) ShowPhaseList(phases []Phase, l logx.Logger) {
 	// Create a new table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
