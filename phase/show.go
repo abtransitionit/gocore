@@ -7,35 +7,37 @@ package phase
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	"github.com/abtransitionit/gocore/logx"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 // Name: Show
 //
-// Description:
-// Displays a list of phases in a pretty, formatted table.
-// It is intended for use with a CLI to show users a clear
-// overview of the available phases in a sequence.
-//
-// Parameters:
-// - l: The logger instance to use for output.
-func (pl PhaseList) Show(l logx.Logger) {
-	// Create a new table writer with standard output.
+// Description: Displays a list of phases in a pretty, human-readable table.
+func (w *Workflow) Show() {
+	// Create a new table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Phase", "Description", "Dependencies"})
 
-	// Set the table headers.
-	t.AppendHeader(table.Row{"#", "Name", "Description"})
+	// Get phase names and sort them
+	names := make([]string, 0, len(w.Phases))
+	for name := range w.Phases {
+		names = append(names, name)
+	}
+	sort.Strings(names)
 
-	// Iterate over the PhaseList and add each phase's details to the table.
-	for i, p := range pl {
-		t.AppendRow(table.Row{i + 1, p.Name, p.Description})
+	// Append rows
+	for _, name := range names {
+		phase := w.Phases[name]
+		deps := "none"
+		if len(phase.Dependencies) > 0 {
+			deps = fmt.Sprintf("%v", phase.Dependencies)
+		}
+		t.AppendRow(table.Row{phase.Name, phase.Description, deps})
 	}
 
-	// Render the table to standard output.
-	l.Info("Available Phases:")
+	// Render the table
 	t.Render()
-	fmt.Println() // Add a newline for better readability after the table.
 }
