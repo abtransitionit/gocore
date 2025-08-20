@@ -10,6 +10,7 @@ defines the different config concerning the GO standard logging driver for the d
 package logx
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -48,42 +49,51 @@ type pathWriter struct {
 //   - Every time log.Logger writes something, it will call it
 func (w *pathWriter) Write(p []byte) (n int, err error) {
 	line := string(p)
+	const paddingWidth = 30
 
-	// Try to detect the file path at the end (for log.Llongfile / log.Lshortfile)
-	// Log format is: "2009/01/23 01:23:23 /full/path/to/file.go:123: message"
-	// We split on spaces, last-but-one is file path with line number
+	// Try to detect the file path (for log.Llongfile / log.Lshortfile)
+	// Standard log format is:
+	//   "2009/01/23 01:23:23 /full/path/to/file.go:123: message"
+	// -> first 2 fields = date + time
+	// -> 3rd field      = file path + line number
 	fields := strings.Fields(line)
 	if len(fields) < 3 {
-		return w.out.Write(p) // fallback
+		// fallback: write as-is if unexpected format
+		return w.out.Write(p)
 	}
 
-	// The file path is usually the 3rd field (after date + time)
+	// Extract file path + line number (3rd field)
 	fileField := fields[2]
-	// remove trailing colon and line number
 	colonIndex := strings.LastIndex(fileField, ":")
 	if colonIndex != -1 {
 		filePath := fileField[:colonIndex]
 		lineNumber := fileField[colonIndex:] // keep ":123"
+
+		// PATH: apply custom formatter (e.g. shorten to last 3 dirs)
 		if w.pathFormatter != nil {
 			filePath = w.pathFormatter(filePath)
 		}
-		fields[2] = filePath + lineNumber
+
+		// PADDING: ensure fixed width alignment for all paths
+		padded := fmt.Sprintf("%-*s", paddingWidth, filePath+lineNumber)
+		fields[2] = padded
 	}
 
+	// Rebuild log line with aligned path + INFO
 	newLine := strings.Join(fields, " ") + "\n"
 	return w.out.Write([]byte(newLine))
 }
 
-// func (w *pathWriter) Write(p []byte) (n int, err error) {
-// 	line := string(p)
-
-// 	// Here we’ll replace the full path with a shorter version
-// 	if w.pathFormatter != nil {
-// 		line = w.pathFormatter(line)
-// 	}
-
-// 	return w.out.Write([]byte(line))
-// }
+// Name: NewStdProdConfig
+// Description: creates a production configuration for GO standard logger driver.
+func NewStdProdConfig() StdLoggerConfig {
+	return StdLoggerConfig{
+		Out:    os.Stdout,
+		Prefix: "",
+		Flag:   log.Ldate | log.Ltime | log.Lshortfile,
+		// PathFormatter: pathFormatter,
+	}
+}
 
 // Name: NewStdDevConfig
 // Description: creates a development configuration for GO standard logger driver.
@@ -96,25 +106,6 @@ func NewStdDevConfig() StdLoggerConfig {
 		Out:    devOut,
 		Prefix: "",
 		Flag:   log.LstdFlags | log.Llongfile, // date/time + caller
-		// PathFormatter: pathFormatter,
-	}
-}
-
-// func pathFormatter(fullPath string) string {
-// 	parts := strings.Split(filepath.ToSlash(fullPath), "/")
-// 	if len(parts) <= 3 {
-// 		return fullPath
-// 	}
-// 	return strings.Join(parts[len(parts)-3:], "/")
-// }
-
-// Name: NewStdProdConfig
-// Description: creates a production configuration for GO standard logger driver.
-func NewStdProdConfig() StdLoggerConfig {
-	return StdLoggerConfig{
-		Out:    os.Stdout,
-		Prefix: "",
-		Flag:   log.Ldate | log.Ltime | log.Lshortfile,
 		// PathFormatter: pathFormatter,
 	}
 }
