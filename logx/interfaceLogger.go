@@ -1,7 +1,9 @@
+// File gocore/logx/interfaceLogger.go
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-gocore/logx/interfaceLogger.go defines the interface any logger driver must implements.
+defines the interface any logger driver must implements.
+
 */
 package logx
 

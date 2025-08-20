@@ -1,4 +1,10 @@
 // File to create in gocore/logx/loggerZapConfig.go
+/*
+Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
+
+defines the different config concerning the Zap logging driver for the different env we want: dev or prod.
+
+*/
 package logx
 
 import (

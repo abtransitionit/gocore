@@ -1,9 +1,8 @@
+// File to create in gocore/logx/logx.go
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-The main entry point for your application to interact with the logger.
-
-gocore/logx/logx.go
+define The entry point for any application to interact with the logger.
 
 */
 

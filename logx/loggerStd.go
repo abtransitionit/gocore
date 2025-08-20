@@ -1,7 +1,8 @@
+// File gocore/logx/loggerStd.go
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-gocore/logx/interfaceLogger.go defines the default implementation using the standard Go log package.
+defines the default implementation using the standard Go log package.
 
 */
 

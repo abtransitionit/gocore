@@ -1,4 +1,11 @@
 // File to create in gocore/logx/loggerZap.go
+/*
+Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
+
+defines the implementation using the Zap logging driver.
+
+*/
+
 package logx
 
 import (
