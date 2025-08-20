@@ -4,23 +4,17 @@ package phase
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/abtransitionit/gocore/list"
 	"github.com/abtransitionit/gocore/logx"
 )
 
-func (sortedPhases PhaseTiers) Filter(wkfl Workflow, l logx.Logger, skipPhases []int) PhaseTiers {
-	l.Info("Received phase IDs to skip: %v", skipPhases)
-	// Get Map:Key in a slice
-	var ListPhase = list.GetMapKeys(wkfl.Phases)
-	fmt.Println(ListPhase)
-	// return
-	return sortedPhases
-}
-
 // Name: filterPhases
+//
 // Description: Returns a new set of tiers with specified phases removed.
+//
 // Parameters:
 //   - sortedPhases: The full list of topologically sorted phases.
 //   - skipIDs: A map of integer IDs to be skipped.
@@ -32,29 +26,66 @@ func (sortedPhases PhaseTiers) Filter(wkfl Workflow, l logx.Logger, skipPhases [
 // Notes:
 //   - This does not re-run the topological sort.
 func (w *Workflow) filterPhases(sortedPhases PhaseTiers, skipPhases []int) (PhaseTiers, error) {
-	logx.GetLogger().Info(">>> Entering filterPhases")
+	l := logx.GetLogger()
+	l.Info(">>> Entering filterPhases")
 
-	// List all phases in the workflow
-	logx.GetLogger().Info("The PHASES:")
-	for name, phase := range w.Phases {
-		fmt.Printf("  %s: %s\n", name, phase.Description)
+	var skippedPhaseName []string // list of phases name to skip
+	var filteredPhases PhaseTiers // list of filtered phases
+
+	// manage parameters
+	if len(skipPhases) == 0 || len(w.Phases) == 0 {
+		return sortedPhases, nil
+	}
+	// log
+	l.Info("Received phase IDs to skip: %v", skipPhases)
+
+	// Get Map:Key in a slice
+	var ListPhase = list.GetMapKeys(w.Phases)
+	l.Info("List phase ordered: %v", ListPhase)
+
+	// create the list of phase name to skip
+	for _, phaseID := range skipPhases {
+		// check if the phase ID exist
+		if phaseID > len(ListPhase) {
+			l.Error("Phase ID %d does not exist in the workflow", phaseID)
+			os.Exit(1)
+		}
+
+		skippedPhaseName = append(skippedPhaseName, ListPhase[phaseID-1])
+	}
+	// log
+	l.Info("List phase name to skip: %v", skippedPhaseName)
+
+	// Create a map from slice for efficient lookups.
+	skippedPhasesMapTemp := make(map[string]bool)
+	for _, name := range skippedPhaseName {
+		skippedPhasesMapTemp[name] = true
 	}
 
-	// // Now loop through sortedPhases
-	// for tierIdx, tier := range sortedPhases {
-	// 	logx.GetLogger().Info("The TIERS:")
-	// 	fmt.Printf("Tier %d:\n", tierIdx+1)
-	// 	for phaseIdx, phase := range tier {
-	// 		fmt.Printf("  Phase %d: %s - %s\n", phaseIdx+1, phase.Name, phase.Description)
-	// 	}
-	// }
-	logx.GetLogger().Info(">>> Exiting filterPhases")
-	return sortedPhases, nil
+	// create the filtered phases
+	for _, tier := range sortedPhases {
+		var newTier []Phase
+		for _, phase := range tier {
+			// Check if the phase is in the skipped map. If not, add it.
+			if !skippedPhasesMapTemp[phase.Name] {
+				newTier = append(newTier, phase)
+			}
+		}
+		// Only append the new tier if it's not empty.
+		if len(newTier) > 0 {
+			filteredPhases = append(filteredPhases, newTier)
+		}
+	}
+	// return
+	return filteredPhases, nil
 }
 
 // exported wrapper
-func (w *Workflow) FilterPhases(sortedPhases PhaseTiers, skipPhases []int) (PhaseTiers, error) {
-	return w.filterPhases(sortedPhases, skipPhases)
+func (sortedPhases PhaseTiers) Filter(wkfl Workflow, l logx.Logger, skipPhases []int) PhaseTiers {
+	// Get filtered phases
+	filteredTiers, _ := wkfl.filterPhases(sortedPhases, skipPhases)
+
+	return filteredTiers
 }
 
 // Name: topologicalSort
