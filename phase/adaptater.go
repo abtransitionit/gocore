@@ -22,6 +22,11 @@ import (
 //
 // Notes:
 //   - This acts as an adapter, making a PhaseFunc compatible with the syncx.RunConcurrently function's signature.
+//   - It wraps the PhaseFunc in a syncx.Func: we create a closure that is an anonymous function.
+//
+// Todo
+//   - pass logging to the closure that is an anonymous function.
+//   - make that function not an anonymous.
 func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, cmd ...string) syncx.Func {
 	return func() error {
 		_, err := fn(ctx, cmd...)

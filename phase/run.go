@@ -12,11 +12,11 @@ import (
 
 // Name: Execute
 //
-// Description: a minimal implementation that executes phases concurrently, tier by tier.
+// Description: executes the phases of a workflow
 //
 // Parameters:
 //
-//   - ctx: The context for the workflow. This allows for cancellation and timeouts.
+//   - ctx: The context for the workflow.
 //   - logger: The logger to use for printing messages.
 //   - skipPhases: A slice of integer IDs representing the phases to be skipped.
 //
@@ -26,30 +26,33 @@ import (
 //
 // Notes:
 //
-//   - This version executes all phases in a tier concurrently.
-//   - It stops execution on the first error it encounters.
+//   - executes all phases in a tier concurrently.
+//   - executes each tier sequentially.
+//   - the order of the tier and their phases is determined by the topological function
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int) error {
 	logger.Info("Starting workflow execution...")
 
 	// Logging the received IDs, as requested.
 	logger.Info("Received phase IDs to skip: %v", skipPhases)
 
+	// Get the sorted phases
 	sortedTiers, err := w.topologicalSort()
 	if err != nil {
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	// Filter out the phases to be skipped.
+	// Get filtered phases
 	filteredTiers, err := w.filterPhases(sortedTiers, skipPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}
 
-	// Show the final phase list
+	// Show the filtered phases ordered by tier
 	w.ShowPhaseList(filteredTiers, logger)
 
 	logger.Info("--- Starting concurrent execution ---")
 
+	// loop over each tier
 	for tierID, tier := range filteredTiers {
 		// Before starting a new tier, check if the context has been canceled.
 		if ctx.Err() != nil {
@@ -59,11 +62,10 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 
 		logger.Info("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
 
-		// Create a slice of functions that fit the syncx.Func signature.
+		// Create a slice of functions (for each tier)
 		concurrentTasks := make([]syncx.Func, 0, len(tier))
 		for _, phase := range tier {
-			// Use the new adapter function to convert our PhaseFunc into a syncx.Func.
-			// Corrected: Add the '...' to unpack the empty slice.
+			// create the closure (needed by syncx) from the phase's function
 			task := adaptToSyncxFunc(phase.fn, ctx, []string{}...)
 
 			// Wrap the task to add logging for this specific phase.
@@ -81,8 +83,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			concurrentTasks = append(concurrentTasks, wrappedTask)
 		}
 
-		// Use syncx package to run all tasks in the tier concurrently.
-		// Corrected: Pass the context as the first argument.
+		// run all phases in the tier concurently.
 		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
 			// Check the first error to determine the reason for cancellation.
 			// This is the correct place to log the cancellation event.

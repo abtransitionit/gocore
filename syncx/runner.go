@@ -12,8 +12,17 @@ import (
 // It returns an error to indicate failure.
 type Func func() error
 
-// RunConcurrently executes a slice of Funcs concurrently.
-// It returns a slice of all errors encountered, or a context cancellation error.
+// Name: RunConcurrently
+//
+// Description: executes a slice of Funcs concurrently.
+//
+// Parameters:
+//
+//   - ctx: one context, the same for all goroutines
+//   - funcs: A slice of Funcs to be executed concurrently.
+//
+// Returns:
+//   - A slice of errors, one for each function that failed to execute or a context cancellation error.
 func RunConcurrently(ctx context.Context, funcs []Func) []error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
