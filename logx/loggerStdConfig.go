@@ -14,25 +14,28 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 )
 
 // Name: StdLoggerConfig
-// Description: holds the configuration for GO standard logger driver.
+// Description: holds the configuration for GO standard logger driver and custom configuration.
 type StdLoggerConfig struct {
-	Out    io.Writer
-	Prefix string
-	Flag   int
-	// PathFormatter func(string) string // optional, for customizing file paths
-
+	Out           io.Writer
+	Prefix        string
+	Flag          int
+	ShowTimestamp bool // keep or drop timestamp
+	ShowFunc      bool // include or hide function name
+	UseShortPath  bool // use short path via pathFormatter or full path
+	PathFormatter func(string) string
 }
 
 // Name: pathWriter
 //
 // Description: a type that represents a writer that formats the path of the log message
 type pathWriter struct {
-	out           io.Writer
-	pathFormatter func(string) string
+	// out    io.Writer
+	Config *StdLoggerConfig
 }
 
 // Name: Write
@@ -50,18 +53,19 @@ type pathWriter struct {
 func (w *pathWriter) Write(p []byte) (n int, err error) {
 	line := string(p)
 
-	const paddingWidth = 30     // fixed width for file:line field (alignment)
-	const showTimestamp = false // toggle: keep or drop timestamp
+	var paddingWidth = 60                      // fixed width for file:line field (alignment)
+	var showTimestamp = w.Config.ShowTimestamp // toggle: keep or drop timestamp
+	var showFunc = w.Config.ShowFunc           // toggle: include or hide function name
+	var useShortPath = w.Config.UseShortPath   // toggle: use pathFormatter (short path) or full path
 
 	// Split log line into whitespace-separated fields
 	fields := strings.Fields(line)
 	if len(fields) == 0 {
 		// fallback: empty line → print as-is
-		return w.out.Write(p)
+		return w.Config.Out.Write(p)
 	}
 
 	// --- STEP 1: handle timestamp ---
-	// By convention, first 2 fields are: "YYYY/MM/DD" and "HH:MM:SS"
 	var timestamp []string
 	if showTimestamp && len(fields) >= 2 {
 		timestamp = fields[0:2] // keep date + time
@@ -71,23 +75,31 @@ func (w *pathWriter) Write(p []byte) (n int, err error) {
 	}
 
 	// --- STEP 2: handle file path + line number ---
-	// First remaining field looks like: "path/to/file.go:42:"
 	if len(fields) > 0 {
 		fileField := fields[0]
 		colonIndex := strings.LastIndex(fileField, ":")
 		if colonIndex != -1 {
-			// split path and line number
 			filePath := fileField[:colonIndex]
 			lineNumber := fileField[colonIndex:]
 
-			// apply optional path formatter (e.g. shorten dirs)
-			if w.pathFormatter != nil {
-				filePath = w.pathFormatter(filePath)
+			// --- optionally shorten path ---
+			if useShortPath && w.Config.PathFormatter != nil {
+				filePath = w.Config.PathFormatter(filePath)
 			}
 
 			// pad to fixed width so INFO messages align nicely
 			padded := fmt.Sprintf("%-*s", paddingWidth, filePath+lineNumber)
 			fields[0] = padded
+
+			// --- optionally add function name ---
+			if showFunc {
+				if pc, _, _, ok := runtime.Caller(5); ok {
+					if fn := runtime.FuncForPC(pc); fn != nil {
+						funcName := fn.Name()
+						fields = append([]string{fields[0], funcName}, fields[1:]...)
+					}
+				}
+			}
 		}
 	}
 
@@ -95,7 +107,7 @@ func (w *pathWriter) Write(p []byte) (n int, err error) {
 	newFields := append(timestamp, fields...)
 	newLine := strings.Join(newFields, " ") + "\n"
 
-	return w.out.Write([]byte(newLine))
+	return w.Config.Out.Write([]byte(newLine))
 }
 
 // Name: NewStdProdConfig
@@ -105,21 +117,25 @@ func NewStdProdConfig() StdLoggerConfig {
 		Out:    os.Stdout,
 		Prefix: "",
 		Flag:   log.Ldate | log.Ltime | log.Lshortfile,
-		// PathFormatter: pathFormatter,
 	}
 }
 
 // Name: NewStdDevConfig
 // Description: creates a development configuration for GO standard logger driver.
 func NewStdDevConfig() StdLoggerConfig {
+	// define a custom writer
 	devOut := &pathWriter{
-		out:           os.Stdout,
-		pathFormatter: pathFormatter,
+		Config: &StdLoggerConfig{
+			Out:           os.Stdout,
+			ShowTimestamp: false,
+			ShowFunc:      false,
+			UseShortPath:  true,
+			PathFormatter: pathFormatter,
+		},
 	}
 	return StdLoggerConfig{
-		Out:    devOut,
+		Out:    devOut, // use the custom writer
 		Prefix: "",
 		Flag:   log.LstdFlags | log.Llongfile, // date/time + caller
-		// PathFormatter: pathFormatter,
 	}
 }

@@ -1,4 +1,4 @@
-// File to create in gocore/list/list.go
+// File in gocore/list/list.go
 package list
 
 import "sort"

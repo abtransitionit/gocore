@@ -1,4 +1,4 @@
-// File to create in gocore/phase/type.go
+// File in gocore/phase/type.go
 package phase
 
 import "context"

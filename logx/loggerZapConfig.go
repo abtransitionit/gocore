@@ -1,4 +1,4 @@
-// File to create in gocore/logx/loggerZapConfig.go
+// File in gocore/logx/loggerZapConfig.go
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 

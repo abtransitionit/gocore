@@ -1,4 +1,4 @@
-// File to create in gocore/syncx/runner.go
+// File in gocore/syncx/runner.go
 package syncx
 
 import (

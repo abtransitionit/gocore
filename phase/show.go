@@ -1,4 +1,4 @@
-// File to create in gocore/phase/show.go
+// File in gocore/phase/show.go
 package phase
 
 import (

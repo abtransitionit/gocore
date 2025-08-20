@@ -1,4 +1,4 @@
-// File to create in gocore/phase/adapter.go
+// File in gocore/phase/adapter.go
 package phase
 
 import (

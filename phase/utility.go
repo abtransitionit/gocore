@@ -1,4 +1,4 @@
-// File to create in gocore/phase/run.go
+// File in gocore/phase/run.go
 package phase
 
 import (
