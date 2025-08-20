@@ -49,38 +49,52 @@ type pathWriter struct {
 //   - Every time log.Logger writes something, it will call it
 func (w *pathWriter) Write(p []byte) (n int, err error) {
 	line := string(p)
-	const paddingWidth = 30
 
-	// Try to detect the file path (for log.Llongfile / log.Lshortfile)
-	// Standard log format is:
-	//   "2009/01/23 01:23:23 /full/path/to/file.go:123: message"
-	// -> first 2 fields = date + time
-	// -> 3rd field      = file path + line number
+	const paddingWidth = 30     // fixed width for file:line field (alignment)
+	const showTimestamp = false // toggle: keep or drop timestamp
+
+	// Split log line into whitespace-separated fields
 	fields := strings.Fields(line)
-	if len(fields) < 3 {
-		// fallback: write as-is if unexpected format
+	if len(fields) == 0 {
+		// fallback: empty line → print as-is
 		return w.out.Write(p)
 	}
 
-	// Extract file path + line number (3rd field)
-	fileField := fields[2]
-	colonIndex := strings.LastIndex(fileField, ":")
-	if colonIndex != -1 {
-		filePath := fileField[:colonIndex]
-		lineNumber := fileField[colonIndex:] // keep ":123"
-
-		// PATH: apply custom formatter (e.g. shorten to last 3 dirs)
-		if w.pathFormatter != nil {
-			filePath = w.pathFormatter(filePath)
-		}
-
-		// PADDING: ensure fixed width alignment for all paths
-		padded := fmt.Sprintf("%-*s", paddingWidth, filePath+lineNumber)
-		fields[2] = padded
+	// --- STEP 1: handle timestamp ---
+	// By convention, first 2 fields are: "YYYY/MM/DD" and "HH:MM:SS"
+	var timestamp []string
+	if showTimestamp && len(fields) >= 2 {
+		timestamp = fields[0:2] // keep date + time
+		fields = fields[2:]
+	} else if !showTimestamp && len(fields) >= 2 {
+		fields = fields[2:] // drop date + time
 	}
 
-	// Rebuild log line with aligned path + INFO
-	newLine := strings.Join(fields, " ") + "\n"
+	// --- STEP 2: handle file path + line number ---
+	// First remaining field looks like: "path/to/file.go:42:"
+	if len(fields) > 0 {
+		fileField := fields[0]
+		colonIndex := strings.LastIndex(fileField, ":")
+		if colonIndex != -1 {
+			// split path and line number
+			filePath := fileField[:colonIndex]
+			lineNumber := fileField[colonIndex:]
+
+			// apply optional path formatter (e.g. shorten dirs)
+			if w.pathFormatter != nil {
+				filePath = w.pathFormatter(filePath)
+			}
+
+			// pad to fixed width so INFO messages align nicely
+			padded := fmt.Sprintf("%-*s", paddingWidth, filePath+lineNumber)
+			fields[0] = padded
+		}
+	}
+
+	// --- STEP 3: rebuild log line ---
+	newFields := append(timestamp, fields...)
+	newLine := strings.Join(newFields, " ") + "\n"
+
 	return w.out.Write([]byte(newLine))
 }
 
