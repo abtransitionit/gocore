@@ -53,7 +53,31 @@ func (w *Workflow) Show(l logx.Logger) {
 //
 // Notes:
 //   - It display a comprehensive list of all phases that will run in parallel.
-func (w *Workflow) ShowPhaseList(sortedPhases [][]Phase, l logx.Logger) {
+// func (w *Workflow) ShowPhaseList(sortedPhases [][]Phase, l logx.Logger) {
+// 	// Create a new table writer
+// 	t := table.NewWriter()
+// 	t.SetOutputMirror(os.Stdout)
+// 	t.AppendHeader(table.Row{"Tier ID", "Phase", "Description", "Dependencies"})
+
+// 	// Append rows from the provided phase list
+// 	for id, tier := range sortedPhases {
+// 		for _, phase := range tier {
+// 			deps := "none"
+// 			if len(phase.Dependencies) > 0 {
+// 				deps = fmt.Sprintf("%v", phase.Dependencies)
+// 			}
+// 			t.AppendRow(table.Row{id + 1, phase.Name, phase.Description, deps})
+// 		}
+// 	}
+// 	l.Info("Phases to be executed in order:")
+// 	// Render the table
+// 	t.Render()
+// 	fmt.Println() // Add a newline for better readability after the table.
+// }
+
+// Show is a method on the slice of phase tiers that formats and prints the phases to the logger.
+// Show is a method on the PhaseTiers type that formats and prints the phases to the logger.
+func (sortedPhases PhaseTiers) Show(l logx.Logger) {
 	// Create a new table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
@@ -69,7 +93,7 @@ func (w *Workflow) ShowPhaseList(sortedPhases [][]Phase, l logx.Logger) {
 			t.AppendRow(table.Row{id + 1, phase.Name, phase.Description, deps})
 		}
 	}
-	l.Info("Phases to be executed in order:")
+	l.Info("Phases sorted by tier:")
 	// Render the table
 	t.Render()
 	fmt.Println() // Add a newline for better readability after the table.

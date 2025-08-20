@@ -5,7 +5,14 @@ import (
 	"context"
 	"fmt"
 	"sort"
+
+	"github.com/abtransitionit/gocore/logx"
 )
+
+func (sortedPhases PhaseTiers) Filter(l logx.Logger, skipPhases []int) PhaseTiers {
+	l.Info("Received phase IDs to skip: %v", skipPhases)
+	return sortedPhases
+}
 
 // Name: filterPhases
 // Description: Returns a new set of tiers with specified phases removed.
@@ -19,46 +26,29 @@ import (
 //
 // Notes:
 //   - This does not re-run the topological sort.
-func (w *Workflow) filterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
-	// Count total number of phases
-	totalPhases := 0
-	for _, tier := range sortedPhases {
-		totalPhases += len(tier)
+func (w *Workflow) filterPhases(sortedPhases PhaseTiers, skipPhases []int) (PhaseTiers, error) {
+	logx.GetLogger().Info(">>> Entering filterPhases")
+
+	// List all phases in the workflow
+	logx.GetLogger().Info("The PHASES:")
+	for name, phase := range w.Phases {
+		fmt.Printf("  %s: %s\n", name, phase.Description)
 	}
 
-	// Check if skip IDs are in range
-	for _, id := range skipPhases {
-		if id < 1 || id > totalPhases {
-			return nil, fmt.Errorf("phase ID %d does not exist in the workflow", id)
-		}
-	}
-
-	skippedIDs := make(map[int]struct{})
-	for _, id := range skipPhases {
-		skippedIDs[id] = struct{}{}
-	}
-
-	// Filter phases
-	newSortedPhases := make([][]Phase, 0)
-	idCounter := 1
-	for _, tier := range sortedPhases {
-		newTier := make([]Phase, 0, len(tier))
-		for _, phase := range tier {
-			if _, skip := skippedIDs[idCounter]; !skip {
-				newTier = append(newTier, phase)
-			}
-			idCounter++
-		}
-		if len(newTier) > 0 {
-			newSortedPhases = append(newSortedPhases, newTier)
-		}
-	}
-
-	return newSortedPhases, nil
+	// // Now loop through sortedPhases
+	// for tierIdx, tier := range sortedPhases {
+	// 	logx.GetLogger().Info("The TIERS:")
+	// 	fmt.Printf("Tier %d:\n", tierIdx+1)
+	// 	for phaseIdx, phase := range tier {
+	// 		fmt.Printf("  Phase %d: %s - %s\n", phaseIdx+1, phase.Name, phase.Description)
+	// 	}
+	// }
+	logx.GetLogger().Info(">>> Exiting filterPhases")
+	return sortedPhases, nil
 }
 
 // exported wrapper
-func (w *Workflow) FilterPhases(sortedPhases [][]Phase, skipPhases []int) ([][]Phase, error) {
+func (w *Workflow) FilterPhases(sortedPhases PhaseTiers, skipPhases []int) (PhaseTiers, error) {
 	return w.filterPhases(sortedPhases, skipPhases)
 }
 
@@ -158,7 +148,7 @@ func (w *Workflow) topologicalSort() ([][]Phase, error) {
 
 // Name: SortedPhases
 //
-// Description:
+// Description: Sort phases of a worflow
 //
 //   - Returns a slice of slices, where each inner slice represents a tier of phases that can be run in parallel.
 //
@@ -168,24 +158,18 @@ func (w *Workflow) topologicalSort() ([][]Phase, error) {
 //
 // Returns:
 //
-//   - [][]Phase: A slice of slices, where each inner slice represents a tier of phases that can be run in parallel.
+//   - [][]Phase: A slice of slices that denotes each a set of phases
 //   - error: An error if a circular dependency is detected.
-//
-// Notes:
-//
-//   - Uses Kahn's algorithm for topological sorting.
-//   - This function is a helper for the `Execute` method.
-//   - The output is used by Execute method to run each phases of a workflow
-func (w *Workflow) SortedPhases(ctx context.Context) ([][]Phase, error) {
-	sortedTiers, err := w.topologicalSort()
+func (w *Workflow) TopoSort(ctx context.Context) (PhaseTiers, error) {
+	sortedByTier, err := w.topologicalSort()
 	if err != nil {
 		return nil, fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	filteredTiers, err := w.filterPhases(sortedTiers, []int{}) // no skipped phases
-	if err != nil {
-		return nil, fmt.Errorf("failed to filter phases: %w", err)
-	}
+	// filteredTiers, err := w.filterPhases(sortedTiers, []int{}) // no skipped phases
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to filter phases: %w", err)
+	// }
 
-	return filteredTiers, nil
+	return sortedByTier, nil
 }

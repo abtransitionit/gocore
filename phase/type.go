@@ -45,3 +45,13 @@ type Workflow struct {
 // //   - Can be easily iterated over to execute each phase in a defined order.
 // //   - primarily a sequence of Phases/tasks.
 // type PhaseList []Phase
+
+// Name: PhaseTiers
+//
+// Description: represents a set of phases with defined dependencies.
+//
+// Notes:
+//   - Can be easily iterated over to execute each phase in a defined order.
+//   - primarily a map of Phases/tasks.
+//   - designed to be a Directed Acyclic Graph (DAG) of tasks.
+type PhaseTiers [][]Phase

@@ -138,3 +138,48 @@ This is the cornerstone of the process that execute all phases of a worflow:
 	- this func() is executed 
 
 
+# How context is pass from cobra cli to goroutines
+```mermaid
+flowchart TD
+    A["cmd.Context() from CLI"] --> B["signal.NotifyContext(cmd.Context(), os.Interrupt)"]
+    B --> C["kindWkf.Execute(ctx, logger, skipPhases)"]
+
+    %% Expanded tiers
+    C --> D1["Tier 1"]
+    C --> D2["Tier 2"]
+    C --> D3["Tier 3"]
+
+    %% Tier 1 phases
+    D1 --> D1P1["Phase 1.1"]
+    D1 --> D1P2["Phase 1.2"]
+    D1 --> D1P3["Phase 1.3"]
+
+    %% Tier 2 phases
+    D2 --> D2P1["Phase 2.1"]
+    D2 --> D2P2["Phase 2.2"]
+
+    %% Tier 3 phases
+    D3 --> D3P1["Phase 3.1"]
+    D3 --> D3P2["Phase 3.2"]
+    D3 --> D3P3["Phase 3.3"]
+    D3 --> D3P4["Phase 3.4"]
+
+    %% create closure
+    D1P1 --> C1P1["Create closure"]
+    D1P2 --> C1P2["Create closure"]
+    D1P3 --> C1P3["Create closure"]
+
+    %% create concurent tasks list
+    C1P1 --> CT1["Add to a list"]
+    C1P2 --> CT1
+    C1P3 --> CT1
+
+    %% create concurent tasks list
+    CT1 --> SP1["run each closure concurently"]
+
+    %% create concurent tasks list
+    SP1 --> GR1["Go routine 1"]
+    SP1 --> GR2["Go routine 2"]
+    SP1 --> GR3["Go routine 3"]
+```
+

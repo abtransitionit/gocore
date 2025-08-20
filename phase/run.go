@@ -48,7 +48,8 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	}
 
 	// Show the filtered phases ordered by tier
-	w.ShowPhaseList(filteredTiers, logger)
+	filteredTiers.Show(logger)
+	// w.ShowPhaseList(filteredTiers, logger)
 
 	logger.Info("--- Starting concurrent execution ---")
 
@@ -65,7 +66,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		// Create a slice of functions (for each tier)
 		concurrentTasks := make([]syncx.Func, 0, len(tier))
 		for _, phase := range tier {
-			// create the closure (needed by syncx) from the phase's function
+			// create the closure (needed by syncx) from the phase's function - pass the context
 			task := adaptToSyncxFunc(phase.fn, ctx, []string{}...)
 
 			// Wrap the task to add logging for this specific phase.
@@ -83,7 +84,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			concurrentTasks = append(concurrentTasks, wrappedTask)
 		}
 
-		// run all phases in the tier concurently.
+		// run all phases in the tier concurently - with all the same ctx.
 		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
 			// Check the first error to determine the reason for cancellation.
 			// This is the correct place to log the cancellation event.
