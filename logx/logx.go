@@ -85,38 +85,49 @@ func Init() {
 	once.Do(InitLogger)
 }
 
-// Name: Info
-//
-// Description: a convenience function
-//
-// Notes:
-// - ensures lazy initialization if globalLogger is nil.
-func Info(format string, v ...any) {
+// Convenience functions matching the Logger interface: callable via logx.XXX
+func Info(msg string) {
 	if globalLogger == nil {
 		Init()
 	}
-	globalLogger.Info(format, v...)
+	globalLogger.Infof("%s", msg)
 }
 
-// Name: Error
-//
-// Description: a convenience function
-//
-// Notes:
-// - ensures lazy initialization if globalLogger is nil.
-func Error(format string, v ...any) {
+func Infof(format string, v ...any) {
 	if globalLogger == nil {
 		Init()
 	}
-	globalLogger.Error(format, v...)
+	globalLogger.Infof(format, v...)
 }
 
-// Name: ErrorWithStack
-//
-// Description: a convenience function
-//
-// Notes:
-// - ensures lazy initialization if globalLogger is nil.
+func Infow(msg string, keysAndValues ...any) {
+	if globalLogger == nil {
+		Init()
+	}
+	globalLogger.Infow(msg, keysAndValues...)
+}
+
+func Error(msg string) {
+	if globalLogger == nil {
+		Init()
+	}
+	globalLogger.Errorf("%s", msg)
+}
+
+func Errorf(format string, v ...any) {
+	if globalLogger == nil {
+		Init()
+	}
+	globalLogger.Errorf(format, v...)
+}
+
+func Errorw(msg string, keysAndValues ...any) {
+	if globalLogger == nil {
+		Init()
+	}
+	globalLogger.Errorw(msg, keysAndValues...)
+}
+
 func ErrorWithStack(err error, format string, v ...any) {
 	if globalLogger == nil {
 		Init()
@@ -124,10 +135,6 @@ func ErrorWithStack(err error, format string, v ...any) {
 	globalLogger.ErrorWithStack(err, format, v...)
 }
 
-// Name: ErrorWithNoStack
-// Description: a convenience function
-// Notes:
-// - ensures lazy initialization if globalLogger is nil.
 func ErrorWithNoStack(err error, format string, v ...any) {
 	if globalLogger == nil {
 		Init()

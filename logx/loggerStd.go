@@ -41,26 +41,57 @@ func NewStdLogger(config StdLoggerConfig) Logger {
 // 	}
 // }
 
-// Name: Info
-// Description: logs a message with an INFO prefix.
-// Notes:
-// - implements the method of the same name in the Logger interface.
-func (l *stdLogger) Info(format string, v ...any) {
+// Info logs a simple info message
+func (l *stdLogger) Info(msg string) {
+	l.logger.Println("INFO:", msg)
+}
+
+// Infof logs a formatted info message
+func (l *stdLogger) Infof(format string, v ...any) {
 	l.logger.Printf("INFO: "+format, v...)
 }
 
-// Name: Error
-// Description: logs a message with an ERROR prefix.
-// Notes:
-// - implements the method of the same name in the Logger interface.
-func (l *stdLogger) Error(format string, v ...any) {
+func (l *stdLogger) Infow(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		msg += " | "
+		for i := 0; i < len(keysAndValues); i += 2 {
+			k := keysAndValues[i]
+			v := "<nil>"
+			if i+1 < len(keysAndValues) {
+				v = fmt.Sprint(keysAndValues[i+1])
+			}
+			msg += fmt.Sprintf("%v=%v ", k, v)
+		}
+	}
+	l.logger.Println("INFO:", msg)
+}
+
+// Error logs a simple error message
+func (l *stdLogger) Error(msg string) {
+	l.logger.Println("ERROR:", msg)
+}
+
+// Errorf logs a formatted error message
+func (l *stdLogger) Errorf(format string, v ...any) {
 	l.logger.Printf("ERROR: "+format, v...)
 }
 
-// Name: ErrorWithStack
-// Description: logs an error, including a stack trace if one is available.
-// Notes:
-// - implements the method of the same name in the Logger interface.
+func (l *stdLogger) Errorw(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		msg += " | "
+		for i := 0; i < len(keysAndValues); i += 2 {
+			k := keysAndValues[i]
+			v := "<nil>"
+			if i+1 < len(keysAndValues) {
+				v = fmt.Sprint(keysAndValues[i+1])
+			}
+			msg += fmt.Sprintf("%v=%v ", k, v)
+		}
+	}
+	l.logger.Println("ERROR:", msg)
+}
+
+// ErrorWithStack logs an error with a stack trace if available
 func (l *stdLogger) ErrorWithStack(err error, format string, v ...any) {
 	var sb strings.Builder
 	sb.WriteString("ERROR: ")
@@ -69,7 +100,6 @@ func (l *stdLogger) ErrorWithStack(err error, format string, v ...any) {
 	sb.WriteString(err.Error())
 	sb.WriteString("\n")
 
-	// Use GetStack from your errorx package to check for a stack trace.
 	if stack := errorx.GetStack(err); stack != nil {
 		sb.WriteString(errorx.FormatStack(stack))
 	}
@@ -77,10 +107,7 @@ func (l *stdLogger) ErrorWithStack(err error, format string, v ...any) {
 	l.logger.Println(sb.String())
 }
 
-// Name: ErrorWithNoStack
-// Description: logs an error without including a stack trace.
-// Notes:
-// - implements the method of the same name in the Logger interface.
+// ErrorWithNoStack logs an error without the stack trace
 func (l *stdLogger) ErrorWithNoStack(err error, format string, v ...any) {
 	l.logger.Printf("ERROR: "+format, v...)
 	l.logger.Println("Original Error:", err.Error())

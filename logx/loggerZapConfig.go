@@ -20,15 +20,16 @@ import (
 // Notes:
 // - It includes customizations like colorized levels and short caller paths.
 func NewDevConfig() zap.Config {
-	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	config.EncoderConfig.EncodeTime = func(time.Time, zapcore.PrimitiveArrayEncoder) {
+	cfg := zap.NewDevelopmentConfig()
+	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	cfg.EncoderConfig.EncodeTime = func(time.Time, zapcore.PrimitiveArrayEncoder) {
 		// This empty function will skip timestamp encoding
 	}
-	// config.EncoderConfig.EncodeCaller = fixedWidthCallerEncoder
+	// cfg.EncoderConfig.EncodeCaller = fixedWidthCallerEncoder
+	// cfg.Development = true // enable stack traces for warnings and errors
 
-	return config
+	return cfg
 }
 
 // Name: NewProdConfig
@@ -37,11 +38,12 @@ func NewDevConfig() zap.Config {
 // Notes:
 // - This is standard the default zap production config.
 func NewProdConfig() zap.Config {
-	// config := zap.NewProductionConfig()
-	// config.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder // no color, uppercase
-	// config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	// config.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-
+	// cfg := zap.NewProductionConfig()
+	// cfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder       // Uppercase levels
+	// cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder         // Standard timestamps
+	// cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder       // Short file paths
+	// cfg.Sampling = &zap.SamplingConfig{Initial: 100, Thereafter: 100} // Optional, avoids log spam
+	// return cfg
 	return zap.NewProductionConfig()
 }
 

@@ -33,7 +33,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	logger.Info("Starting workflow execution...")
 
 	// Logging the received IDs, as requested.
-	logger.Info("Received phase IDs to skip: %v", skipPhases)
+	logger.Infof("Received phase IDs to skip: %v", skipPhases)
 
 	// Get the sorted phases
 	sortedTiers, err := w.topologicalSort()
@@ -61,7 +61,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			return ctx.Err()
 		}
 
-		logger.Info("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
+		logger.Infof("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
 
 		// Create a slice of functions (for each tier)
 		concurrentTasks := make([]syncx.Func, 0, len(tier))
@@ -72,11 +72,11 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			// Wrap the task to add logging for this specific phase.
 			wrappedTask := func(phaseName string) syncx.Func {
 				return func() error {
-					logger.Info("  -> Executing phase '%s'...", phaseName)
+					logger.Infof("  -> Executing phase '%s'...", phaseName)
 					if err := task(); err != nil {
 						return err
 					}
-					logger.Info("  -> Phase '%s' finished.", phaseName)
+					logger.Infof("  -> Phase '%s' finished.", phaseName)
 					return nil
 				}
 			}(phase.Name)

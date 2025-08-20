@@ -1,0 +1,101 @@
+// File to create in gocore/logx/loggerZap.go
+/*
+Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
+
+defines the implementation using the Zap logging driver.
+
+*/
+
+package logx
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
+
+type zapLogger struct {
+	logger *zap.SugaredLogger
+}
+
+var zapBase *zap.Logger
+
+// newZapLogger creates a new zap-based logger
+func newZapLogger() ILogger {
+	env := strings.ToLower(os.Getenv("APP_ENV"))
+	levelStr := strings.ToLower(os.Getenv("APP_LOG_LEVEL"))
+
+	// Default to info level
+	level := zapcore.InfoLevel
+	switch levelStr {
+	case "debug":
+		level = zapcore.DebugLevel
+	case "warn":
+		level = zapcore.WarnLevel
+	case "error":
+		level = zapcore.ErrorLevel
+	}
+
+	cfg := zap.Config{
+		Level:            zap.NewAtomicLevelAt(level),
+		Encoding:         "json",
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+		EncoderConfig:    zap.NewProductionEncoderConfig(),
+	}
+
+	// Dev mode = console encoder
+	if env == "dev" {
+		cfg.Encoding = "console"
+		cfg.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+	}
+
+	// Add caller info
+	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.EncoderConfig.TimeKey = "ts"
+	cfg.EncoderConfig.CallerKey = "caller"
+	cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+
+	// Build logger safely
+	var err error
+	zapBase, err = cfg.Build(zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	if err != nil {
+		// Fallback to std logger
+		fmt.Fprintf(os.Stderr, "failed to init zap logger: %v, falling back to std logger\n", err)
+		return newStdLogger()
+	}
+
+	return &zapLogger{logger: zapBase.Sugar()}
+}
+
+// --- ILogger interface implementation ---
+
+func (l *zapLogger) Info(msg string, args ...interface{}) {
+	l.logger.Infof(msg, args...)
+}
+
+func (l *zapLogger) Error(msg string, args ...interface{}) {
+	l.logger.Errorf(msg, args...)
+}
+
+func (l *zapLogger) Debug(msg string, args ...interface{}) {
+	l.logger.Debugf(msg, args...)
+}
+
+func (l *zapLogger) Warn(msg string, args ...interface{}) {
+	l.logger.Warnf(msg, args...)
+}
+
+func (l *zapLogger) ErrorWithStack(err error, msg string) {
+	l.logger.Errorw(msg, "error", err, "stack", fmt.Sprintf("%+v", err))
+}
+
+// Close flushes zap logs
+func Close() {
+	if zapBase != nil {
+		_ = zapBase.Sync()
+	}
+}

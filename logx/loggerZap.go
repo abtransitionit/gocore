@@ -1,9 +1,8 @@
-// File to create in gocore/logx/loggerZap.go
+// File: gocore/logx/loggerZap.go
 /*
 Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 
-defines the implementation using the Zap logging driver.
-
+Implementation of Logger interface using Zap SugaredLogger.
 */
 
 package logx
@@ -15,64 +14,62 @@ import (
 	"go.uber.org/zap"
 )
 
-// Name: stdLogger
-// Description: a concrete implementation of the Logger interface
-// Notes:
-// - uses the Zap library logging
+// zapLogger implements Logger using Zap SugaredLogger
 type zapLogger struct {
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 }
 
-// Name: NewZapLogger
-// Description: creates a new zapLogger instance for any environment (production or development).
-// Return:
-// - Logger: an instance to the zapLogger configured for an env (dev, prod, ..) and that satisfies the Logger interface.
+// NewZapLogger creates a new zapLogger instance for any environment (prod/dev)
 func NewZapLogger(config zap.Config) Logger {
-	// We need to tell Zap to skip two frames: one for the Info/Error method itself and one for the NewZapLogger wrapper.
-	l, _ := config.Build(zap.AddCallerSkip(1)) // <--- ADDED LINE
+	l, err := config.Build(zap.AddCallerSkip(2)) // skip frames for wrappers
+	if err != nil {
+		panic("failed to build zap logger: " + err.Error())
+	}
 	return &zapLogger{
-		logger: l,
+		logger: l.Sugar(),
 	}
 }
 
-// Name: Info
-// Description: logs a message with the zap logger at Info level.
-// Notes:
-// - implements the method of the same name in the Logger interface.
-func (z *zapLogger) Info(format string, v ...any) {
-	z.logger.Info(fmt.Sprintf(format, v...))
+// Simple info logging
+func (l *zapLogger) Info(msg string) {
+	l.logger.Info(msg)
 }
 
-// Name: Error
-// Description: logs a message with the zap logger at Error level.
-// Notes:
-// - implements the method of the same name in the Logger interface.
-func (l *zapLogger) Error(format string, v ...any) {
-	l.logger.Error(fmt.Sprintf(format, v...))
+// Formatted info logging
+func (l *zapLogger) Infof(format string, v ...any) {
+	l.logger.Infof(format, v...)
 }
 
-// Name: ErrorWithStack
-// Description: logs an error, including a stack trace if one is available.
-// Notes:
-// - implements the method of the same name in the Logger interface.
+// Structured info logging
+func (l *zapLogger) Infow(msg string, keysAndValues ...any) {
+	l.logger.Infow(msg, keysAndValues...)
+}
+
+// Simple error logging
+func (l *zapLogger) Error(msg string) {
+	l.logger.Error(msg)
+}
+
+// Formatted error logging
+func (l *zapLogger) Errorf(format string, v ...any) {
+	l.logger.Errorf(format, v...)
+}
+
+// Structured error logging
+func (l *zapLogger) Errorw(msg string, keysAndValues ...any) {
+	l.logger.Errorw(msg, keysAndValues...)
+}
+
+// Error with stack trace
 func (l *zapLogger) ErrorWithStack(err error, format string, v ...any) {
-	// create a slice of zap.Field and append the error and stack trace to the original error (zap.Error(err)).
-	fields := []zap.Field{
-		zap.Error(err),
-	}
-
-	// Use GetStack from your errorx package to check for a stack trace.
+	fields := []any{"error", err}
 	if stack := errorx.GetStack(err); stack != nil {
-		fields = append(fields, zap.String("stack_trace", errorx.FormatStack(stack)))
+		fields = append(fields, "stack_trace", errorx.FormatStack(stack))
 	}
-
-	l.logger.Error(fmt.Sprintf(format, v...), fields...)
+	l.logger.Errorw(fmt.Sprintf(format, v...), fields...)
 }
 
-// Name: ErrorWithNoStack
-// Description: logs an error without including a stack trace.
-// Notes:
-// - implements the method of the same name in the Logger interface.
+// Error without stack trace
 func (l *zapLogger) ErrorWithNoStack(err error, format string, v ...any) {
-	l.logger.Error(fmt.Sprintf(format, v...), zap.Error(err))
+	l.logger.Errorw(fmt.Sprintf(format, v...), "error", err)
 }

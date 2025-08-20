@@ -273,3 +273,57 @@ func someFunctionThatReturnsAnError() error {
 ```
 
 This final step creates a powerful, unified logging and error management system. Your applications will now generate rich, debuggable log messages in development and clean, structured ones in production, all with a consistent and easy-to-use API.
+
+
+# Exemple usage
+```go
+package main
+
+import (
+	"errors"
+	"time"
+
+	"github.com/abtransitionit/gocore/logx"
+	"go.uber.org/zap"
+)
+
+func main() {
+	// Choose dev or prod config
+	config := zap.NewProductionConfig()
+	logger := logx.NewZapLogger(config)
+
+	// Simple info log
+	logger.Info("Starting application...")
+
+	// Formatted info log
+	appVersion := "1.0.0"
+	logger.Infof("Application version: %s", appVersion)
+
+	// Structured info log
+	logger.Infow("User logged in",
+		"userID", 42,
+		"role", "admin",
+		"time", time.Now(),
+	)
+
+	// Simple error log
+	logger.Error("Something went wrong")
+
+	// Formatted error log
+	err := errors.New("connection failed")
+	logger.Errorf("Failed to connect: %v", err)
+
+	// Structured error log
+	logger.Errorw("Database error",
+		"error", err,
+		"retry", true,
+	)
+
+	// Error with stack trace
+	logger.ErrorWithStack(err, "Critical failure in module %s", "database")
+
+	// Error without stack trace
+	logger.ErrorWithNoStack(err, "Non-critical failure in module %s", "cache")
+}
+
+```

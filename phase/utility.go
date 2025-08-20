@@ -37,24 +37,24 @@ func (w *Workflow) filterPhases(sortedPhases PhaseTiers, skipPhases []int) (Phas
 		return sortedPhases, nil
 	}
 	// log
-	l.Info("Received phase IDs to skip: %v", skipPhases)
+	l.Infof("Received phase IDs to skip: %v", skipPhases)
 
 	// Get Map:Key in a slice
 	var ListPhase = list.GetMapKeys(w.Phases)
-	l.Info("List phase ordered: %v", ListPhase)
+	l.Infof("List phase ordered: %v", ListPhase)
 
 	// create the list of phase name to skip
 	for _, phaseID := range skipPhases {
 		// check if the phase ID exist
 		if phaseID > len(ListPhase) {
-			l.Error("Phase ID %d does not exist in the workflow", phaseID)
+			l.Errorf("Phase ID %d does not exist in the workflow", phaseID)
 			os.Exit(1)
 		}
 
 		skippedPhaseName = append(skippedPhaseName, ListPhase[phaseID-1])
 	}
 	// log
-	l.Info("List phase name to skip: %v", skippedPhaseName)
+	l.Infof("List phase name to skip: %v", skippedPhaseName)
 
 	// Create a map from slice for efficient lookups.
 	skippedPhasesMapTemp := make(map[string]bool)
