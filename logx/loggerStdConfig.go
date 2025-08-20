@@ -29,7 +29,7 @@ func NewStdDevConfig() StdLoggerConfig {
 	return StdLoggerConfig{
 		Out:    os.Stdout,
 		Prefix: "",
-		Flag:   log.Lshortfile,
+		Flag:   log.LstdFlags | log.Lshortfile, // date/time + caller
 	}
 }
 
