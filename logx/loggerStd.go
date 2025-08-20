@@ -11,6 +11,7 @@ package logx
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/abtransitionit/gocore/errorx"
@@ -35,20 +36,25 @@ func NewStdLogger(config StdLoggerConfig) Logger {
 	}
 }
 
-// func NewStdLogger() Logger {
-// 	return &stdLogger{
-// 		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile),
-// 	}
-// }
+func pathFormatter(fullPath string) string {
+	parts := strings.Split(filepath.ToSlash(fullPath), "/")
+	if len(parts) <= 3 {
+		return fullPath
+	}
+	return strings.Join(parts[len(parts)-3:], "/")
+}
 
 // Info logs a simple info message
 func (l *stdLogger) Info(msg string) {
-	l.logger.Println("INFO:", msg)
+	// l.logger.Println("INFO:", msg)
+	l.logger.Output(2, "INFO: "+msg)
+
 }
 
 // Infof logs a formatted info message
 func (l *stdLogger) Infof(format string, v ...any) {
-	l.logger.Printf("INFO: "+format, v...)
+	// l.logger.Printf("INFO: "+format, v...)
+	l.logger.Output(2, "INFO: "+fmt.Sprintf(format, v...))
 }
 
 func (l *stdLogger) Infow(msg string, keysAndValues ...any) {
