@@ -6,11 +6,16 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/abtransitionit/gocore/list"
 	"github.com/abtransitionit/gocore/logx"
 )
 
-func (sortedPhases PhaseTiers) Filter(l logx.Logger, skipPhases []int) PhaseTiers {
+func (sortedPhases PhaseTiers) Filter(wkfl Workflow, l logx.Logger, skipPhases []int) PhaseTiers {
 	l.Info("Received phase IDs to skip: %v", skipPhases)
+	// Get Map:Key in a slice
+	var ListPhase = list.GetMapKeys(wkfl.Phases)
+	fmt.Println(ListPhase)
+	// return
 	return sortedPhases
 }
 
