@@ -34,6 +34,7 @@ type Phase struct {
 //   - primarily a map of Phases/tasks.
 //   - designed to be a Directed Acyclic Graph (DAG) of tasks.
 type Workflow struct {
+	Name   string
 	Phases map[string]Phase
 }
 
