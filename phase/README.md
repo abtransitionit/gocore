@@ -1,5 +1,25 @@
 # Intro
 
+
+```mermaid
+flowchart TD
+flowchart TD
+    A[Start: RunE function] --> B{dryRun?}
+    B -- Yes --> C[Call wkf.DryRun] --> Z[End]
+    B -- No --> E{force flag present?}
+    E -- No --> G[Show command help] --> Z
+    E -- Yes --> H{skipPhases is empty?}
+    H -- No --> J[Create context] --> K[Call wkf.Execute] --> L{Error?}
+    L -- Yes --> M[Log error] --> Z
+    L -- No --> Z
+    H -- Yes --> N{keepPhases not empty?}
+    N -- Yes --> O[Log restricted phases] --> Z
+    N -- No --> P[Create context] --> Q[Call wkf.Execute] --> R{Error?}
+    R -- Yes --> S[Log error] --> Z
+    R -- No --> Z
+
+```
+
 This package defines the following concepts
 - a **Task** is the conceptual idea of a single, atomic unit of work to be performed.
 - a **Phase** 
@@ -183,3 +203,111 @@ flowchart TD
     SP1 --> GR3["Go routine 3"]
 ```
 
+Got it 👍. To make this documentation **professional and production-grade**, we want:
+
+* Clear context (what/why, not just what to do).
+* Numbered steps with precise file references.
+* Consistent formatting and section hierarchy.
+* Explicit before/after code blocks.
+* Notes on required updates across the codebase.
+* Optional: test/verify section at the end.
+
+Here’s a polished version:
+
+---
+
+
+# Howto
+
+## Updating `PhaseFunc` Signature
+
+- This howto explains how to update the `PhaseFunc` type, to accept a new parameter in it signature (a `logx.Logger`). 
+
+- The same approach could be applies to other changes. 
+
+> **Note**: after this update, all existing phases must be updated to comply with the new signature.
+
+### Step 1: Update the type definition (`phase/type.go`)
+
+
+**Before:**
+
+```go
+type PhaseFunc func(ctx context.Context, cmd ...string) (string, error)
+```
+
+**After:**
+
+```go
+type PhaseFunc func(ctx context.Context, l logx.Logger, cmd ...string) (string, error)
+```
+
+### Step 2: Update the adapter (`phase/adaptater.go`)
+
+**Before:**
+
+```go
+func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, cmd ...string) syncx.Func {
+	return func() error {
+		_, err := fn(ctx, cmd...)
+		return err
+	}
+}
+```
+
+**After:**
+
+```go
+func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...string) syncx.Func {
+	return func() error {
+		_, err := fn(ctx, l, cmd...)
+		return err
+	}
+}
+```
+
+
+### Step 3: Update the execution function (`phase/run.go`)
+
+**Before:**
+
+
+```go
+task := adaptToSyncxFunc(phase.fn, ctx, []string{}...)
+```
+
+**After:**
+
+```go
+task := adaptToSyncxFunc(phase.fn, ctx, logx.GetLogger(), []string{}...)
+```
+
+---
+
+### Step 4: Update all phase implementations
+
+All phase functions must now accept a `logx.Logger` parameter.
+For example:
+
+**Before:**
+
+```go
+func MyPhase(ctx context.Context, cmd ...string) (string, error) {
+    // implementation
+}
+```
+
+**After:**
+
+```go
+func MyPhase(ctx context.Context, l logx.Logger, cmd ...string) (string, error) {
+    l.Info("Starting phase...")
+    // implementation
+}
+```
+
+
+### Step 4: Check
+at least:
+1. Run `go vet   ./...`
+1. Run `go test  ./...`
