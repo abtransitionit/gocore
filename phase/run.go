@@ -67,7 +67,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		concurrentTasks := make([]syncx.Func, 0, len(tier))
 		for _, phase := range tier {
 			// create the closure (needed by syncx) from the phase's function - pass the context
-			task := adaptToSyncxFunc(phase.fn, ctx, []string{}...)
+			task := adaptToSyncxFunc(phase.fn, ctx, logx.GetLogger(), []string{}...)
 
 			// Wrap the task to add logging for this specific phase.
 			wrappedTask := func(phaseName string) syncx.Func {

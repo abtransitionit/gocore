@@ -1,7 +1,11 @@
 // File in gocore/phase/type.go
 package phase
 
-import "context"
+import (
+	"context"
+
+	"github.com/abtransitionit/gocore/logx"
+)
 
 // Name: PhaseFunc
 //
@@ -9,7 +13,8 @@ import "context"
 //
 // Notes:
 // - The function is designed to accept a context and a variable number of string arguments
-type PhaseFunc func(ctx context.Context, cmd ...string) (string, error)
+// type PhaseFunc func(ctx context.Context, cmd ...string) (string, error)
+type PhaseFunc func(ctx context.Context, l logx.Logger, cmd ...string) (string, error)
 
 // Name: Phase
 //

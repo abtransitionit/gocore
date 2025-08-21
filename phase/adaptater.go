@@ -4,6 +4,7 @@ package phase
 import (
 	"context"
 
+	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/syncx"
 )
 
@@ -27,9 +28,9 @@ import (
 // Todo
 //   - pass logging to the closure that is an anonymous function.
 //   - make that function not an anonymous.
-func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, cmd ...string) syncx.Func {
+func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...string) syncx.Func {
 	return func() error {
-		_, err := fn(ctx, cmd...)
+		_, err := fn(ctx, l, cmd...)
 		return err
 	}
 }
