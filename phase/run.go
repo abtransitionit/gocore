@@ -51,28 +51,30 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	filteredTiers.Show(logger)
 	// w.ShowPhaseList(filteredTiers, logger)
 
-	logger.Info("--- Starting concurrent execution ---")
+	logger.Info("--- Starting execution: concurrent within tiers, sequential across tiers ---")
 
 	// loop over each tier
-	for tierID, tier := range filteredTiers {
+	for tierId, tier := range filteredTiers {
+		tierIdx := tierId + 1
+		NbPhase := len(tier)
 		// Before starting a new tier, check if the context has been canceled.
 		if ctx.Err() != nil {
 			logger.Info("Workflow canceled by user.")
 			return ctx.Err()
 		}
-
-		logger.Infof("Executing Tier %d with %d phases concurrently...", tierID+1, len(tier))
+		logger.Infof("👉 Executing Tier %d with %d phases concurrently...", tierIdx, NbPhase)
 
 		// Create a slice of functions (for each tier)
-		concurrentTasks := make([]syncx.Func, 0, len(tier))
-		for _, phase := range tier {
+		concurrentTasks := make([]syncx.Func, 0, NbPhase)
+		for phaseId, phase := range tier {
+			phaseIdx := phaseId + 1
 			// create the closure (needed by syncx) from the phase's function - pass the context
 			task := adaptToSyncxFunc(phase.fn, ctx, logx.GetLogger(), []string{}...)
 
 			// Wrap the task to add logging for this specific phase.
 			wrappedTask := func(phaseName string) syncx.Func {
 				return func() error {
-					logger.Infof("  -> Executing phase '%s'...", phaseName)
+					logger.Infof("  ➡️ Executing phase %d/%d of tier %d : '%s'...", phaseIdx, NbPhase, tierIdx, phaseName)
 					if err := task(); err != nil {
 						return err
 					}
@@ -99,13 +101,15 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 
 			// Log all collected errors and return the first one to stop the workflow.
 			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierID+1))
+			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierIdx))
 			for _, e := range errs {
 				sb.WriteString(fmt.Sprintf("\n- %v", e))
 			}
 			logger.ErrorWithNoStack(errs[0], "%s", sb.String())
 			return errs[0]
 		}
+		logger.Infof("✅ Tier %d: All %d phases completed successfully.", tierIdx, NbPhase)
+
 	}
 
 	logger.Info("Workflow execution finished.")

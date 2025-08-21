@@ -3,21 +3,19 @@
 
 ```mermaid
 flowchart TD
-flowchart TD
     A[Start: RunE function] --> B{dryRun?}
     B -- Yes --> C[Call wkf.DryRun] --> Z[End]
     B -- No --> E{force flag present?}
     E -- No --> G[Show command help] --> Z
     E -- Yes --> H{skipPhases is empty?}
     H -- No --> J[Create context] --> K[Call wkf.Execute] --> L{Error?}
-    L -- Yes --> M[Log error] --> Z
+    L -- Yes --> M[Log error with stack] --> Z
     L -- No --> Z
     H -- Yes --> N{keepPhases not empty?}
     N -- Yes --> O[Log restricted phases] --> Z
     N -- No --> P[Create context] --> Q[Call wkf.Execute] --> R{Error?}
-    R -- Yes --> S[Log error] --> Z
+    R -- Yes --> S[Log error with stack] --> Z
     R -- No --> Z
-
 ```
 
 This package defines the following concepts
