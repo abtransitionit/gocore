@@ -28,7 +28,16 @@ import (
 func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
 	logger.Info("Starting workflow planning (dry run)...")
 
-	// Logging the received IDs, as requested.
+	// check parameters: skipPhases  and retainPhases are mutually exclusive
+	if len(skipPhases) > 0 && len(retainPhases) > 0 {
+		return fmt.Errorf("invalid parameters: skipPhases and retainPhases cannot be set at the same time")
+	}
+
+	// display the wokflow (ie. the list of phases)
+	logger.Info("The worflow contains the following phases:")
+	w.Show(logger)
+
+	// Logging the received IDs (skippeds or retained)
 	logger.Infof("Received phase IDs to skip: %v", skipPhases)
 
 	// Get the sorted phases
@@ -44,6 +53,8 @@ func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []
 	}
 
 	// Show the filtered phases ordered by tier
+	logger.Info("The execution plan is:")
+
 	filteredTiers.Show(logger)
 
 	logger.Info("Workflow planning finished. No phases were executed.")
