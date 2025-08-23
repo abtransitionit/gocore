@@ -34,20 +34,30 @@ func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []
 	}
 
 	// display the wokflow (ie. the list of phases)
-	logger.Info("The worflow contains the following phases:")
+	logger.Info("The worflow phases are:")
 	w.Show(logger)
 
-	// Logging the received IDs (skippeds or retained)
-	logger.Infof("Received phase IDs to skip: %v", skipPhases)
+	// Log the received IDs to skipping or retaining if any
+	if len(skipPhases) > 0 {
+		logger.Infof("Received phase IDs to skip: %v", skipPhases)
+	} else if len(retainPhases) > 0 {
+		logger.Infof("Received phase IDs to retain: %v", retainPhases)
+	}
 
-	// Get the sorted phases
+	// Get the Tier (ie. topo dependency sorted phases)
 	sortedTiers, err := w.topologicalSort()
 	if err != nil {
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	// Get filtered phases
-	filteredTiers, err := w.filterSkipPhase(sortedTiers, skipPhases)
+	// // Get filtered phases
+	// filteredTiers, err := w.filterSkipPhase(sortedTiers, skipPhases)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to filter phases: %w", err)
+	// }
+
+	// get filtered phases
+	filteredTiers, err := w.filterPhase(sortedTiers, skipPhases, retainPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}
