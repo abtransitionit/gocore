@@ -1,0 +1,109 @@
+
+
+
+func (w *Workflow) filterSkipPhase(sortedPhases PhaseTiers, skipPhases []int) (PhaseTiers, error) {
+	l := logx.GetLogger()
+	l.Info(">>> Entering filterSkipPhase")
+
+	var skippedPhaseName []string // list of phases name to skip
+	var filteredPhases PhaseTiers // list of filtered phases
+
+	// manage parameters
+	if len(skipPhases) == 0 || len(w.Phases) == 0 {
+		return sortedPhases, nil
+	}
+	// log
+	l.Infof("Received phase IDs to skip: %v", skipPhases)
+
+	// Get Map:Key in a slice
+	var ListPhase = list.GetMapKeys(w.Phases)
+	l.Infof("List phase ordered: %v", ListPhase)
+
+	// create the list of phase name to skip
+	for _, phaseID := range skipPhases {
+		// check if the phase ID exist
+		if phaseID > len(ListPhase) {
+			l.Errorf("Phase ID %d does not exist in the workflow", phaseID)
+			os.Exit(1)
+		}
+
+		skippedPhaseName = append(skippedPhaseName, ListPhase[phaseID-1])
+	}
+	// log
+	l.Infof("List phase name to skip: %v", skippedPhaseName)
+
+	// Create a map from slice for efficient lookups.
+	skippedPhasesMapTemp := make(map[string]bool)
+	for _, name := range skippedPhaseName {
+		skippedPhasesMapTemp[name] = true
+	}
+
+	// create the filtered phases
+	for _, tier := range sortedPhases {
+		var newTier []Phase
+		for _, phase := range tier {
+			// Check if the phase is in the skipped map. If not, add it.
+			if !skippedPhasesMapTemp[phase.Name] {
+				newTier = append(newTier, phase)
+			}
+		}
+		// Only append the new tier if it's not empty.
+		if len(newTier) > 0 {
+			filteredPhases = append(filteredPhases, newTier)
+		}
+	}
+	// return
+	return filteredPhases, nil
+}
+
+
+
+func (w *Workflow) filterRetainPhase(sortedPhases PhaseTiers, retainPhases []int) (PhaseTiers, error) {
+	l := logx.GetLogger()
+	l.Info(">>> Entering filterRetainPhase")
+
+	var filteredPhases PhaseTiers // list of filtered phases
+
+	// if nothing to retain or no phases in workflow, return as-is
+	if len(retainPhases) == 0 || len(w.Phases) == 0 {
+		return sortedPhases, nil
+	}
+
+	l.Infof("Phase IDs to keep: %v", retainPhases)
+
+	// get list of phase names in order
+	ListPhase := list.GetMapKeys(w.Phases)
+	l.Infof("All phases ordered: %v", ListPhase)
+
+	// create list of phase names to retain
+	var retainedPhaseName []string
+	for _, phaseID := range retainPhases {
+		if phaseID > len(ListPhase) {
+			l.Errorf("Phase ID %d does not exist in the workflow", phaseID)
+			os.Exit(1)
+		}
+		retainedPhaseName = append(retainedPhaseName, ListPhase[phaseID-1])
+	}
+	l.Infof("Phases to keep by name: %v", retainedPhaseName)
+
+	// create a map for quick lookup
+	retainedPhasesMap := make(map[string]bool)
+	for _, name := range retainedPhaseName {
+		retainedPhasesMap[name] = true
+	}
+
+	// filter the sorted phases, keeping only the ones in the map
+	for _, tier := range sortedPhases {
+		var newTier []Phase
+		for _, phase := range tier {
+			if retainedPhasesMap[phase.Name] {
+				newTier = append(newTier, phase)
+			}
+		}
+		if len(newTier) > 0 {
+			filteredPhases = append(filteredPhases, newTier)
+		}
+	}
+
+	return filteredPhases, nil
+}

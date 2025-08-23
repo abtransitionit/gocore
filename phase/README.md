@@ -359,3 +359,28 @@ The emiter define a value
 // inside ShowWorkflow: retrieve the var
 execID, ok := ctx.Value(ctxdef.ExecutionIDKey).(string)
 ```
+
+# Filtering phases in a workflow
+
+This `whatis` pinpoint the way of filtering phases of a workflow
+
+1. There is 2 modes
+   * `skipPhases`
+   * `retainPhases`
+
+2. Build map for fast lookup
+
+   * Skip mode → map contains phases to skip.
+   * Retain mode → map contains phases to keep.
+
+3. Build filtered list
+
+   * Iterate each tier in `sortedPhases`.
+   * Keep phases according to the mode:
+
+     * Skip mode: keep if **not in skip map**.
+     * Retain mode: keep if **in retain map**.
+   * Append non-empty tiers to `filteredPhases`.
+
+
+4. Return filtered phases
