@@ -24,9 +24,9 @@ import (
 // Notes:
 //   - This does not re-run the topological sort.
 
-func (w *Workflow) filterPhase(sortedPhases PhaseTiers, skipPhases []int, retainPhases []int) (PhaseTiers, error) {
-	l := logx.GetLogger()
-	l.Info(">>> Entering filterPhase")
+func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skipPhases []int, retainPhases []int) (PhaseTiers, error) {
+	// l := logx.GetLogger()
+	logger.Info(">>> Entering filterPhase")
 
 	// Parameter checks
 	if len(skipPhases) > 0 && len(retainPhases) > 0 {
@@ -39,34 +39,34 @@ func (w *Workflow) filterPhase(sortedPhases PhaseTiers, skipPhases []int, retain
 
 	// Get ordered phase names
 	ListPhase := list.GetMapKeys(w.Phases)
-	l.Infof("All phases ordered: %v", ListPhase)
+	logger.Infof("All phases ordered: %v", ListPhase)
 
 	var filterPhaseName []string
 	mode := "skip"
 
 	if len(skipPhases) > 0 {
-		l.Infof("Phase IDs to skip: %v", skipPhases)
+		logger.Infof("Phase(s) to skip by id: %v", skipPhases)
 		filterPhaseName = make([]string, len(skipPhases))
 		for i, id := range skipPhases {
 			if id > len(ListPhase) {
-				l.Errorf("Phase ID %d does not exist in the workflow", id)
+				logger.Errorf("Phase ID %d does not exist in the workflow", id)
 				os.Exit(1)
 			}
 			filterPhaseName[i] = ListPhase[id-1]
 		}
-		l.Infof("Phases to skip by name: %v", filterPhaseName)
+		logger.Infof("Phase(s) to skip by id %v", filterPhaseName)
 	} else {
 		mode = "retain"
-		l.Infof("Phase IDs to retain: %v", retainPhases)
+		logger.Infof("Phase(s) to retain by id: %v", retainPhases)
 		filterPhaseName = make([]string, len(retainPhases))
 		for i, id := range retainPhases {
 			if id > len(ListPhase) {
-				l.Errorf("Phase ID %d does not exist in the workflow", id)
+				logger.Errorf("Phase(s) ID %d does not exist in the workflow", id)
 				os.Exit(1)
 			}
 			filterPhaseName[i] = ListPhase[id-1]
 		}
-		l.Infof("Phases to retain by name: %v", filterPhaseName)
+		logger.Infof("Phases to skip/retain by name: %v", filterPhaseName)
 	}
 
 	// Build lookup map

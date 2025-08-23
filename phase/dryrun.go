@@ -57,7 +57,7 @@ func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []
 	// }
 
 	// get filtered phases
-	filteredTiers, err := w.filterPhase(sortedTiers, skipPhases, retainPhases)
+	filteredTiers, err := w.filterPhase(logger, sortedTiers, skipPhases, retainPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}

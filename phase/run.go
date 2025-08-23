@@ -32,8 +32,8 @@ import (
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
 	logger.Info("Starting workflow execution...")
 
-	// Logging the received IDs, as requested.
-	logger.Infof("Received phase IDs to skip: %v", skipPhases)
+	// // Logging the received IDs, as requested.
+	// logger.Infof("Received phase IDs to skip/retained: %v", skipPhases)
 
 	// Get the sorted phases
 	sortedTiers, err := w.topologicalSort()
@@ -42,7 +42,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	}
 
 	// Get filtered phases
-	filteredTiers, err := w.filterPhase(sortedTiers, skipPhases, retainPhases)
+	filteredTiers, err := w.filterPhase(logger, sortedTiers, skipPhases, retainPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}
