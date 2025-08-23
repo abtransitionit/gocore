@@ -11,7 +11,7 @@ flowchart TD
     H -- No --> J[Create context] --> K[Call wkf.Execute] --> L{Error?}
     L -- Yes --> M[Log error with stack] --> Z
     L -- No --> Z
-    H -- Yes --> N{keepPhases not empty?}
+    H -- Yes --> N{retainPhases not empty?}
     N -- Yes --> O[Log restricted phases] --> Z
     N -- No --> P[Create context] --> Q[Call wkf.Execute] --> R{Error?}
     R -- Yes --> S[Log error with stack] --> Z
@@ -309,3 +309,53 @@ func MyPhase(ctx context.Context, l logx.Logger, cmd ...string) (string, error) 
 at least:
 1. Run `go vet   ./...`
 1. Run `go test  ./...`
+
+## Limitation of `PhaseFunc`
+This howto explains how to go beyond the limitaion of type of var pass to `PhaseFunc` by using `context`. the idea is to
+- create a context
+- pass the var to the context
+- use that context in a function (in a library) call done by an **emitter**
+- when the function that was called (the **receiver**) will execute, it will retrieve that var from the context and use it
+
+### Step 1: define a type
+in a package accessible to the emitter and receiver
+```go
+package ctx
+
+// here: an equivalent to a string
+type contextKey string
+```
+
+### Step 2: define a key
+That will be used both by **emitter** and **receiver** to identify the var
+```go
+// the key is shared by both and say: the value is of that type (contextkey)
+const ExecutionIDKey contextKey = "executionID"
+```
+
+### Step 3: define the value
+The emiter define a value
+```go
+// the type of the value is the same of the type above
+mxExecutionId := "max-123-xyz"
+```
+
+### Step 4: pas value to the ctx
+The emiter define a value
+```go
+// the type of the value is the same of the type above
+ctx = context.WithValue(ctx, ctxdef.ExecutionIDKey, mxExecutionId)
+```
+
+### Step 5: call the PhaseFunc function
+The emiter define a value
+```go
+// call the function that have the signature of PhaseFunc
+workflow.ShowWorkflow(ctx, logger)
+```
+### Step 5: retriev the var from the context
+The emiter define a value
+```go
+// inside ShowWorkflow: retrieve the var
+execID, ok := ctx.Value(ctxdef.ExecutionIDKey).(string)
+```

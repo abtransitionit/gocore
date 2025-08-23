@@ -25,7 +25,7 @@ import (
 // TODO: Extend this method to include a more realistic dry run by executing
 //
 //	mock phases that log their execution without performing any real work.
-func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []int) error {
+func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
 	logger.Info("Starting workflow planning (dry run)...")
 
 	// Logging the received IDs, as requested.

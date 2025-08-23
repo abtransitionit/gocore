@@ -29,7 +29,7 @@ import (
 //   - executes all phases in a tier concurrently.
 //   - executes each tier sequentially.
 //   - the order of the tier and their phases is determined by the topological function
-func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int) error {
+func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
 	logger.Info("Starting workflow execution...")
 
 	// Logging the received IDs, as requested.
