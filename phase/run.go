@@ -42,7 +42,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	}
 
 	// Get filtered phases
-	filteredTiers, err := w.filterSkipPhase(sortedTiers, skipPhases)
+	filteredTiers, err := w.filterPhase(sortedTiers, skipPhases, retainPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}
