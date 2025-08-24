@@ -21,7 +21,7 @@ type zapLogger struct {
 
 // NewZapLogger creates a new zapLogger instance for any environment (prod/dev)
 func NewZapLogger(config zap.Config) Logger {
-	l, err := config.Build(zap.AddCallerSkip(2)) // skip frames for wrappers
+	l, err := config.Build(zap.AddCallerSkip(1)) // skip 1 wrapper frame
 	if err != nil {
 		panic("failed to build zap logger: " + err.Error())
 	}

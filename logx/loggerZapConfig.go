@@ -8,6 +8,7 @@ defines the different config concerning the Zap logging driver for the different
 package logx
 
 import (
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -22,7 +23,8 @@ import (
 func NewDevConfig() zap.Config {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	// cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	cfg.EncoderConfig.EncodeCaller = shortCallerWithLineEncoder
 	cfg.EncoderConfig.EncodeTime = func(time.Time, zapcore.PrimitiveArrayEncoder) {
 		// This empty function will skip timestamp encoding
 	}
@@ -45,6 +47,12 @@ func NewProdConfig() zap.Config {
 	// cfg.Sampling = &zap.SamplingConfig{Initial: 100, Thereafter: 100} // Optional, avoids log spam
 	// return cfg
 	return zap.NewProductionConfig()
+}
+
+// Custom caller encoder to show file:line only (similar to Std logger)
+func shortCallerWithLineEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	// enc.AppendString(fmt.Sprintf("%s:%d", caller.TrimmedPath(), caller.Line))
+	enc.AppendString(fmt.Sprintf("%s ", caller.TrimmedPath()))
 }
 
 // func fixedWidthCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
