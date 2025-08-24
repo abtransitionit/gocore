@@ -32,8 +32,17 @@ import (
 func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
 	logger.Info("Starting workflow execution...")
 
-	// // Logging the received IDs, as requested.
-	// logger.Infof("Received phase IDs to skip/retained: %v", skipPhases)
+	// check paramaters. Deletgate check of other parameters to the filterPhase function
+	if len(w.Phases) == 0 {
+		return fmt.Errorf("workflow is empty: no phases defined")
+		// logger.ErrorWithNoStack(err, "cannot execute empty workflow")
+		// return err
+	}
+
+	// if len(w.Phases) == 0 {
+	// 	logger.Info("the workflow cannot be emty, please add phases to the workflow")
+	// 	return fmt.Errorf("failed to sort phases: %w")
+	// }
 
 	// Get the sorted phases
 	sortedTiers, err := w.topologicalSort()
@@ -68,28 +77,25 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		concurrentTasks := make([]syncx.Func, 0, NbPhase)
 		for phaseId, phase := range tier {
 			phaseIdx := phaseId + 1
-			// create the closure (needed by syncx) from the phase's function - pass the context
+			phaseName := phase.Name // <- capture the variable here
 			task := adaptToSyncxFunc(phase.fn, ctx, logx.GetLogger(), []string{}...)
 
-			// Wrap the task to add logging for this specific phase.
-			wrappedTask := func(phaseName string) syncx.Func {
-				return func() error {
-					logger.Infof("  ➡️ Executing phase %d/%d of tier %d : '%s'...", phaseIdx, NbPhase, tierIdx, phaseName)
-					if err := task(); err != nil {
-						return err
-					}
-					logger.Infof("  -> Phase '%s' finished.", phaseName)
-					return nil
+			// convert Phases that al have a PhaseFunc sigature to a syncx.Func signature
+			wrappedTask := func() error {
+				logger.Infof("➡️ Executing phase %d/%d of tier %d : '%s'...", phaseIdx, NbPhase, tierIdx, phaseName)
+				if err := task(); err != nil {
+					return err
 				}
-			}(phase.Name)
+				logger.Infof("➡️🔹 Terminated phase %d/%d of tier %d : '%s'.", phaseIdx, NbPhase, tierIdx, phaseName)
+				return nil
+			}
 
 			concurrentTasks = append(concurrentTasks, wrappedTask)
 		}
 
-		// run all phases in the tier concurently - with all the same ctx.
+		// run all functions in the tier concurently - with all the same ctx.
 		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
-			// Check the first error to determine the reason for cancellation.
-			// This is the correct place to log the cancellation event.
+			// TODO: CHATGPT: COMMENT:Check the first error to determine the reason for cancellation. This is the correct place to log the cancellation event.
 			switch errs[0] {
 			case context.Canceled:
 				logger.Info("Context activation: canceled by user (e.g., via Ctrl+C).")
@@ -101,11 +107,11 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 
 			// Log all collected errors and return the first one to stop the workflow.
 			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf("tier %d failed with the following errors:", tierIdx))
+			sb.WriteString(fmt.Sprintf("tier %d / Phase %d (TODO:phase name) failed with the following errors:", tierIdx, NbPhase))
 			for _, e := range errs {
 				sb.WriteString(fmt.Sprintf("\n- %v", e))
 			}
-			logger.ErrorWithNoStack(errs[0], "%s", sb.String())
+			logger.ErrorWithNoStack(errs[0], "❌ %s", sb.String())
 			return errs[0]
 		}
 		logger.Infof("✅ Tier %d: All %d phases completed successfully.", tierIdx, NbPhase)

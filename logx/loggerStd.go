@@ -69,17 +69,22 @@ func (l *stdLogger) Infow(msg string, keysAndValues ...any) {
 			msg += fmt.Sprintf("%v=%v ", k, v)
 		}
 	}
-	l.logger.Println("INFO:", msg)
+	// l.logger.Println("INFO:", msg)
+	l.logger.Output(2, "INFO: "+msg)
 }
 
 // Error logs a simple error message
 func (l *stdLogger) Error(msg string) {
-	l.logger.Println("ERROR:", msg)
+	// l.logger.Println("ERROR:", msg)
+	l.logger.Output(2, "ERROR: "+msg)
+
 }
 
 // Errorf logs a formatted error message
 func (l *stdLogger) Errorf(format string, v ...any) {
-	l.logger.Printf("ERROR: "+format, v...)
+	// l.logger.Printf("ERROR: "+format, v...)
+	l.logger.Output(2, "ERROR: "+fmt.Sprintf(format, v...))
+
 }
 
 func (l *stdLogger) Errorw(msg string, keysAndValues ...any) {
@@ -94,7 +99,8 @@ func (l *stdLogger) Errorw(msg string, keysAndValues ...any) {
 			msg += fmt.Sprintf("%v=%v ", k, v)
 		}
 	}
-	l.logger.Println("ERROR:", msg)
+	// l.logger.Println("ERROR:", msg)
+	l.logger.Output(2, "ERROR: "+msg)
 }
 
 // ErrorWithStack logs an error with a stack trace if available
@@ -110,11 +116,15 @@ func (l *stdLogger) ErrorWithStack(err error, format string, v ...any) {
 		sb.WriteString(errorx.FormatStack(stack))
 	}
 
-	l.logger.Println(sb.String())
+	// l.logger.Println(sb.String())
+	l.logger.Output(2, "ERROR: "+sb.String())
 }
 
 // ErrorWithNoStack logs an error without the stack trace
 func (l *stdLogger) ErrorWithNoStack(err error, format string, v ...any) {
-	l.logger.Printf("ERROR: "+format, v...)
-	l.logger.Println("Original Error:", err.Error())
+	msg := fmt.Sprintf(format, v...) + ": " + err.Error()
+	l.logger.Output(2, "ERROR: "+msg)
+	// l.logger.Printf("ERROR: "+format, v...)
+	// l.logger.Println("Original Error:", err.Error())
+
 }

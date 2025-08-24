@@ -26,7 +26,7 @@ import (
 //
 //	mock phases that log their execution without performing any real work.
 func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
-	logger.Info("Starting workflow planning (dry run)...")
+	logger.Info("Dry Running workflow...")
 
 	// check parameters: skipPhases  and retainPhases are mutually exclusive
 	if len(skipPhases) > 0 && len(retainPhases) > 0 {
@@ -67,6 +67,6 @@ func (w *Workflow) DryRun(ctx context.Context, logger logx.Logger, skipPhases []
 
 	filteredTiers.Show(logger)
 
-	logger.Info("Workflow planning finished. No phases were executed.")
+	logger.Info("Dry runned the worflow.")
 	return nil
 }

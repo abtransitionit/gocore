@@ -25,8 +25,12 @@ import (
 //   - This does not re-run the topological sort.
 
 func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skipPhases []int, retainPhases []int) (PhaseTiers, error) {
-	// l := logx.GetLogger()
-	logger.Info(">>> Entering filterPhase")
+	logger.Info("filtering phases")
+
+	if len(skipPhases) == 0 && len(retainPhases) == 0 {
+		logger.Info("nothing to filter: returning all phases unchanged")
+		return sortedPhases, nil
+	}
 
 	// Parameter checks
 	if len(skipPhases) > 0 && len(retainPhases) > 0 {
@@ -34,6 +38,7 @@ func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skip
 	}
 
 	if (len(skipPhases) == 0 && len(retainPhases) == 0) || len(w.Phases) == 0 {
+		logger.Info("nothing to filter")
 		return sortedPhases, nil
 	}
 
@@ -89,5 +94,6 @@ func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skip
 		}
 	}
 
+	logger.Info("filtered phases")
 	return filteredPhases, nil
 }
