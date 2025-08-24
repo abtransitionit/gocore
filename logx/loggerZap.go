@@ -73,3 +73,33 @@ func (l *zapLogger) ErrorWithStack(err error, format string, v ...any) {
 func (l *zapLogger) ErrorWithNoStack(err error, format string, v ...any) {
 	l.logger.Errorw(fmt.Sprintf(format, v...), "error", err)
 }
+
+// File gocore/logx/loggerZap.go
+
+// Warn logs a simple warning message
+func (l *zapLogger) Warn(msg string) {
+	l.logger.Warn(msg)
+}
+
+// Warnf logs a formatted warning message
+func (l *zapLogger) Warnf(format string, v ...any) {
+	l.logger.Warnf(format, v...)
+}
+
+func (l *zapLogger) Warnw(msg string, keysAndValues ...any) {
+	l.logger.Warnw(msg, keysAndValues...)
+}
+
+// Debug logs a simple debug message
+func (l *zapLogger) Debug(msg string) {
+	l.logger.Debug(msg)
+}
+
+// Debugf logs a formatted debug message
+func (l *zapLogger) Debugf(format string, v ...any) {
+	l.logger.Debugf(format, v...)
+}
+
+func (l *zapLogger) Debugw(msg string, keysAndValues ...any) {
+	l.logger.Debugw(msg, keysAndValues...)
+}

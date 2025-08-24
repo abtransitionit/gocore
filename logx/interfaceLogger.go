@@ -37,4 +37,22 @@ type Logger interface {
 
 	// ErrorWithNoStack logs an error without the stack trace
 	ErrorWithNoStack(err error, format string, v ...any)
+
+	// Warn logs a plain warning message
+	Warn(msg string)
+
+	// Warnf logs a formatted warning message
+	Warnf(format string, v ...any)
+
+	// Warnw logs a structured warning message
+	Warnw(msg string, keysAndValues ...any)
+
+	// Debug logs a plain debug message
+	Debug(msg string)
+
+	// Debugf logs a formatted debug message
+	Debugf(format string, v ...any)
+
+	// Debugw logs a structured debug message
+	Debugw(msg string, keysAndValues ...any)
 }

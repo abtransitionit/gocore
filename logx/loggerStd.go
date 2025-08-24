@@ -128,3 +128,55 @@ func (l *stdLogger) ErrorWithNoStack(err error, format string, v ...any) {
 	// l.logger.Println("Original Error:", err.Error())
 
 }
+
+// File gocore/logx/loggerStd.go
+
+// Warn logs a simple warning message
+func (l *stdLogger) Warn(msg string) {
+	l.logger.Output(2, "WARN: "+msg)
+}
+
+// Warnf logs a formatted warning message
+func (l *stdLogger) Warnf(format string, v ...any) {
+	l.logger.Output(2, "WARN: "+fmt.Sprintf(format, v...))
+}
+
+func (l *stdLogger) Warnw(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		msg += " | "
+		for i := 0; i < len(keysAndValues); i += 2 {
+			k := keysAndValues[i]
+			v := "<nil>"
+			if i+1 < len(keysAndValues) {
+				v = fmt.Sprint(keysAndValues[i+1])
+			}
+			msg += fmt.Sprintf("%v=%v ", k, v)
+		}
+	}
+	l.logger.Output(2, "WARN: "+msg)
+}
+
+// Debug logs a simple debug message
+func (l *stdLogger) Debug(msg string) {
+	l.logger.Output(2, "DEBUG: "+msg)
+}
+
+// Debugf logs a formatted debug message
+func (l *stdLogger) Debugf(format string, v ...any) {
+	l.logger.Output(2, "DEBUG: "+fmt.Sprintf(format, v...))
+}
+
+func (l *stdLogger) Debugw(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		msg += " | "
+		for i := 0; i < len(keysAndValues); i += 2 {
+			k := keysAndValues[i]
+			v := "<nil>"
+			if i+1 < len(keysAndValues) {
+				v = fmt.Sprint(keysAndValues[i+1])
+			}
+			msg += fmt.Sprintf("%v=%v ", k, v)
+		}
+	}
+	l.logger.Output(2, "DEBUG: "+msg)
+}
