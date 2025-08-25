@@ -58,9 +58,21 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	logger.Debug("Execution plan after filtering:")
 	filteredTiers.Show(logger)
 
-	logger.Info("📌 Starting execution strategy: concurrent within tiers, sequential across tiers")
+	// Create as many slice as tiers
+	allTierTasks := make([][]syncx.Func, len(filteredTiers))
+	// loop over each tier
+	for tierId, tier := range filteredTiers {
+		// Create a slice of functions
+		tasks, err := w.createSliceFunc(ctx, logger, tierId, tier)
+		if err != nil {
+			return err
+		}
+		// add the slice to allTierTasks
+		allTierTasks[tierId] = tasks
+	}
 
-	// loop over each tier - run tiers sequentially
+	logger.Info("📌 Starting execution strategy: concurrent within tiers, sequential across tiers")
+	// loop over each tier
 	for tierId, tier := range filteredTiers {
 		tierIdx := tierId + 1
 		nbPhase := len(tier)
@@ -69,17 +81,10 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			logger.Warnf("Workflow canceled (by user) before starting Tier %d", tierIdx)
 			return ctx.Err()
 		}
-
 		logger.Infof("👉 Executing Tier %d with %d phase(s) concurrently...", tierIdx, nbPhase)
+		tasks := allTierTasks[tierId]
 
-		// Create a slice of functions (for each tier)
-		concurrentTasks, err := w.createSliceFunc(ctx, logger, tierId, tier)
-		if err != nil {
-			return err
-		}
-
-		// Run all phases in this tier concurrently using syncx with the same context
-		if errs := syncx.RunConcurrently(ctx, concurrentTasks); errs != nil {
+		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
 			switch errs[0] {
 			case context.Canceled:
 				logger.Warn("Context activation: user canceled workflow execution using ctrl-c")
