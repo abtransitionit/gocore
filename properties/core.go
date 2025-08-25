@@ -1,3 +1,4 @@
+// file: gocore/properties/core.go
 package properties
 
 import (
