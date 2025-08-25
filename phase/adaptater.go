@@ -3,6 +3,7 @@ package phase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/syncx"
@@ -33,4 +34,70 @@ func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...s
 		_, err := fn(ctx, l, cmd...)
 		return err
 	}
+}
+
+// Name: createSliceFunc
+//
+// Description:
+//
+//	Builds a slice of wrapped syncx.Func tasks for all phases in a given tier.
+//	Each phase is adapted, wrapped with logging (before/after execution), and added
+//	to the slice. The resulting slice can then be executed concurrently.
+//
+// Parameters:
+//   - ctx:    The context used to control cancellation and timeouts.
+//   - logger: Logger instance used for structured logging.
+//   - tierId: The index of the current tier (0-based).
+//   - tier:   The list of phases belonging to this tier.
+//
+// Returns:
+//   - []syncx.Func: A slice of wrapped functions ready to be executed concurrently.
+//   - error:        An error if building the slice fails.
+//
+// Notes:
+//   - Each wrapped task logs the start and end of its execution.
+//   - If a task fails, it logs the error and returns it.
+//   - Nothing is executed at this stage — the slice only prepares tasks for later execution.
+//
+// Todo:
+//   - Externalize the wrapping logic into a named function instead of using an inline closure.
+//   - Allow custom log message formatting for phases (e.g., configurable success/failure symbols).
+func (w *Workflow) createSliceFunc(
+	ctx context.Context,
+	logger logx.Logger,
+	tierId int,
+	tier []Phase,
+) ([]syncx.Func, error) {
+
+	nbPhase := len(tier)
+	concurrentTasks := make([]syncx.Func, 0, nbPhase)
+
+	for phaseId, phase := range tier {
+		phaseIdx := phaseId + 1
+		phaseName := phase.Name
+
+		// Adapt PhaseFunc -> syncx.Func
+		task := adaptToSyncxFunc(phase.fn, ctx, logger, []string{}...)
+
+		// Wrap task with logging
+		wrappedTask := func() error {
+			logger.Debugf("➡️ running phase %d/%d of tier %d: %s",
+				phaseIdx, nbPhase, tierId+1, phaseName)
+
+			if err := task(); err != nil {
+				return fmt.Errorf(
+					"➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w",
+					phaseIdx, nbPhase, tierId+1, phaseName, err)
+			}
+
+			logger.Debugf("➡️ 🟢 phase %d/%d of tier %d: %s completed successfully",
+				phaseIdx, nbPhase, tierId+1, phaseName)
+
+			return nil
+		}
+
+		concurrentTasks = append(concurrentTasks, wrappedTask)
+	}
+
+	return concurrentTasks, nil
 }

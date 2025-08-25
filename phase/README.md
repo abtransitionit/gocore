@@ -132,8 +132,9 @@ This is the cornerstone of the process that execute all phases of a worflow:
 | 4    | rc        | Add a line to non-root user RC file.                               | [dapack1]    |
 | 4    | service   | configure OS services on Kind VMs.                                 | [dapack1]    |
 
-- some phases of the worflow can be skipped thus building a **filtered** set of tiers.
-- suppose we want to **skip the phases**: `cpluc` and `linger`. the **filtered** set of tiers would be:
+- some phases of the worflow can be skipped/retained
+- It generates a **filtered** set of tiers that defined an **execution plan**.
+- suppose we **skip the phases**: `cpluc` and `linger`. the **execution plan** will be:
 
 
 | Tier | PHASE     | DESCRIPTION                                                        | DEPENDENCIES |
@@ -148,12 +149,21 @@ This is the cornerstone of the process that execute all phases of a worflow:
 | 4    | rc        | Add a line to non-root user RC file.                               | [dapack1]    |
 | 4    | service   | configure OS services on Kind VMs.                                 | [dapack1]    |
 
-- There is a potential pbs with **upgrade** that originally depend on **cpluc**
-- Now each tier is executed sequentially. this mean:
+- suppose we **retain the phases**: `show`, the **execution plan** will be:
+
+
+| Tier | PHASE     | DESCRIPTION                                                        | DEPENDENCIES |
+|------|-----------|--------------------------------------------------------------------|--------------|
+| 1    | show      | display the desired KIND Cluster's configuration                   | none         |
+
+- after the execution plan is defined
+- each tier is executed sequentially. this mean:
   - in a tier, all phases run **concurently**
   - For a **next** tier to start, all the phases of the **previous** tier must have finished running.
-	- a phase is bind to a GO function that is wrapped into a `func() error` 
-	- this func() is executed 
+
+
+- a phase is bind to a GO function that is wrapped into a `func() error` 
+- this func() is executed 
 
 
 # How context is pass from cobra cli to goroutines
@@ -384,3 +394,116 @@ This `whatis` pinpoint the way of filtering phases of a workflow
 
 
 4. Return filtered phases
+
+# The `Execute()` method
+
+
+## Preparation
+
+* Sort phases in dependency order (`w.topologicalSort()`).
+* Filter phases (skip/retain) (`w.filterPhase`).
+* Show the filtered execution plan.
+
+
+
+## Execution Strategy
+
+* Strategy is **sequential across tiers, concurrent within a tier**.
+* Loop over each tier **in order**:
+
+  * **Before starting a tier** → check if the context is canceled (`ctx.Err()`):
+
+    * **If yes** →
+
+      * Log a warning that the workflow was canceled before starting the tier.
+      * Stop execution and return the context error.
+    * **If no** →
+
+      * Log that the tier is starting, with the number of phases it contains.
+      * Proceed to build and run the phases of the tier concurrently.
+
+
+---
+
+Got it 👍 — you’re right, the way it’s written makes it sound like there’s execution happening **already in the “task building” step**, but in reality that step is just *preparing functions* (not running them). The **actual execution** only happens in the next step.
+
+Here’s the corrected version that reflects the real sequence:
+
+---
+
+## Concurrent Task Building
+
+* For each phase in a tier:
+
+  * Adapt the phase function (`phase.fn`) into a `syncx.Func` → so it can be run concurrently.
+  * Wrap that function with extra logging logic:
+
+    * When executed later, it will log **before** the phase starts.
+    * When executed later, it will log **after** the phase finishes (success or failure).
+  * Collect all these wrapped functions into a slice (`concurrentTasks`).
+  * ⚠️ **Note**: at this stage, nothing runs yet — we’re just *preparing functions*.
+
+---
+
+## Concurrent Execution
+
+* Take the prepared slice of functions (`concurrentTasks`).
+* Run all of them concurrently using `syncx.RunConcurrently`.
+* Handle errors:
+
+  * `context.Canceled` → user aborted.
+  * `context.DeadlineExceeded` → timeout.
+  * Otherwise → log and return first error.
+
+---
+
+👉 This way it’s clear:
+- Step 1 = build a list of wrapped tasks.**
+- Step 2 = actually execute them concurrently.**
+
+---
+
+## Concurrent Task Building
+
+* For each phase in a tier:
+
+  * Adapt the phase function (`phase.fn`) into a `syncx.Func` → so it can be run concurrently.
+  * **Wrap the execution of that phase** with logging:
+
+    * **Before** running → log *“starting phase X/Y of tier N: NAME”*.
+    * **After** running → log either:
+
+      * Success (*“phase completed successfully”*)
+      * Or failure (*“phase failed: error …”*).
+  * Collect all these wrapped functions into a slice (`concurrentTasks`).
+
+
+## Concurrent Execution
+
+* Run all tasks in the tier concurrently (`syncx.RunConcurrently`).
+* Handle errors:
+
+  * `context.Canceled` → user aborted.
+  * `context.DeadlineExceeded` → timeout.
+  * Otherwise → log and return first error.
+
+---
+
+
+
+### 6. **Completion**
+
+* If all tiers succeed → log success of each tier.
+* At the end → log overall workflow success.
+
+---
+
+👉 So you can think of it as **6 main topics**:
+
+1. Initialization & checks
+2. Preparation
+3. Execution strategy
+4. Concurrent task building
+5. Concurrent execution & error handling
+6. Completion
+

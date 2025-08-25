@@ -4,7 +4,6 @@ package phase
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/syncx"
@@ -38,6 +37,10 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		logger.ErrorWithNoStack(err, "Cannot execute workflow")
 		return err
 	}
+
+	// display the wokflow (ie. the list of phases)
+	logger.Info("The worflow phases are:")
+	w.Show(logger)
 
 	// sort workflow's phases
 	sortedTiers, err := w.topologicalSort()
@@ -82,7 +85,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			wrappedTask := func() error {
 				logger.Debugf("➡️ running phase %d/%d of tier %d: %s", phaseIdx, nbPhase, tierIdx, phaseName)
 				if err := task(); err != nil {
-					return fmt.Errorf("➡️ 🔴 phase %d/%d of tier %d: %s  failed: %w", phaseIdx, nbPhase, tierIdx, phaseName, err)
+					return fmt.Errorf("➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w", phaseIdx, nbPhase, tierIdx, phaseName, err)
 				}
 				logger.Debugf("➡️ 🟢 phase %d/%d of tier %d: %s completed successfully", phaseIdx, nbPhase, tierIdx, phaseName)
 				return nil
@@ -99,23 +102,23 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			case context.DeadlineExceeded:
 				logger.Warn("Context activation: deadline exceeded defined timeout")
 				return errs[0]
-				// default:
-				// 	logger.ErrorWithNoStack(errs[0], "❌ Errors occurred in Tier %d", tierIdx+1)
-				// 	for _, e := range errs {
-				// 		logger.ErrorWithNoStack(e, "Tier %d error", tierIdx+1)
-				// 	}
-				// 	return errs[0]
+			default:
+				logger.ErrorWithNoStack(errs[0], "👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase)
+				// for _, e := range errs {
+				// 	logger.ErrorWithNoStack(e, "👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase)
+				// }
+				return errs[0]
 			}
-			// Log all collected errors and return the first one to stop the workflow.
-			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf("👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase))
-			for _, e := range errs {
-				sb.WriteString(fmt.Sprintf("\n- %v", e))
-			}
-			logger.ErrorWithNoStack(errs[0], "%s", sb.String())
-			return errs[0]
+			// // Log all collected errors and return the first one to stop the workflow.
+			// var sb strings.Builder
+			// sb.WriteString(fmt.Sprintf("👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase))
+			// for _, e := range errs {
+			// 	sb.WriteString(fmt.Sprintf("\n- %v", e))
+			// }
+			// // logger.ErrorWithNoStack(errs[0], "%s", sb.String())
+			// return errs[0]
 		}
-		logger.Infof("👉 🟢 Tier %d/%d : All %phases completed successfully", tierIdx, nbPhase)
+		logger.Infof("👉 🟢 Tier %d : All %phases completed successfully", tierIdx)
 	}
 
 	logger.Info("🎉 Workflow execution finished successfully")
