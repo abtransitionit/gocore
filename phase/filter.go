@@ -44,13 +44,13 @@ func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skip
 
 	// Get ordered phase names
 	ListPhase := list.GetMapKeys(w.Phases)
-	logger.Infof("All phases ordered: %v", ListPhase)
+	logger.Debugf("All phases ordered: %v", ListPhase)
 
 	var filterPhaseName []string
 	mode := "skip"
 
 	if len(skipPhases) > 0 {
-		logger.Infof("Phase(s) to skip by id: %v", skipPhases)
+		logger.Debugf("Phase(s) to skip by id: %v", skipPhases)
 		filterPhaseName = make([]string, len(skipPhases))
 		for i, id := range skipPhases {
 			if id > len(ListPhase) {
@@ -62,7 +62,7 @@ func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skip
 		logger.Infof("Phase(s) to skip by id %v", filterPhaseName)
 	} else {
 		mode = "retain"
-		logger.Infof("Phase(s) to retain by id: %v", retainPhases)
+		logger.Debugf("Phase(s) to retain by id: %v", retainPhases)
 		filterPhaseName = make([]string, len(retainPhases))
 		for i, id := range retainPhases {
 			if id > len(ListPhase) {
@@ -71,7 +71,7 @@ func (w *Workflow) filterPhase(logger logx.Logger, sortedPhases PhaseTiers, skip
 			}
 			filterPhaseName[i] = ListPhase[id-1]
 		}
-		logger.Infof("Phases to skip/retain by name: %v", filterPhaseName)
+		logger.Debugf("Phases to skip/retain by name: %v", filterPhaseName)
 	}
 
 	// Build lookup map

@@ -11,16 +11,39 @@ import (
 
 // Name: adaptToSyncxFunc
 //
+// Description: adapts a PhaseFunc to a syncx.Func, passing the list of targets.
+//
+// Parameters:
+//   - fn: PhaseFunc to adapt
+//   - ctx: context for cancellation/timeouts
+//   - l: logger
+//   - targets: list of targets (VMs, etc.) for this phase
+//   - cmd: optional arguments
+//
+// Returns:
+//   - syncx.Func suitable for concurrent execution
+// func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, targets []Target, cmd ...string) syncx.Func {
+// 	return func() error {
+// 		_, err := fn(ctx, l, targets, cmd...)
+// 		return err
+// 	}
+// }
+
+// Name: adaptToSyncxFunc
+//
 // Description: takes a PhaseFunc and returns a syncx.Func.
+//
 // Parameters:
 //
-//   - fn: The PhaseFunc to be adapted.
-//   - ctx: The context for the phase's execution.
-//   - cmd: Additional arguments to be passed to the phase's function.
+//   - fn: PhaseFunc to adapt
+//   - ctx: context for cancellation/timeouts
+//   - l: logger
+//   - targets: list of targets (VMs, etc.) for this phase
+//   - cmd: optional arguments//
 //
 // Returns:
 //
-//   - syncx.Func: A syncx.Func that represents the adapted PhaseFunc.
+//   - syncx.Func: A function that represents the adapted PhaseFunc.
 //
 // Notes:
 //   - This acts as an adapter, making a PhaseFunc compatible with the syncx.RunConcurrently function's signature.
@@ -29,9 +52,9 @@ import (
 // Todo
 //   - pass logging to the closure that is an anonymous function.
 //   - make that function not an anonymous.
-func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...string) syncx.Func {
+func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, targets []Target, cmd ...string) syncx.Func {
 	return func() error {
-		_, err := fn(ctx, l, cmd...)
+		_, err := fn(ctx, l, targets, cmd...)
 		return err
 	}
 }
@@ -62,7 +85,7 @@ func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...s
 // Todo:
 //   - Externalize the wrapping logic into a named function instead of using an inline closure.
 //   - Allow custom log message formatting for phases (e.g., configurable success/failure symbols).
-func (w *Workflow) createSliceFunc(ctx context.Context, logger logx.Logger, tierId int, tier []Phase) ([]syncx.Func, error) {
+func (w *Workflow) createSliceFunc(ctx context.Context, logger logx.Logger, tierId int, tier []Phase, targets []Target) ([]syncx.Func, error) {
 	nbPhase := len(tier)
 	concurrentTasks := make([]syncx.Func, 0, nbPhase)
 
@@ -71,7 +94,7 @@ func (w *Workflow) createSliceFunc(ctx context.Context, logger logx.Logger, tier
 		phaseName := phase.Name
 
 		// Adapt PhaseFunc -> syncx.Func
-		task := adaptToSyncxFunc(phase.fn, ctx, logger, []string{}...)
+		task := adaptToSyncxFunc(phase.fn, ctx, logger, targets, []string{}...)
 
 		// Wrap task with logging
 		wrappedTask := func() error {

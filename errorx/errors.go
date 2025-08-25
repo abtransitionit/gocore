@@ -25,6 +25,15 @@ type errorWithStack struct {
 	stack []uintptr
 }
 
+// Name: errorWithNoStack
+// Description: represents an error that do not includes a stack trace.
+// Notes:
+// - It implements the standard library's `Unwrap()` method and our `Stacker` interface.
+type errorWithNoStack struct {
+	msg string
+	err error
+}
+
 // Name: Error
 // Return:
 // - string: the formatted error message, including the stack trace.
@@ -66,6 +75,40 @@ func (e *errorWithStack) Unwrap() error {
 // - It fulfills the Stacker interface.
 func (e *errorWithStack) StackTrace() []uintptr {
 	return e.stack
+}
+
+func (e *errorWithNoStack) Error() string {
+	var sb strings.Builder
+	if e.err != nil {
+		sb.WriteString(e.err.Error())
+		sb.WriteString(": ")
+	}
+	sb.WriteString(e.msg)
+	return sb.String()
+}
+
+func (e *errorWithNoStack) Unwrap() error {
+	return e.err
+}
+
+// Name: NewWithNoStack
+// Description: creates a new error with a message but no stack trace.
+func NewWithNoStack(format string, a ...any) error {
+	return &errorWithNoStack{
+		msg: fmt.Sprintf(format, a...),
+	}
+}
+
+// Name: WrapWithNoStack
+// Description: wraps an existing error with a new message, without adding a stack trace.
+func WrapWithNoStack(err error, format string, a ...any) any {
+	if err == nil {
+		return nil
+	}
+	return &errorWithNoStack{
+		msg: fmt.Sprintf(format, a...),
+		err: err,
+	}
 }
 
 // Name: captureStack

@@ -507,3 +507,18 @@ Here’s the corrected version that reflects the real sequence:
 5. Concurrent execution & error handling
 6. Completion
 
+
+
+# Phase
+
+Each **phase** is basically an **autonomous function** in the `gotask` library. Those phase functions can internally call code from **two different libraries**:
+
+  1. `gocore` → cross-platform Go library (generic/shared logic).
+  2. `golinux` → Linux-specific Go library (platform-specific logic).
+
+So each phase is like a **wrapper function** that orchestrates some operations from these libraries.
+
+We can now look at a phase either as:
+
+* Its **definition and signature**, or
+* Its **runtime behavior** within the workflow.

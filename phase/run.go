@@ -28,7 +28,7 @@ import (
 //   - executes all phases in a tier concurrently.
 //   - executes each tier sequentially.
 //   - the order of the tier and their phases is determined by the topological function
-func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases []int, retainPhases []int) error {
+func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, targets []Target, skipPhases []int, retainPhases []int) error {
 	logger.Info("🚀 Starting workflow execution")
 
 	// check some paramaters, deletgate other checks to the filterPhase function
@@ -55,15 +55,15 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 	}
 
 	// Optional: Show the filtered phases ordered by tiers
-	logger.Debug("Execution plan after filtering:")
+	logger.Info("Execution plan after filtering:")
 	filteredTiers.Show(logger)
 
-	// Create as many slice as tiers
+	// Create as many slice of function as tiers
 	allTierTasks := make([][]syncx.Func, len(filteredTiers))
 	// loop over each tier
 	for tierId, tier := range filteredTiers {
 		// Create a slice of functions
-		tasks, err := w.createSliceFunc(ctx, logger, tierId, tier)
+		tasks, err := w.createSliceFunc(ctx, logger, tierId, tier, targets)
 		if err != nil {
 			return err
 		}
@@ -71,6 +71,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		allTierTasks[tierId] = tasks
 	}
 
+	// Executes the phases: tier by tier
 	logger.Info("📌 Starting execution strategy: concurrent within tiers, sequential across tiers")
 	// loop over each tier
 	for tierId, tier := range filteredTiers {
@@ -81,7 +82,8 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 			logger.Warnf("Workflow canceled (by user) before starting Tier %d", tierIdx)
 			return ctx.Err()
 		}
-		logger.Infof("👉 Executing Tier %d with %d phase(s) concurrently...", tierIdx, nbPhase)
+
+		logger.Infof("👉 Executing Tier %d with %d concurent phase(s)", tierIdx, nbPhase)
 		tasks := allTierTasks[tierId]
 
 		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
@@ -97,9 +99,9 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 				return errs[0]
 			}
 		}
-		logger.Infof("👉 🟢 Tier %d : All %phases completed successfully", tierIdx)
+		logger.Infof("👉 🟢 Tier %d : All phases completed successfully", tierIdx)
 	}
 
-	logger.Info("🎉 Workflow execution finished successfully")
+	logger.Info("📌 🟢 Workflow execution finished successfully")
 	return nil
 }
