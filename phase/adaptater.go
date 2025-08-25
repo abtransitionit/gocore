@@ -62,13 +62,7 @@ func adaptToSyncxFunc(fn PhaseFunc, ctx context.Context, l logx.Logger, cmd ...s
 // Todo:
 //   - Externalize the wrapping logic into a named function instead of using an inline closure.
 //   - Allow custom log message formatting for phases (e.g., configurable success/failure symbols).
-func (w *Workflow) createSliceFunc(
-	ctx context.Context,
-	logger logx.Logger,
-	tierId int,
-	tier []Phase,
-) ([]syncx.Func, error) {
-
+func (w *Workflow) createSliceFunc(ctx context.Context, logger logx.Logger, tierId int, tier []Phase) ([]syncx.Func, error) {
 	nbPhase := len(tier)
 	concurrentTasks := make([]syncx.Func, 0, nbPhase)
 
@@ -81,18 +75,11 @@ func (w *Workflow) createSliceFunc(
 
 		// Wrap task with logging
 		wrappedTask := func() error {
-			logger.Debugf("➡️ running phase %d/%d of tier %d: %s",
-				phaseIdx, nbPhase, tierId+1, phaseName)
-
+			logger.Debugf("➡️ running phase %d/%d of tier %d: %s", phaseIdx, nbPhase, tierId+1, phaseName)
 			if err := task(); err != nil {
-				return fmt.Errorf(
-					"➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w",
-					phaseIdx, nbPhase, tierId+1, phaseName, err)
+				return fmt.Errorf("➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w", phaseIdx, nbPhase, tierId+1, phaseName, err)
 			}
-
-			logger.Debugf("➡️ 🟢 phase %d/%d of tier %d: %s completed successfully",
-				phaseIdx, nbPhase, tierId+1, phaseName)
-
+			logger.Debugf("➡️ 🟢 phase %d/%d of tier %d: %s completed successfully", phaseIdx, nbPhase, tierId+1, phaseName)
 			return nil
 		}
 

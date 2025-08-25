@@ -73,24 +73,9 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 		logger.Infof("👉 Executing Tier %d with %d phase(s) concurrently...", tierIdx, nbPhase)
 
 		// Create a slice of functions (for each tier)
-		// Build tasks for concurrent execution
-		concurrentTasks := make([]syncx.Func, 0, nbPhase)
-		for phaseId, phase := range tier {
-			phaseIdx := phaseId + 1
-			phaseName := phase.Name
-			// create a syncx.Func from PhaseFunc
-			// convert Phases that al have a PhaseFunc sigature to a syncx.Func signature
-			task := adaptToSyncxFunc(phase.fn, ctx, logger, []string{}...)
-
-			wrappedTask := func() error {
-				logger.Debugf("➡️ running phase %d/%d of tier %d: %s", phaseIdx, nbPhase, tierIdx, phaseName)
-				if err := task(); err != nil {
-					return fmt.Errorf("➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w", phaseIdx, nbPhase, tierIdx, phaseName, err)
-				}
-				logger.Debugf("➡️ 🟢 phase %d/%d of tier %d: %s completed successfully", phaseIdx, nbPhase, tierIdx, phaseName)
-				return nil
-			}
-			concurrentTasks = append(concurrentTasks, wrappedTask)
+		concurrentTasks, err := w.createSliceFunc(ctx, logger, tierId, tier)
+		if err != nil {
+			return err
 		}
 
 		// Run all phases in this tier concurrently using syncx with the same context
@@ -104,19 +89,8 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, skipPhases [
 				return errs[0]
 			default:
 				logger.ErrorWithNoStack(errs[0], "👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase)
-				// for _, e := range errs {
-				// 	logger.ErrorWithNoStack(e, "👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase)
-				// }
 				return errs[0]
 			}
-			// // Log all collected errors and return the first one to stop the workflow.
-			// var sb strings.Builder
-			// sb.WriteString(fmt.Sprintf("👉 🔴 tier %d/%d : some phases failed with the following errors:", tierIdx, nbPhase))
-			// for _, e := range errs {
-			// 	sb.WriteString(fmt.Sprintf("\n- %v", e))
-			// }
-			// // logger.ErrorWithNoStack(errs[0], "%s", sb.String())
-			// return errs[0]
 		}
 		logger.Infof("👉 🟢 Tier %d : All %phases completed successfully", tierIdx)
 	}
