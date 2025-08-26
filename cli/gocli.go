@@ -56,7 +56,7 @@ func BuildGoProject(l logx.Logger, projectPath, outputDir string) error {
 	}
 
 	// build the artifact for the current platform
-	l.Infof("Building project '%s' from path: %s into output: %s for %s:%s: ", projectName, projectPath, outputFile, goos, goarch)
+	l.Infof("Building artifact '%s' from project: %s for platform:%s/%s: ", outputFile, projectPath, goos, goarch)
 	command := fmt.Sprintf("GOOS=%s GOARCH=%s go build -o %s %s", goos, goarch, outputFile, projectPath)
 	output, err := run.RunOnLocal(command)
 	if err != nil {
@@ -68,7 +68,7 @@ func BuildGoProject(l logx.Logger, projectPath, outputDir string) error {
 	goos = "linux"
 	goarch = "amd64"
 	outputFile = filepath.Join(outputDir, projectName+"-"+goos)
-	l.Infof("Building project '%s' from path: %s into output: %s for %s:%s: ", projectName, projectPath, outputFile, goos, goarch)
+	l.Infof("Building artifact '%s' from project: %s for platform:%s/%s: ", outputFile, projectPath, goos, goarch)
 	command = fmt.Sprintf("GOOS=%s GOARCH=%s go build -o %s %s", goos, goarch, outputFile, projectPath)
 	output, err = run.RunOnLocal(command)
 	if err != nil {
