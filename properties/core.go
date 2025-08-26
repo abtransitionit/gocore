@@ -8,7 +8,9 @@ import (
 
 // Name: GetPropertyLocal
 //
-// Description: retrieves a property from the core set.
+// Description: retrieves a property from the core set or Linux-specific set if running Linux.
+// GetPropertyLocal retrieves a property from gocore or golinux (if Linux).
+
 func GetPropertyLocal(property string, params ...string) (string, error) {
 	fnPropertyHandler, ok := coreProperties[property]
 	if !ok {
