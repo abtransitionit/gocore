@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/properties"
+	"github.com/abtransitionit/gocore/run"
 )
 
 // Name: BuildProject
@@ -35,7 +37,17 @@ func BuildGoProject(l logx.Logger, projectPath, outputDir string) error {
 	projectName := filepath.Base(projectPath)
 	outputFile := filepath.Join(outputDir, projectName)
 
-	// check folder exists
+	// Get the targeted OS:type and OS:arch
+	goos, err := properties.GetPropertyLocal("ostype")
+	if err != nil {
+		return fmt.Errorf("failed to get OS type: %w", err)
+	}
+	goarch, err := properties.GetPropertyLocal("osarch")
+	if err != nil {
+		return fmt.Errorf("failed to get OS architecture: %w", err)
+	}
+
+	// check folders exists
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
 		return fmt.Errorf("output directory does not exist: %s", outputDir)
 	}
@@ -43,9 +55,29 @@ func BuildGoProject(l logx.Logger, projectPath, outputDir string) error {
 		return fmt.Errorf("project directory does not exist: %s", projectPath)
 	}
 
-	l.Infof("Building project '%s' from path: %s into output: %s", projectName, projectPath, outputFile)
+	// build the artifact for the current platform
+	l.Infof("Building project '%s' from path: %s into output: %s for %s:%s: ", projectName, projectPath, outputFile, goos, goarch)
+	command := fmt.Sprintf("GOOS=%s GOARCH=%s go build -o %s %s", goos, goarch, outputFile, projectPath)
+	output, err := run.RunOnLocal(command)
+	if err != nil {
+		l.Errorf("go build command failed: %v with output: %s", err, output)
+		return err
+	}
+
+	// build the artifact for linux platform
+	goos = "linux"
+	goarch = "amd64"
+	outputFile = filepath.Join(outputDir, projectName+"-"+goos)
+	l.Infof("Building project '%s' from path: %s into output: %s for %s:%s: ", projectName, projectPath, outputFile, goos, goarch)
+	command = fmt.Sprintf("GOOS=%s GOARCH=%s go build -o %s %s", goos, goarch, outputFile, projectPath)
+	output, err = run.RunOnLocal(command)
+	if err != nil {
+		l.Errorf("go build command failed: %v with output: %s", err, output)
+		return err
+	}
+
 	// TODO:
 	// success
-	l.Infof("Successfully built project to: %s", outputFile)
+	l.Infof("Successfully built project to file: %s", outputFile)
 	return nil
 }
