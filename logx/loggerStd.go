@@ -68,13 +68,13 @@ func pathFormatter(fullPath string) string {
 // Info logs a simple info message
 func (l *stdLogger) Info(msg string) {
 	// l.logger.Println("INFO:", msg)
-	l.logger.Output(2, colorCyan+"INFO:   "+msg+colorReset)
+	l.logger.Output(2, colorCyan+"INFO:   "+colorReset+msg)
 
 }
 
 // Infof logs a formatted info message
 func (l *stdLogger) Infof(format string, v ...any) {
-	l.logger.Output(2, colorCyan+"INFO:   "+colorReset+fmt.Sprintf(format, v...))
+	l.logger.Output(2, colorCyan+"INFO:   "+fmt.Sprintf(format, v...)+colorReset)
 }
 
 func (l *stdLogger) Infow(msg string, keysAndValues ...any) {

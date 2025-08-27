@@ -26,7 +26,7 @@ import (
 // Returns:
 //
 //	error: An error if the scp command fails.
-func Scp(l logx.Logger, source, destination string) error {
+func Scp(l logx.Logger, source string, destination string) error {
 	l.Infof("Initiating SCP transfer from %s to %s", source, destination)
 
 	// Construct the scp command string.
