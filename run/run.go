@@ -100,14 +100,24 @@ func RunCliLocal(command string) (string, error) {
 }
 
 // RunOnVm executes a CLI command on a remote VM via SSH
-func RunOnVm(vmName, cli string) error {
+func RunOnVm(vmName, cli string) (string, error) {
 	cmd := exec.Command("ssh", vmName, cli)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to run command on VM %s: %v, output: %s", vmName, err, string(output))
+		// This error message now includes the output, which is useful for debugging.
+		return "", fmt.Errorf("failed to run command on VM %s: %w, output: %s", vmName, err, string(output))
 	}
-	return nil
+	return string(output), nil
 }
+
+// func RunOnVm(vmName, cli string) error {
+// 	cmd := exec.Command("ssh", vmName, cli)
+// 	output, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		return fmt.Errorf("failed to run command on VM %s: %v, output: %s", vmName, err, string(output))
+// 	}
+// 	return nil
+// }
 
 // RunOnLocal executes a CLI command on the local machine and returns the output.
 // It is an analogy to RunOnVm, as it captures and returns all output for consistent error reporting.
