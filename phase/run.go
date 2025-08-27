@@ -42,19 +42,19 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, targets []Ta
 	logger.Info("The worflow phases are:")
 	w.Show(logger)
 
-	// sort workflow's phases
+	// sort workflow's phases (by tier)
 	sortedTiers, err := w.topologicalSort()
 	if err != nil {
 		return fmt.Errorf("failed to sort phases: %w", err)
 	}
 
-	// filter workflow's phases
+	// filter the phases in the sorted tiers
 	filteredTiers, err := w.filterPhase(logger, sortedTiers, skipPhases, retainPhases)
 	if err != nil {
 		return fmt.Errorf("failed to filter phases: %w", err)
 	}
 
-	// Optional: Show the filtered phases ordered by tiers
+	// Show the filtered sorted tiers
 	logger.Info("Execution plan after filtering:")
 	filteredTiers.Show(logger)
 
