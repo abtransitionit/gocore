@@ -9,7 +9,7 @@ import (
 	"github.com/abtransitionit/gocore/errorx"
 	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/logx"
-	"github.com/abtransitionit/gocore/properties"
+	"github.com/abtransitionit/gocore/property"
 	"github.com/abtransitionit/gocore/run"
 )
 
@@ -54,11 +54,11 @@ func BuildGoProject(logger logx.Logger, projectPath, outputDir string) error {
 	outputFile := filepath.Join(outputDir, projectName)
 
 	// set the targeted OS:type and OS:arch dynamically
-	goos, err := properties.GetPropertyLocal("ostype")
+	goos, err := property.GetProperty("ostype")
 	if err != nil {
 		return fmt.Errorf("failed to get OS type: %w", err)
 	}
-	goarch, err := properties.GetPropertyLocal("osarch")
+	goarch, err := property.GetProperty("osarch")
 	if err != nil {
 		return fmt.Errorf("failed to get OS architecture: %w", err)
 	}

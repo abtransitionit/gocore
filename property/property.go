@@ -1,5 +1,5 @@
-// file: gocore/properties/properties.go
-package properties
+// file: gocore/property/property.go
+package property
 
 import (
 	"fmt"
@@ -12,11 +12,6 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 )
-
-// Name: PropertyHandler
-//
-// Description: is a function that retrieves a system property.
-type PropertyHandler func(...string) (string, error)
 
 var coreProperties = map[string]PropertyHandler{
 	"ostype":    getOsType, // e.g. linux, windows, darwin

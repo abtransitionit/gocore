@@ -2,7 +2,7 @@
 * **Purpose:** Provides a **cross-platform way** to retrieve basic system properties (Linux, Windows, macOS).
 * **Main functions:**
 
-  * `GetPropertyLocal(property string, params ...string)`: fetches a property from the **core set** (`coreProperties` map).
+  * `GetProperty(property string, params ...string)`: fetches a property from the **core set** (`coreProperties` map).
   * `coreProperties` map contains handlers for properties like:
 
   | Property       | Description                     |
@@ -28,7 +28,7 @@
 
 * Both libraries have the **same design pattern**:
 
-  * `GetPropertyLocal` function.
+  * `GetProperty` function.
   * A `map[string]PropertyHandler]` mapping property names to handler functions.
 * `gocore` is **generic and cross-platform**.
 * `golinux` is **Linux-specific**, providing extra details that `gocore` cannot.

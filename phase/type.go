@@ -18,6 +18,7 @@ import (
 
 // Notes:
 // - The function is designed to play some code on a Target (VM, Container, etc).
+// - The cmd...string here is meant to pass the same arguments to all phases of a workflow via Execute
 type PhaseFunc func(ctx context.Context, l logx.Logger, targets []Target, cmd ...string) (string, error)
 
 // Name: Phase
@@ -32,6 +33,8 @@ type Phase struct {
 	Description  string
 	fn           PhaseFunc
 	Dependencies []string
+	// Add a new field for phase-specific arguments
+	// Args         []string
 }
 
 // Name: Workflow
