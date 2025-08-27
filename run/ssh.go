@@ -76,7 +76,7 @@ func IsVmSshReachable(vmName string) (bool, error) {
 	// command := fmt.Sprintf("ssh %s true", vmName)
 	command := fmt.Sprintf("ssh -o BatchMode=yes -o ConnectTimeout=5 %s 'exit'", vmName)
 
-	_, err = RunCliLocal(command)
+	_, err = RunOnLocal(command)
 	if err != nil {
 		// If RunCliLocal returns an error, it means the SSH connection failed.
 		// This is the expected behavior for a non-reachable host.
