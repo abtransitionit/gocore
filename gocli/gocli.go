@@ -9,7 +9,7 @@ import (
 
 func Install(logger logx.Logger, cli GoCli, osType string, osArch string, uname string) (string, error) {
 	// resolve URL
-	url, err := resolveURL(logger, goCliReference, cli, osType, osArch, uname)
+	url, err := ResolveURL(logger, cli, osType, osArch, uname)
 	if err != nil {
 		return "", err
 	}
@@ -23,8 +23,9 @@ func Install(logger logx.Logger, cli GoCli, osType string, osArch string, uname 
 //
 // Todos:
 // - handle "latest" version resolution here.
-func resolveURL(logger logx.Logger, goCliReference MapGoCli, cli GoCli, osType string, osArch string, uname string) (string, error) {
-	// lookup URL
+func ResolveURL(logger logx.Logger, cli GoCli, osType string, osArch string, uname string) (string, error) {
+
+	// lookup the templated URL in package private database
 	template, ok := goCliReference[cli.Name]
 	if !ok {
 		return "", fmt.Errorf("no cli %s found in Go CLI db", cli.Name)
