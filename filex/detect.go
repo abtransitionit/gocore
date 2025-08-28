@@ -50,7 +50,7 @@ func DetectBinaryType(filePath string) (string, error) {
 
 	// Check for gzip (tar.gz)
 	if magic[0] == 0x1F && magic[1] == 0x8B {
-		return "tar.gz", nil
+		return "tgz", nil
 	}
 
 	// Check for zip
@@ -59,5 +59,5 @@ func DetectBinaryType(filePath string) (string, error) {
 	}
 
 	// Default: binary
-	return "binary", nil
+	return "exe", nil
 }
