@@ -1,5 +1,4 @@
-// file: gocore/cli/gocli.go
-package cli
+package gocli
 
 import (
 	"fmt"
