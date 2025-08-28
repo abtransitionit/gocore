@@ -1,6 +1,57 @@
 package gocli
 
-func Install(cliName GoCli) (string, error) {
+import (
+	"fmt"
+	"strings"
 
-	return "", nil
+	"github.com/abtransitionit/gocore/logx"
+)
+
+func Install(logger logx.Logger, cli GoCli, osType string, osArch string, uname string) (string, error) {
+	// resolve URL
+	url, err := resolveURL(logger, goCliReference, cli, osType, osArch, uname)
+	if err != nil {
+		return "", err
+	}
+	logger.Infof("Cli: %s Url: %s", cli.Name, url)
+	return url, nil
+}
+
+// Name:resolveURL
+//
+// Description: resolves the final download URL for a CLI.
+//
+// Todos:
+// - handle "latest" version resolution here.
+func resolveURL(logger logx.Logger, goCliReference MapGoCli, cli GoCli, osType string, osArch string, uname string) (string, error) {
+	// lookup URL
+	template, ok := goCliReference[cli.Name]
+	if !ok {
+		return "", fmt.Errorf("no cli %s found in Go CLI db", cli.Name)
+	}
+	if template.Url == "" {
+		return "", fmt.Errorf("no URL template defined for %s", cli.Name)
+	}
+	// For now, just use Version directly
+	tag := cli.Version
+	return substitutePlaceholders(template.Url, cli, tag, osType, osArch, uname), nil
+}
+
+// Name: substitutePlaceholders
+//
+// Description: replaces placeholders in the URL template.
+func substitutePlaceholders(templatedUrl string, cli GoCli, tag string, osType string, osArch string, uname string) string {
+
+	replacements := map[string]string{
+		"$NAME":  cli.Name,
+		"$TAG":   tag,
+		"$OS":    osType,
+		"$ARCH":  osArch,
+		"$UNAME": uname,
+	}
+	url := templatedUrl
+	for k, v := range replacements {
+		url = strings.ReplaceAll(url, k, v)
+	}
+	return url
 }

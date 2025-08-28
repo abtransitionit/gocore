@@ -1,6 +1,6 @@
 package gocli
 
-var SharedMapGoCli = MapGoCli{
+var goCliReference = MapGoCli{
 	"cni":         {Name: "cni", Url: "https://github.com/containernetworking/plugins/releases/download/v$TAG/$NAME-plugins-$OS-$ARCH-v$TAG.tgz"},
 	"containerd":  {Name: "containerd", Url: "https://github.com/$NAME/$NAME/releases/download/v$TAG/$NAME-$TAG-$OS-$ARCH.tar.gz"},
 	"kind":        {Name: "kind", Url: "https://$NAME.sigs.k8s.io/dl/$TAG/$NAME-$OS-$ARCH"},
