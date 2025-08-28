@@ -7,8 +7,7 @@ package filex
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
+	"os"
 )
 
 // Name: detect
@@ -25,26 +24,40 @@ import (
 //
 // Notes:
 //
-//   - Currently inspects the file path and returns the type of archive or "binary".
+//   - Currently reads the magic bytes of the file to determine its type.
 //   - Currently supports ".tar.gz", ".zip", and defaults to "binary".
-func Detect(filePath string) (string, error) {
+func DetectBinaryType(filePath string) (string, error) {
 	if filePath == "" {
 		return "", fmt.Errorf("empty file path")
 	}
 
-	// get the file extension
-	ext := strings.ToLower(filepath.Ext(filePath))
-
-	switch ext {
-	case ".gz":
-		// check if the file ends with .tar.gz
-		if strings.HasSuffix(strings.ToLower(filePath), ".tar.gz") {
-			return "tar.gz", nil
-		}
-		return "gz", nil
-	case ".zip":
-		return "zip", nil
-	default:
-		return "binary", nil
+	// Open file
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("cannot open file %s: %w", filePath, err)
 	}
+	defer f.Close()
+
+	// Read first 4 bytes
+	magic := make([]byte, 4)
+	n, err := f.Read(magic)
+	if err != nil {
+		return "", fmt.Errorf("cannot read magic bytes from %s: %w", filePath, err)
+	}
+	if n < 2 {
+		return "binary", nil // too short to determine, assume binary
+	}
+
+	// Check for gzip (tar.gz)
+	if magic[0] == 0x1F && magic[1] == 0x8B {
+		return "tar.gz", nil
+	}
+
+	// Check for zip
+	if n >= 4 && magic[0] == 0x50 && magic[1] == 0x4B && magic[2] == 0x03 && magic[3] == 0x04 {
+		return "zip", nil
+	}
+
+	// Default: binary
+	return "binary", nil
 }
