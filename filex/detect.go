@@ -6,6 +6,7 @@ Copyright © 2025 AB TRANSITION IT abtransitionit@hotmail.com
 package filex
 
 import (
+	"context"
 	"fmt"
 	"os"
 )
@@ -26,7 +27,7 @@ import (
 //
 //   - Currently reads the magic bytes of the file to determine its type.
 //   - Currently supports ".tar.gz", ".zip", and defaults to "binary".
-func DetectBinaryType(filePath string) (string, error) {
+func DetectBinaryType(ctx context.Context, filePath string) (string, error) {
 	if filePath == "" {
 		return "", fmt.Errorf("empty file path")
 	}
