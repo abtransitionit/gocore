@@ -11,10 +11,7 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
-func DownloadLocalArtifact(ctx context.Context, url string, prefix string) (string, error) {
-	return DownloadArtifact(ctx, "", url, prefix)
-}
-func DownloadArtifact(ctx context.Context, vmName, url string, prefix string) (string, error) {
+func DownloadArtifact(ctx context.Context, vmName string, url string, prefix string) (string, error) {
 	// Remote download
 	if vmName != "" {
 		cmd := fmt.Sprintf("goluc do download %s -p %s", url, prefix)
@@ -99,3 +96,7 @@ func Download(cliName string, url string) (string, error) {
 
 	return tmpFile.Name(), nil
 }
+
+// func DownloadLocalArtifact(ctx context.Context, url string, prefix string) (string, error) {
+// 	return DownloadArtifact(ctx, "", url, prefix)
+// }

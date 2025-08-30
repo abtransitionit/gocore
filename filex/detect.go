@@ -9,6 +9,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/abtransitionit/gocore/run"
 )
 
 // Name: detect
@@ -27,7 +30,19 @@ import (
 //
 //   - Currently reads the magic bytes of the file to determine its type.
 //   - Currently supports ".tar.gz", ".zip", and defaults to "binary".
-func DetectBinaryType(ctx context.Context, filePath string) (string, error) {
+func DetectBinaryType(ctx context.Context, vmName string, filePath string) (string, error) {
+
+	// Remote detect
+	if vmName != "" {
+		cmd := fmt.Sprintf("goluc do detect %s", filePath)
+		fileName, err := run.RunCliSsh(vmName, cmd)
+		if err != nil {
+			return "", fmt.Errorf("failed to remote detect file typr of '%s' from '%s': %w", filePath, vmName, err)
+		}
+		return strings.TrimSpace(fileName), nil
+	}
+
+	// Local detect
 	if filePath == "" {
 		return "", fmt.Errorf("empty file path")
 	}
