@@ -98,7 +98,7 @@ func (w *Workflow) createSliceFunc(ctx context.Context, logger logx.Logger, tier
 
 		// Wrap task with logging
 		wrappedTask := func() error {
-			logger.Debugf("➡️ running phase %d/%d of tier %d: %s", phaseIdx, nbPhase, tierId+1, phaseName)
+			logger.Debugf("➡️ Tier %d: running phase %d/%d named %s", tierId+1, phaseIdx, nbPhase, phaseName)
 			if err := task(); err != nil {
 				return fmt.Errorf("➡️ 🔴 phase %d/%d of tier %d (%s) failed: %w", phaseIdx, nbPhase, tierId+1, phaseName, err)
 			}

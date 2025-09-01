@@ -83,7 +83,7 @@ func (w *Workflow) Execute(ctx context.Context, logger logx.Logger, targets []Ta
 			return ctx.Err()
 		}
 
-		logger.Infof("👉 Executing Tier %d with %d concurent phase(s)", tierIdx, nbPhase)
+		logger.Infof("👉 Tier %d: %d has concurent phase(s)", tierIdx, nbPhase)
 		tasks := allTierTasks[tierId]
 
 		if errs := syncx.RunConcurrently(ctx, tasks); errs != nil {
