@@ -24,11 +24,24 @@ var coreProperties = map[string]PropertyHandler{
 	// "netip":      getNetIp,      // code change from original
 	// "netgateway": getNetGateway, // code change from original
 	"oskversion": getOsKernelVersion,
+	"envar":      getEnvar,
 }
 
 // GetCorePropertyMap exposes the map of cross-platform properties to external callers.
 func GetCorePropertyMap() map[string]PropertyHandler {
 	return coreProperties
+}
+
+// getOsType retrieves the value of any environment variable
+func getEnvar(params ...string) (string, error) {
+	if len(params) != 1 {
+		return "", fmt.Errorf("expected exactly 1 environment variable name, got %d", len(params))
+	}
+
+	// get input
+	envarName := params[0]
+
+	return os.Getenv(envarName), nil
 }
 
 // getOsType retrieves the operating system type.
