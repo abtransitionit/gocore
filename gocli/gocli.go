@@ -25,17 +25,18 @@ import (
 // - handle "latest" version resolution here.
 func ResolveURL(logger logx.Logger, cli GoCli, osType string, osArch string, uname string) (string, error) {
 
-	// lookup the templated URL in package private database
-	template, ok := goCliReference[cli.Name]
+	// lookup and get in the reference database that goCli object
+	goCliRef, ok := goCliReference[cli.Name]
 	if !ok {
-		return "", fmt.Errorf("no cli %s found in Go CLI db", cli.Name)
+		return "", fmt.Errorf("failed to fetch in reference db : %s", cli.Name)
 	}
-	if template.Url == "" {
+	// check the field is not empty
+	if goCliRef.Url == "" {
 		return "", fmt.Errorf("no URL template defined for %s", cli.Name)
 	}
 	// For now, just use Version directly
 	tag := cli.Version
-	return substituteUrlPlaceholders(template.Url, cli, tag, osType, osArch, uname), nil
+	return substituteUrlPlaceholders(goCliRef.Url, cli, tag, osType, osArch, uname), nil
 }
 
 // Name: substituteUrlPlaceholders
