@@ -1,22 +1,34 @@
 package gocli
 
 var goCliReference = MapGoCli{
-	"cni":         {Name: "cni", Url: "https://github.com/containernetworking/plugins/releases/download/v$TAG/$NAME-plugins-$OS-$ARCH-v$TAG.tgz"},
-	"containerd":  {Name: "containerd", Url: "https://github.com/$NAME/$NAME/releases/download/v$TAG/$NAME-$TAG-$OS-$ARCH.tar.gz"},
-	"kind":        {Name: "kind", OsName: "kind", Url: "https://$NAME.sigs.k8s.io/dl/$TAG/$NAME-$OS-$ARCH"},
-	"nerdctl":     {Name: "nerdctl", Url: "https://github.com/containerd/$NAME/releases/download/v$TAG/nerdctl-$TAG-$OS-$ARCH.tar.gz"},
-	"rootlesskit": {Name: "rootlesskit", Url: "https://github.com/rootless-containers/$NAME/releases/download/v$TAG/$NAME-$UNAME.tar.gz"},
-	"runc":        {Name: "runc", OsName: "runc", Url: "https://github.com/opencontainers/$NAME/releases/download/v$TAG/$NAME.$ARCH"},
-	"slirp4netns": {Name: "slirp4netns", Url: "https://github.com/rootless-containers/$NAME/releases/download/v$TAG/$NAME-$UNAME"},
+	"cni": {
+		Name: "cni",
+		Url:  "https://github.com/containernetworking/plugins/releases/download/v$TAG/$NAME-plugins-$OS-$ARCH-v$TAG.tgz",
+	},
+	"containerd": {
+		Name: "containerd",
+		Url:  "https://github.com/$NAME/$NAME/releases/download/v$TAG/$NAME-$TAG-$OS-$ARCH.tar.gz",
+	},
+	"kind": {
+		Name: "kind", OsName: "kind",
+		Url: "https://$NAME.sigs.k8s.io/dl/$TAG/$NAME-$OS-$ARCH",
+	},
+	"nerdctl": {
+		Name: "nerdctl",
+		Url:  "https://github.com/containerd/$NAME/releases/download/v$TAG/nerdctl-$TAG-$OS-$ARCH.tar.gz",
+	},
+	"rootlesskit": {
+		Name: "rootlesskit",
+		Url:  "https://github.com/rootless-containers/$NAME/releases/download/v$TAG/$NAME-$UNAME.tar.gz",
+	},
+	"runc": {
+		Name: "runc", OsName: "runc",
+		Url: "https://github.com/opencontainers/$NAME/releases/download/v$TAG/$NAME.$ARCH",
+	},
+	"slirp4netns": {
+		Name: "slirp4netns",
+		Url:  "https://github.com/rootless-containers/$NAME/releases/download/v$TAG/$NAME-$UNAME"},
 }
-
-// 		{Name: "cni", Version: "1.7.1"},
-// 		{Name: "containerd", Version: "2.1.1"},
-// 		{Name: "kind", Version: "latest"},
-// 		{Name: "nerdctl", Version: "2.1.2"},
-// 		{Name: "rootlesskit", Version: "2.3.5"},
-// 		{Name: "runc", Version: "1.3.0"},
-// 		{Name: "slirp4netns", Version: "1.3.3"},
 
 // 	"cni": {
 // 		Name: "cni",
