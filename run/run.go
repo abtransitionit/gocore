@@ -5,11 +5,45 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/abtransitionit/gocore/errorx"
 )
+
+func RunCliSshLive(vmName, cli string) error {
+	// step: check the VM is reachable
+	isSshReachable, err := IsVmSshReachable(vmName)
+	if err != nil {
+		return errorx.Wrap(err, "failed to check VM SSH reachability")
+	}
+	if !isSshReachable {
+		return errorx.New("vm '%s' is not SSH reachable", vmName)
+	}
+
+	// step: Base64 encode the input to handle complex quoting and special characters.
+	cliEncoded := base64.StdEncoding.EncodeToString([]byte(cli))
+
+	// step: Define the full SSH command to run (same as RunCliSsh).
+	command := fmt.Sprintf(
+		`ssh -o BatchMode=yes -o ConnectTimeout=5 %s "echo '%s' | base64 --decode | sh"`,
+		vmName,
+		cliEncoded,
+	)
+
+	// step: Use exec.Command so we can stream live output.
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = os.Stdout // stream remote stdout directly
+	cmd.Stderr = os.Stderr // stream remote stderr directly
+
+	// step: Run and stream live output
+	if err := cmd.Run(); err != nil {
+		return errorx.Wrap(err, "failed to run remote command on '%s'", vmName)
+	}
+
+	return nil
+}
 
 // Name: RunCliSsh
 //
@@ -49,7 +83,7 @@ func RunCliSsh(vmName, cli string) (string, error) {
 	cliEncoded := base64.StdEncoding.EncodeToString([]byte(cli))
 
 	// step: Now that the VM is reachable, define the full SSH command to run.
-	command := fmt.Sprintf(`ssh -o BatchMode=yes -o ConnectTimeout=5 %s "echo '%s' | base64 --decode | sh"`, vmName, cliEncoded)
+	command := fmt.Sprintf(`ssh -o BatchMode=yes -o ConnectTimeout=5 %s "echo '%s' | base64 --decode | $SHELL -l"`, vmName, cliEncoded)
 
 	// step: Run the command.
 	output, err := RunCliLocal(command)
