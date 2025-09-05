@@ -9,6 +9,7 @@ type GoCli struct {
 	OsName  string
 }
 
+type SliceGoCli []GoCli
 type MapGoCli map[string]GoCli
 
 func GetOsName(cli GoCli) (string, error) {
