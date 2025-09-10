@@ -1,7 +1,10 @@
 // File in gocore/list/list.go
 package list
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // # Purpose
 //
@@ -30,4 +33,20 @@ func GetMapKeys[V any](m map[string]V) []string {
 	sort.Strings(keys)
 
 	return keys
+}
+
+func GetSlicefromStringWithSep(ListAsString string, sep string) []string {
+	return strings.Split(ListAsString, sep)
+}
+
+func GetSlicefromStringWithSpace(ListAsString string) []string {
+	return strings.Fields(ListAsString)
+}
+
+func GetStringWithSepFromSlice(ListString []string, separator string) string {
+	return strings.Join(ListString, separator)
+}
+
+func GetStringWithSpaceFromSlice(ListString []string) string {
+	return GetStringWithSepFromSlice(ListString, " ")
 }
