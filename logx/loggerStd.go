@@ -122,7 +122,7 @@ func (l *stdLogger) Errorw(msg string, keysAndValues ...any) {
 // ErrorWithStack logs an error with a stack trace if available
 func (l *stdLogger) ErrorWithStack(err error, format string, v ...any) {
 	var sb strings.Builder
-	sb.WriteString("ERROR: ")
+	// sb.WriteString("ERROR: ")
 	sb.WriteString(fmt.Sprintf(format, v...))
 	sb.WriteString(": ")
 	sb.WriteString(err.Error())

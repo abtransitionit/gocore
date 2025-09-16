@@ -159,8 +159,7 @@ func RunOnLocal(cli string) (string, error) {
 	cmd := exec.Command("sh", "-c", cli)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed to run command locally: %v, output: %s", err, string(output))
+		return string(output), fmt.Errorf("failed to run command locally: %v, output: %s", err, string(output))
 	}
-
 	return string(output), nil
 }
