@@ -15,3 +15,15 @@ func DeleteLeftSpace(s string) string {
 	}
 	return strings.Join(lines, "\n")
 }
+
+func DeleteLeftTab(s string) string {
+	lines := strings.Split(s, "\n")
+	var result []string
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, "\t") // trims only leading tabs
+		if strings.TrimSpace(trimmed) != "" {   // skip empty lines
+			result = append(result, trimmed)
+		}
+	}
+	return strings.Join(result, "\n")
+}
