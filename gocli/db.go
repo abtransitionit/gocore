@@ -9,6 +9,10 @@ var goCliReference = MapGoCli{
 		Name: "containerd",
 		Url:  "https://github.com/$NAME/$NAME/releases/download/v$TAG/$NAME-$TAG-$OS-$ARCH.tar.gz",
 	},
+	"helm": {
+		Name: "helm", OsName: "helm",
+		Url: "https://get.helm.sh/helm-v$TAG-$OS-$ARCH.tar.gz",
+	},
 	"kind": {
 		Name: "kind", OsName: "kind",
 		Url: "https://$NAME.sigs.k8s.io/dl/$TAG/$NAME-$OS-$ARCH",
