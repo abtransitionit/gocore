@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Name: getCredentialFilePath
 func getCredentialFilePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -28,31 +29,6 @@ func getCredentialFilePath() (string, error) {
 
 	return credentialPath, nil
 
-}
-
-// func getAccessToken(clientID, clientSecret string) (*oauth2.Token, error) {
-func GetAccessTokenFromFile() (string, error) {
-
-	// get credential file
-	filePath, err := getCredentialFilePath()
-	if err != nil {
-		return "", err
-	}
-
-	// Read the entire file content.
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("error reading file: %w", err)
-	}
-
-	// Unmarshal the JSON data into the Go struct.
-	var credentialConfigFile CredentialConfigFile
-	if err := json.Unmarshal(fileContent, &credentialConfigFile); err != nil {
-		return "", fmt.Errorf("error unmarshalling JSON: %w", err)
-	}
-
-	// success
-	return credentialConfigFile.ServiceAccount.AccessToken, nil
 }
 
 // func getAccessToken2(clientID, clientSecret string) (*oauth2.Token, error) {
@@ -96,3 +72,66 @@ func GetAccessTokenFromFile() (string, error) {
 
 // "golang.org/x/oauth2"
 // "golang.org/x/oauth2/clientcredentials"
+
+// Name: getCredentialStrut
+//
+// Description: get the credential datas from file into a GO struct.
+//
+// Returns:
+// - *CredentialStruct: a pointer to the a populated CredentialStruct or an error if anything fails.
+// - error: an error if anything fails.
+func getCredentialStrut() (*CredentialStruct, error) {
+	// get file path
+	filePath, err := getCredentialFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the entire file content.
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	// Unmarshal the JSON data into the Go struct - map json to a GO struct
+	var credentialConfigFile CredentialStruct
+	if err := json.Unmarshal(fileContent, &credentialConfigFile); err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
+	}
+
+	// success - return credential as a pointer to a GO struct
+	return &credentialConfigFile, nil
+}
+
+// GetSAClientId gets the ClientID from the credential struct.
+func GetSAClientId() (string, error) {
+	// get credential as a GO struct
+	creds, err := getCredentialStrut()
+	if err != nil {
+		return "", err
+	}
+	// success
+	return creds.ServiceAccount.ClientID, nil
+}
+
+// GetSAClientSecret gets the ClientSecret from the credential struct.
+func GetSAClientSecret() (string, error) {
+	// get credential as a GO struct
+	creds, err := getCredentialStrut()
+	if err != nil {
+		return "", err
+	}
+	// success
+	return creds.ServiceAccount.ClientSecret, nil
+}
+
+// GetAccessTokenFromFile gets the AccessToken from the credential struct.
+func GetAccessTokenFromFile() (string, error) {
+	// get credential as a GO struct
+	creds, err := getCredentialStrut()
+	if err != nil {
+		return "", err
+	}
+	// success
+	return creds.ServiceAccount.AccessToken, nil
+}

@@ -13,9 +13,11 @@ type OvhClient struct {
 	logger logx.Logger
 }
 
-type CredentialConfigFile struct {
+type CredentialStruct struct {
 	ServiceAccount struct {
-		AccessToken string `json:"access_token"`
+		ClientID     string `json:"clientId"`
+		ClientSecret string `json:"clientSecret"`
+		AccessToken  string `json:"access_token"`
 	} `json:"serviceAccount"`
 }
 
