@@ -35,55 +35,6 @@ func getCredentialFilePath() (string, error) {
 
 }
 
-// func getAccessToken2(clientID, clientSecret string) (*oauth2.Token, error) {
-// 	conf := &clientcredentials.Config{
-// 		ClientID:     clientID,
-// 		ClientSecret: clientSecret,
-// 		TokenURL:     "https://api.ovh.com/oauth2/token",
-// 	}
-
-// 	client := conf.Client(context.Background())
-// 	resp, err := client.Get("https://api.ovh.com/1.0/me")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	// Handle the response
-// 	// ...
-
-// 	return nil, nil
-// }
-
-// func testOvhApi() {
-// 	// Replace with your OAuth2 bearer token
-// 	token := "YOUR_OAUTH2_ACCESS_TOKEN"
-
-// 	// Create a client using OAuth2
-// 	client := ovh.NewAccessTokenClient("ovh-eu", token)
-
-// 	// Example: get account details
-// 	var vps map[string]interface{}
-// 	url := "/vps"
-// 	err := client.Get(url, &vps)
-// 	if err != nil {
-// 		log.Fatalf("Error calling OVH API: %v", err)
-// 	}
-
-// 	fmt.Println("Vps info:")
-// 	fmt.Println(vps)
-// }
-
-// "golang.org/x/oauth2"
-// "golang.org/x/oauth2/clientcredentials"
-
-// Name: getCredentialStrut
-//
-// Description: get the credential datas from file into a GO struct.
-//
-// Returns:
-// - *CredentialStruct: a pointer to the a populated CredentialStruct or an error if anything fails.
-// - error: an error if anything fails.
 func getCredentialStrut() (*CredentialStruct, error) {
 	// get file path
 	filePath, err := getCredentialFilePath()
@@ -107,7 +58,9 @@ func getCredentialStrut() (*CredentialStruct, error) {
 	return &credentialConfigFile, nil
 }
 
-// GetSaId gets the ClientID from the credential struct.
+// Name: GetSaId
+//
+// Description: gets the ClientID from the credential struct.
 func GetSaId() (string, error) {
 	// get credential as a GO struct
 	creds, err := getCredentialStrut()
@@ -118,7 +71,9 @@ func GetSaId() (string, error) {
 	return creds.ServiceAccount.ClientID, nil
 }
 
-// GetSaSecret gets the ClientSecret from the credential struct.
+// Name: GetSaSecret
+//
+// Description: gets the ClientSecret from the credential struct.
 func GetSaSecret() (string, error) {
 	// get credential as a GO struct
 	creds, err := getCredentialStrut()
@@ -129,7 +84,9 @@ func GetSaSecret() (string, error) {
 	return creds.ServiceAccount.ClientSecret, nil
 }
 
-// GetAccessTokenFromFile gets the AccessToken from the credential struct.
+// Name: GetAccessTokenFromFile
+//
+// Description: gets the AccessToken from the credential struct.
 func GetAccessTokenFromFile() (string, error) {
 	// get credential as a GO struct
 	creds, err := getCredentialStrut()
@@ -140,6 +97,9 @@ func GetAccessTokenFromFile() (string, error) {
 	return creds.ServiceAccount.AccessToken, nil
 }
 
+// Name: GetAccessTokenFromServiceAccount
+//
+// Description: gets the AccessToken from the credential struct.
 func GetAccessTokenFromServiceAccount(ctx context.Context, logger logx.Logger) (string, error) {
 	// Get service account credentials
 	SaId, err := GetSaId()
@@ -180,7 +140,7 @@ func GetAccessTokenFromServiceAccount(ctx context.Context, logger logx.Logger) (
 	// Create the client
 	client := apicli.NewClient(urlBase)
 
-	// Play the request
+	// Play the request and get response
 	if err := client.Do(req, &resp); err != nil {
 		return "", fmt.Errorf("failed to fetch access token: %w", err)
 	}
@@ -188,12 +148,14 @@ func GetAccessTokenFromServiceAccount(ctx context.Context, logger logx.Logger) (
 	// Save token to file
 	if err := updateToken(resp.Token); err != nil {
 		logger.Warnf("could not update token file: %v", err)
-		// don't return error here, token retrieval was still successful
 	}
 
 	return resp.Token, nil
 }
 
+// Name: updateToken
+//
+// Description: updates the access token in the credential file.
 func updateToken(newToken string) error {
 
 	// get file path
@@ -234,29 +196,3 @@ func updateToken(newToken string) error {
 
 	return nil
 }
-
-// // Create the client
-// apiClient := apicli.NewClient("https://www.ovh.com") // base URL optional; domain can also be provided in Request
-
-// // Prepare the request
-// req := &apicli.Request{
-// 	Verb:     http.MethodPost,
-// 	Domain:   "www.ovh.com",
-// 	Endpoint: "/auth/oauth2/token",
-// 	Body:     body,
-// 	Context:  ctx,
-// 	Headers: map[string]string{
-// 		"Content-Type": "application/x-www-form-urlencoded", // optional, Resty auto-handles this
-// 	},
-// 	Logger: logger,
-// }
-
-// // Response struct
-// var resp AccessToken
-
-// // Execute the request
-// if err := apiClient.Do(req, &resp); err != nil {
-// 	return "", fmt.Errorf("failed to get access token: %w", err)
-// }
-
-// return resp.AccessToken, nil
