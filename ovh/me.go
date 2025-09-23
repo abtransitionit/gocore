@@ -8,7 +8,7 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-func VpsList(ctx context.Context, logger logx.Logger) ([]string, error) {
+func MeInfo(ctx context.Context, logger logx.Logger) (any, error) {
 	// get token from file
 	accessToken, err := GetAccessTokenFromFile()
 	if err != nil {
@@ -19,7 +19,7 @@ func VpsList(ctx context.Context, logger logx.Logger) ([]string, error) {
 
 	// define var
 	domain := DOMAIN_EU
-	endpoint := fmt.Sprintf("%s%s", NS_VERSION, "/vps")
+	endpoint := fmt.Sprintf("%s%s", NS_VERSION, "/me")
 	urlBase := fmt.Sprintf("https://%s", domain)
 	bearer := fmt.Sprintf("Bearer %s", accessToken)
 	logger.Infof("Domain: %s", domain)
@@ -40,8 +40,8 @@ func VpsList(ctx context.Context, logger logx.Logger) ([]string, error) {
 	}
 
 	// Define the response's struct
-	var resp []string
-
+	// var resp []string
+	var resp any
 	// Create the client
 	client := apicli.NewClient(urlBase)
 
