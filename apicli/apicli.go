@@ -39,7 +39,26 @@ func (c *Client) Do(req *Request, out any) error {
 		}
 	}
 
+	// define the url to be played
 	fullURL := fmt.Sprintf("https://%s%s", req.Domain, req.Endpoint)
-	_, err := r.Execute(req.Verb, fullURL)
-	return err
+
+	// Execute the request
+	resp, err := r.Execute(req.Verb, fullURL)
+	if err != nil {
+		// Network, context timeout, or other low-level error
+		return fmt.Errorf("request execution failed: %w", err)
+	}
+
+	// Check HTTP status code
+	if resp.StatusCode() >= 400 {
+		if resp.StatusCode() == 401 {
+			// Unauthorized → token may be expired or invalid
+			return fmt.Errorf("unauthorized: token may be expired or invalid (HTTP 401)")
+		}
+		// Other HTTP errors
+		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode(), resp.String())
+	}
+
+	// At this point, status is 2xx and 'out' has been unmarshaled if JSON
+	return nil
 }
