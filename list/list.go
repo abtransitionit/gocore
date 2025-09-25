@@ -2,8 +2,11 @@
 package list
 
 import (
+	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/abtransitionit/gocore/color"
 )
 
 // # Purpose
@@ -49,4 +52,19 @@ func GetStringWithSepFromSlice(ListString []string, separator string) string {
 
 func GetStringWithSpaceFromSlice(ListString []string) string {
 	return GetStringWithSepFromSlice(ListString, " ")
+}
+
+// PrettyPrint prints []string with rotating colors
+func PrettyPrint(list []string) {
+	colors := []string{
+		color.Red,
+		color.Green,
+		color.Yellow,
+		color.Blue,
+		color.Magenta,
+		color.Cyan,
+	}
+	for i, item := range list {
+		fmt.Println(color.Colorize(fmt.Sprintf("- %s", item), colors[i%len(colors)]))
+	}
 }

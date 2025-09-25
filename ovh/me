@@ -1,0 +1,54 @@
+package ovh
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/abtransitionit/gocore/apicli"
+	"github.com/abtransitionit/gocore/logx"
+)
+
+func MeInfo(ctx context.Context, logger logx.Logger) (any, error) {
+	// get token from file
+	accessToken, err := GetAccessTokenFromFile()
+	if err != nil {
+		logger.Errorf("%v", err)
+		return nil, err
+	}
+	logger.Infof("Loaded token. First char are: %s", accessToken[:10])
+
+	// define var
+	domain := DOMAIN_EU
+	endpoint := fmt.Sprintf("%s%s", NS_V1, "/me")
+	urlBase := fmt.Sprintf("https://%s", domain)
+	bearer := fmt.Sprintf("Bearer %s", accessToken)
+	logger.Infof("Domain: %s", domain)
+	logger.Infof("Endpoint: %s", endpoint)
+	logger.Infof("Bearer: %s", bearer)
+
+	// define the request structure
+	req := &apicli.Request{
+		Verb:     "GET",
+		Endpoint: endpoint,
+		Headers: map[string]string{
+			"Accept":        "application/json",
+			"Authorization": bearer,
+		},
+		Context: ctx,
+		Logger:  logger,
+	}
+
+	// Define the response's struct
+	// var resp []string
+	var resp any
+	// Create the client
+	client := apicli.NewClient(urlBase, logger)
+
+	// Play the request and get response
+	err = client.Do(req, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list VPS: %w", err)
+	}
+	return resp, nil
+
+}

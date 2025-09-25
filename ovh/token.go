@@ -7,14 +7,30 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
+	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
+	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/logx"
 )
 
+// ovh_client.go (OVH-specific)
+var cachedToken string
+var tokenOnce sync.Once
+
+// read token only if needed
+func GetCachedAccessToken() (string, error) {
+	var err error
+	tokenOnce.Do(func() {
+		cachedToken, err = GetAccessTokenFromFile() // OVH-specific
+	})
+	return cachedToken, err
+}
+
 // Name: CreateAccessTokenForServiceAccount
 //
-// Description: gets the AccessToken from the credential struct.
+// Description: create an AccessToken from the credential struct.
 func CreateAccessTokenForServiceAccount(ctx context.Context, logger logx.Logger) (string, error) {
 	// Get service account credentials
 	SaId, err := GetSaId()
@@ -29,39 +45,90 @@ func CreateAccessTokenForServiceAccount(ctx context.Context, logger logx.Logger)
 		return "", errors.New("client ID or client secret is not set")
 	}
 
-	// define the request structure
-	domain := "www.ovh.com"
-	urlBase := fmt.Sprintf("https://%s", domain)
-	req := &apicli.Request{
-		Verb:     "POST",
-		Domain:   domain,
-		Endpoint: "/auth/oauth2/token",
-		Headers: map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded", // ie. define the way the body is defined - here body is a set of curl:--data
-		},
-		Body: url.Values{
-			"grant_type":    {"client_credentials"},
-			"client_id":     {SaId},
-			"client_secret": {SaSecret},
-			"scope":         {"all"},
-		},
-		Context: ctx,
-		Logger:  logger,
+	// create a client without bearer
+	client := apicli.NewClient(DOMAIN_STD, logger)
+
+	// define the action
+	ep := endpointReference["CreateToken"]
+	endpoint, err := ep.BuildPath(nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to build path for %s: %w", ep.Desc, err)
 	}
 
-	// Define the response's struct
-	var resp AccessToken
-
-	// Create the client
-	client := apicli.NewClient(urlBase)
+	// define the request parameters
+	tokenParam := url.Values{
+		"grant_type":    {"client_credentials"},
+		"client_id":     {SaId},
+		"client_secret": {SaSecret},
+		"scope":         {"all"},
+	}
+	reqHeader := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded", // tells the server how the body is encoded
+	}
+	req := &apicli.Request{
+		Verb:     ep.Verb,
+		Endpoint: endpoint,
+		Headers:  reqHeader,
+		Body:     tokenParam,
+	}
 
 	// Play the request and get response
-	if err := client.Do(req, &resp); err != nil {
-		return "", fmt.Errorf("failed to fetch access token: %w", err)
+	var resp AccessToken
+	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
+	err = client.Do(req, &resp)
+	if err != nil {
+		return "", fmt.Errorf("failed to %s %w", ep.Desc, err)
+	}
+	return resp.Token, nil
+
+}
+
+// Name: getCredentialFilePath
+func getCredentialFilePath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve home directory %w", err)
 	}
 
-	// success
-	return resp.Token, nil
+	credentialPath := filepath.Join(home, credentialRelPath)
+
+	ok, err := filex.ExistsFile(credentialPath)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", fmt.Errorf("credential file not found: %s", credentialPath)
+	}
+
+	return credentialPath, nil
+}
+
+// Name: getCredentialStrut
+//
+// Description: get data from a file into  structure
+func getCredentialStrut() (*CredentialStruct, error) {
+	// define dest structure
+	var credStruct CredentialStruct
+
+	// get file path
+	filePath, err := getCredentialFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Read the entire file content.
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	// Map filecontent into the GO:struct (aka. Unmarshal the JSON)
+	if err := json.Unmarshal(fileContent, &credStruct); err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
+	}
+
+	// success - return credential as a pointer to a GO struct
+	return &credStruct, nil
 }
 
 // Name: GetAccessTokenFromFile
@@ -77,8 +144,12 @@ func GetAccessTokenFromFile() (string, error) {
 	return creds.ServiceAccount.AccessToken, nil
 }
 
-// CheckTokenExist checks if the token exists in the credential file.
-// Returns an error if the credential file is missing or token is empty.
+// Name: CheckTokenExist
+//
+// Description: checks if the token exists in the credential file.
+//
+// Returns:
+// - an error if the credential file is missing or token is empty.
 func CheckTokenExist(ctx context.Context, logger logx.Logger) error {
 	logger.Info("Checking token existence")
 
@@ -96,12 +167,16 @@ func CheckTokenExist(ctx context.Context, logger logx.Logger) error {
 	return nil
 }
 
-// RefreshToken generates a new token using the service account and updates the credential file.
-// Returns the new token or an error if something fails.
+// Name: RefreshToken
+//
+// Description: generates a new token using the service account and updates the credential file.
+//
+// Returns
+// - the new token or an error if something fails.
 func RefreshToken(ctx context.Context, logger logx.Logger) (string, error) {
 	logger.Info("Refreshing token")
 
-	// Get a new token from service account
+	// api get a new token from service account
 	newToken, err := CreateAccessTokenForServiceAccount(ctx, logger)
 	if err != nil {
 		return "", fmt.Errorf("failed to refresh token: %w", err)

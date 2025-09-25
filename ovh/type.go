@@ -9,10 +9,38 @@ type AccessToken struct {
 	// TokenType   string `json:"token_type"`
 }
 
+type VpsOsImage struct {
+	Name string
+	Id   string
+}
+type MapVpsOsImage map[string]VpsOsImage
+
+type VpsInfo struct {
+	DisplayName string
+	NameId      string
+	Distro      string
+}
+type MapVpsInfo map[string]VpsInfo
+
 type CredentialStruct struct {
+	SshKeyId       string `json:"sshKeyId"`
 	ServiceAccount struct {
 		ClientID     string `json:"clientId"`
 		ClientSecret string `json:"clientSecret"`
 		AccessToken  string `json:"access_token"`
 	} `json:"serviceAccount"`
+}
+
+type ListVpsStruct struct {
+	Vps []struct {
+		DisplayName string `json:"DisplayName"`
+		NameId      string `json:"NameId"`
+		Distro      string `json:"Distro"`
+	} `json:"vps"`
+}
+
+type VpsReinstallParam struct {
+	DoNotSendPassword bool   `json:"doNotSendPassword"`
+	ImageId           string `json:"imageId"`
+	PublicSshKey      string `json:"publicSshKey"`
 }

@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-
-	"github.com/go-resty/resty/v2"
 )
 
-// Client wraps resty.Client
-type Client struct {
-	resty *resty.Client
-}
-
-func NewClient(baseURL string) *Client {
-	r := resty.New().SetBaseURL(baseURL)
-	return &Client{resty: r}
-}
-
 func (c *Client) Do(req *Request, out any) error {
+	// Use request context or fallback to client default
+	ctx := req.Context
+	if ctx == nil {
+		ctx = c.Ctx
+	}
+
+	// Use request logger or fallback to client default
+	logger := req.Logger
+	if logger == nil && c.Logger != nil {
+		logger = c.Logger
+	}
+	// Create the request
 	r := c.resty.R().
 		SetContext(req.Context).
 		SetHeaders(req.Headers).
@@ -39,8 +39,17 @@ func (c *Client) Do(req *Request, out any) error {
 		}
 	}
 
+	// Inject token if token function is provided
+	if c.tokenFunc != nil {
+		token, err := c.tokenFunc()
+		if err != nil {
+			return fmt.Errorf("failed to get token: %w", err)
+		}
+		r.SetHeader("Authorization", "Bearer "+token)
+	}
+
 	// define the url to be played
-	fullURL := fmt.Sprintf("https://%s%s", req.Domain, req.Endpoint)
+	fullURL := fmt.Sprintf("https://%s%s", c.domain, req.Endpoint)
 
 	// Execute the request
 	resp, err := r.Execute(req.Verb, fullURL)

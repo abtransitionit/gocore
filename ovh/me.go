@@ -5,50 +5,33 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/apicli"
+	"github.com/abtransitionit/gocore/jsonx"
 	"github.com/abtransitionit/gocore/logx"
 )
 
-func MeInfo(ctx context.Context, logger logx.Logger) (any, error) {
-	// get token from file
-	accessToken, err := GetAccessTokenFromFile()
-	if err != nil {
-		logger.Errorf("%v", err)
-		return nil, err
-	}
-	logger.Infof("Loaded token. First char are: %s", accessToken[:10])
+func MeGetInfo(ctx context.Context, logger logx.Logger) (jsonx.Json, error) {
+	// create a client
+	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
 
-	// define var
-	domain := DOMAIN_EU
-	endpoint := fmt.Sprintf("%s%s", NS_VERSION, "/me")
-	urlBase := fmt.Sprintf("https://%s", domain)
-	bearer := fmt.Sprintf("Bearer %s", accessToken)
-	logger.Infof("Domain: %s", domain)
-	logger.Infof("Endpoint: %s", endpoint)
-	logger.Infof("Bearer: %s", bearer)
+	// define the action
+	ep := endpointReference["MeGetInfo"]
+	endpoint, err := ep.BuildPath(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build path for %s: %w", ep.Desc, err)
+	}
 
 	// define the request structure
 	req := &apicli.Request{
-		Verb:     "GET",
-		Domain:   domain,
+		Verb:     ep.Verb,
 		Endpoint: endpoint,
-		Headers: map[string]string{
-			"Accept":        "application/json",
-			"Authorization": bearer,
-		},
-		Context: ctx,
-		Logger:  logger,
 	}
 
-	// Define the response's struct
-	// var resp []string
-	var resp any
-	// Create the client
-	client := apicli.NewClient(urlBase)
-
 	// Play the request and get response
+	var resp jsonx.Json
+	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
 	err = client.Do(req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list VPS: %w", err)
+		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
 	}
 	return resp, nil
 
