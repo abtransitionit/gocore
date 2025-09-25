@@ -156,20 +156,20 @@ func GetOsImageId(VpsNameId string) (string, error) {
 	return image.Id, nil
 }
 
-func GetListVpsFromFile() (string, error) {
+func GetListVpsFromFile() (*ListVpsStruct, error) {
 	// get List as a GO struct
-	creds, err := getCredentialStrut()
+	listVps, err := getlistVpsStruct()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// success
-	return creds.ServiceAccount.AccessToken, nil
+	return listVps, nil
 }
 
 // Name: getCredentialStrut
 //
 // Description: get file:data into  Go:structure
-func getlistVpsStrut() (*ListVpsStruct, error) {
+func getlistVpsStruct() (*ListVpsStruct, error) {
 	// define dest structure
 	var listVpsStruct ListVpsStruct
 
