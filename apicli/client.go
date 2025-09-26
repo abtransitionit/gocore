@@ -15,7 +15,7 @@ import (
 //   - pass the domain
 func NewClient(domain string, logger logx.Logger) *Client {
 	urlBase := fmt.Sprintf("https://%s", domain)
-	logger.Infof("Creating client with base URL: %s", urlBase) // debug log
+	// logger.Infof("Creating client with base URL: %s", urlBase) // debug log
 	r := resty.New().
 		SetBaseURL(urlBase).
 		SetHeader("Accept", "application/json") // default for all requests

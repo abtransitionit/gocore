@@ -11,9 +11,9 @@ import (
 
 func MeGetInfo(ctx context.Context, logger logx.Logger) (jsonx.Json, error) {
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
-	// define the action
+	// define the api action
 	ep := endpointReference["MeGetInfo"]
 	endpoint, err := ep.BuildPath(nil)
 	if err != nil {
@@ -29,9 +29,9 @@ func MeGetInfo(ctx context.Context, logger logx.Logger) (jsonx.Json, error) {
 	// Play the request and get response
 	var resp jsonx.Json
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 

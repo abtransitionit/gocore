@@ -1,16 +1,15 @@
 package apicli
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/url"
 )
 
-func (c *Client) Do(req *Request, out any) error {
-	// Use request context or fallback to client default
-	ctx := req.Context
+func (c *Client) Do(ctx context.Context, req *Request, out any) error {
 	if ctx == nil {
-		ctx = c.Ctx
+		return fmt.Errorf("context must not be nil")
 	}
 
 	// Use request logger or fallback to client default
@@ -20,7 +19,7 @@ func (c *Client) Do(req *Request, out any) error {
 	}
 	// Create the request
 	r := c.resty.R().
-		SetContext(req.Context).
+		SetContext(ctx).
 		SetHeaders(req.Headers).
 		SetQueryParams(req.QueryParams).
 		SetResult(out)
@@ -54,11 +53,10 @@ func (c *Client) Do(req *Request, out any) error {
 	// Execute the request
 	resp, err := r.Execute(req.Verb, fullURL)
 	if err != nil {
-		// Network, context timeout, or other low-level error
 		return fmt.Errorf("request execution failed: %w", err)
 	}
 
-	// Check HTTP status code
+	// Handle HTTP errors
 	if resp.StatusCode() >= 400 {
 		if resp.StatusCode() == 401 {
 			// Unauthorized → token may be expired or invalid
@@ -69,5 +67,8 @@ func (c *Client) Do(req *Request, out any) error {
 	}
 
 	// At this point, status is 2xx and 'out' has been unmarshaled if JSON
+	if logger != nil {
+		logger.Debugf("Request successful: %s %s", req.Verb, fullURL)
+	}
 	return nil
 }

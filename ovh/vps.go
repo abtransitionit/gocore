@@ -3,10 +3,10 @@ package ovh
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/abtransitionit/gocore/apicli"
 	"github.com/abtransitionit/gocore/filex"
@@ -18,7 +18,7 @@ func VpsGetList(ctx context.Context, logger logx.Logger) ([]string, error) {
 	// define response type
 	var resp []string
 
-	// define the action
+	// define the api action
 	ep := endpointReference["VpsGetList"]
 	endpoint, err := ep.BuildPath(nil)
 	if err != nil {
@@ -32,21 +32,23 @@ func VpsGetList(ctx context.Context, logger logx.Logger) ([]string, error) {
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
+
+	// success
 	return resp, nil
 }
 func VpsGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, error) {
 	// define response type
 	var resp jsonx.Json
 
-	// define the action
+	// define the api action
 	ep := endpointReference["VpsGetDetail"]
 	endpoint, err := ep.BuildPath(map[string]string{"id": id})
 	if err != nil {
@@ -54,7 +56,7 @@ func VpsGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.Jso
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// define the request structure
 	req := &apicli.Request{
@@ -64,8 +66,8 @@ func VpsGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.Jso
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	if err := client.Do(req, &resp); err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+	if err := client.Do(ctx, req, &resp); err != nil {
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 }
@@ -73,7 +75,7 @@ func VpsGetOs(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, e
 	// define response type
 	var resp jsonx.Json
 
-	// define the action
+	// define the api action
 	ep := endpointReference["VpsGetOs"]
 	endpoint, err := ep.BuildPath(map[string]string{"id": id})
 	if err != nil {
@@ -81,7 +83,7 @@ func VpsGetOs(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, e
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// define the request structure
 	req := &apicli.Request{
@@ -91,9 +93,9 @@ func VpsGetOs(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, e
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 }
@@ -102,7 +104,7 @@ func VpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 	// define response type
 	var resp jsonx.Json
 
-	// define the action
+	// define the api action
 	ep := endpointReference["VpsReinstall"]
 	endpoint, err := ep.BuildPath(map[string]string{"id": id})
 	if err != nil {
@@ -110,7 +112,7 @@ func VpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// define the request structure
 	req := &apicli.Request{
@@ -121,36 +123,42 @@ func VpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	if err := client.Do(req, &resp); err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+	if err := client.Do(ctx, req, &resp); err != nil {
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 }
 
-func GetOsImageId(VpsNameId string) (string, error) {
-	var vps VpsInfo
-	// 1️⃣ find VPS by NameId
-	found := false
-	for _, info := range vpsReference {
-		if info.NameId == VpsNameId {
-			vps = info
-			found = true
-			break
-		}
-	}
-	if !found {
-		return "", fmt.Errorf("VPS with NameId %q not found", VpsNameId)
+func GetListOsImageFromStruct() MapVpsOsImage {
+	return vpsOsImageReference
+}
+
+func GetVpsImageId(vpsNameId string) (string, error) {
+	// load VPS list
+	listVps, err := GetListVpsFromFile()
+	if err != nil {
+		return "", fmt.Errorf("failed to load VPS list: %w", err)
 	}
 
-	// 2️⃣ lookup OS image by Distro
-	image, ok := vpsOsImageReference[vps.Distro]
+	// build a lookup map for NameId -> Distro
+	nameIdToDistro := make(map[string]string, len(*listVps))
+	for _, vps := range *listVps {
+		nameIdToDistro[vps.NameId] = vps.Distro
+	}
+
+	// lookup distro by vpsNameId
+	distro, ok := nameIdToDistro[vpsNameId]
 	if !ok {
-		return "", fmt.Errorf("Distro %q not found in vpsOsImageReference", vps.Distro)
+		return "", fmt.Errorf("no VPS found with NameId %s", vpsNameId)
 	}
 
-	// 3️⃣ check if Id is empty
-	if image.Id == "" {
-		return "", errors.New("OS image Id is empty")
+	// load images (static map)
+	listImage := GetListOsImageFromStruct()
+
+	// lookup image by distro
+	image, ok := listImage[distro]
+	if !ok {
+		return "", fmt.Errorf("no image found for distro %s", distro)
 	}
 
 	return image.Id, nil
@@ -161,6 +169,13 @@ func GetListVpsFromFile() (*ListVpsStruct, error) {
 	listVps, err := getlistVpsStruct()
 	if err != nil {
 		return nil, err
+	}
+	// inject a dynamic field into the struct
+	for key, vps := range *listVps {
+		if len(vps.Distro) > 0 {
+			vps.NameDynamic = key + strings.ToLower(string(vps.Distro[0]))
+			(*listVps)[key] = vps // reassign updated struct
+		}
 	}
 	// success
 	return listVps, nil
@@ -190,6 +205,14 @@ func getlistVpsStruct() (*ListVpsStruct, error) {
 		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
 
+	// // inject a dynamic field
+	// for key, vps := range listVpsStruct {
+	// 	if len(vps.Distro) > 0 {
+	// 		vps.NameDynamic = key + strings.ToLower(string(vps.Distro[0]))
+	// 		listVpsStruct[key] = vps // reassign updated struct
+	// 	}
+	// }
+
 	// success - return credential as a pointer to a GO struct
 	return &listVpsStruct, nil
 }
@@ -211,4 +234,92 @@ func getListVpsFilePath() (string, error) {
 	}
 
 	return listVpsPath, nil
+}
+
+// Name: VpsReinstallHandler
+//
+// Description: api rebuild a VPS
+//
+// Parameters:
+//   - ctx: context.Context
+//   - logger: logx.Logger
+//   - vpsNameId: string
+//
+// Returns:
+//   - jsonx.Json:
+//   - error
+func VpsReinstallHandler(ctx context.Context, logger logx.Logger, vpsNameId string) (jsonx.Json, error) {
+	// get ssh key id
+	sshKeyId, err := SshKeyGetIdFromFileCached()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSH key id: %w", err)
+	}
+
+	// api get ssh key detail
+	sshKeyDetail, err := SshKeyGetDetail(ctx, logger, sshKeyId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSH key detail: %w", err)
+	}
+
+	// api get ssh public key
+	sshPubKey, err := SshKeyGetPublic(ctx, logger, sshKeyDetail)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSH public key: %w", err)
+	}
+
+	// get OS image id
+	imageId, err := GetVpsImageId(vpsNameId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve image id for VPS %s: %w", vpsNameId, err)
+	}
+
+	// define the reinstall parameter
+	reinstallParam := VpsReinstallParam{
+		DoNotSendPassword: true,
+		ImageId:           imageId,
+		PublicSshKey:      sshPubKey, // example
+	}
+
+	// reinstall the vps via api
+	vpsInfo, err := VpsReinstall(ctx, logger, vpsNameId, reinstallParam)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reinstall VPS %s: %w", vpsNameId, err)
+	}
+	return vpsInfo, nil
+}
+
+func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsNameId string) (bool, error) {
+	// api get vps detail
+	vpsDetail, err := VpsGetDetail(ctx, logger, vpsNameId)
+	if err != nil {
+		return false, err
+	}
+	// get the vps:state
+	state, ok := vpsDetail["state"].(string)
+	if !ok {
+		return false, fmt.Errorf("unexpected state format in VPS detail")
+	}
+
+	return state == "running", nil
+}
+
+// Name: DisplayVpsDetail
+//
+// Description: gets a VPS:detail or a VPS:detail:field according to field.
+// Returns
+// - an error instead of exiting, so the caller can handle it.
+func GetVpsDetailFiltered(ctx context.Context, logger logx.Logger, vpsDetail jsonx.Json, field string) (jsonx.Json, error) {
+	if vpsDetail == nil {
+		return nil, fmt.Errorf("vpsDetail is nil")
+	}
+
+	if field != "" {
+		val, ok := jsonx.GetField(vpsDetail, field)
+		if !ok {
+			return nil, fmt.Errorf("field %s not found in VPS detail", field)
+		}
+		return jsonx.Json{field: val}, nil
+	}
+
+	return vpsDetail, nil
 }

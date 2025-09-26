@@ -3,6 +3,7 @@ package jsonx
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/tidwall/pretty"
 )
@@ -14,6 +15,23 @@ func PrettyPrint(v interface{}) {
 		return
 	}
 	fmt.Println(string(b))
+}
+
+func GetField(m map[string]interface{}, path string) (interface{}, bool) {
+	parts := strings.Split(path, ".")
+	var current interface{} = m
+	for _, p := range parts {
+		if m2, ok := current.(map[string]interface{}); ok {
+			if val, exists := m2[p]; exists {
+				current = val
+			} else {
+				return nil, false
+			}
+		} else {
+			return nil, false
+		}
+	}
+	return current, true
 }
 
 func PrettyPrintColor(v interface{}) {

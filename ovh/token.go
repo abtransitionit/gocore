@@ -20,7 +20,7 @@ var cachedToken string
 var tokenOnce sync.Once
 
 // read token only if needed
-func GetCachedAccessToken() (string, error) {
+func GetAccessTokenFromFileCached() (string, error) {
 	var err error
 	tokenOnce.Do(func() {
 		cachedToken, err = GetAccessTokenFromFile() // OVH-specific
@@ -48,7 +48,7 @@ func CreateAccessTokenForServiceAccount(ctx context.Context, logger logx.Logger)
 	// create a client without bearer
 	client := apicli.NewClient(DOMAIN_STD, logger)
 
-	// define the action
+	// define the api action
 	ep := endpointReference["CreateToken"]
 	endpoint, err := ep.BuildPath(nil)
 	if err != nil {
@@ -75,9 +75,9 @@ func CreateAccessTokenForServiceAccount(ctx context.Context, logger logx.Logger)
 	// Play the request and get response
 	var resp AccessToken
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return "", fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return "", fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp.Token, nil
 

@@ -15,33 +15,33 @@ const NS_V2 = "v2"
 var credentialRelPath = filepath.Join("wkspc", ".config", "ovh", "credential.json")
 var listVpsRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
 
-var vpsReference = MapVpsInfo{
-	"o1": {
-		DisplayName: "vm.ovh.01",
-		NameId:      "vps-9c33782a.vps.ovh.net",
-		Distro:      "ubuntu2504",
-	},
-	"o2": {
-		DisplayName: "vm.ovh.02",
-		NameId:      "vps-ff9b9706.vps.ovh.net",
-		Distro:      "alma9",
-	},
-	"o3": {
-		DisplayName: "vm.ovh.03",
-		NameId:      "vps-5b6ad1b7.vps.ovh.net",
-		Distro:      "rocky9",
-	},
-	"o4": {
-		DisplayName: "vm.ovh.04",
-		NameId:      "vps-54f2f0c1.vps.ovh.ca",
-		Distro:      "Fedora42",
-	},
-	"o5": {
-		DisplayName: "vm.ovh.05",
-		NameId:      "vps-a7a8f7f6.vps.ovh.net",
-		Distro:      "debian12",
-	},
-}
+// var vpsReference = MapVpsInfo{
+// 	"o1": {
+// 		DisplayName: "vm.ovh.01",
+// 		NameId:      "vps-9c33782a.vps.ovh.net",
+// 		Distro:      "ubuntu2504",
+// 	},
+// 	"o2": {
+// 		DisplayName: "vm.ovh.02",
+// 		NameId:      "vps-ff9b9706.vps.ovh.net",
+// 		Distro:      "alma9",
+// 	},
+// 	"o3": {
+// 		DisplayName: "vm.ovh.03",
+// 		NameId:      "vps-5b6ad1b7.vps.ovh.net",
+// 		Distro:      "rocky9",
+// 	},
+// 	"o4": {
+// 		DisplayName: "vm.ovh.04",
+// 		NameId:      "vps-54f2f0c1.vps.ovh.ca",
+// 		Distro:      "Fedora42",
+// 	},
+// 	"o5": {
+// 		DisplayName: "vm.ovh.05",
+// 		NameId:      "vps-a7a8f7f6.vps.ovh.net",
+// 		Distro:      "debian12",
+// 	},
+// }
 
 var vpsOsImageReference = MapVpsOsImage{
 	"alma9": {

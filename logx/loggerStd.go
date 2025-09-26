@@ -146,12 +146,12 @@ func (l *stdLogger) ErrorWithNoStack(err error, format string, v ...any) {
 
 // Warn logs a simple warning message
 func (l *stdLogger) Warn(msg string) {
-	l.logger.Output(2, "WARN:   "+msg)
+	l.logger.Output(2, colorYellow+"WARN:   "+msg+colorReset)
 }
 
 // Warnf logs a formatted warning message
 func (l *stdLogger) Warnf(format string, v ...any) {
-	l.logger.Output(2, "WARN:   "+fmt.Sprintf(format, v...))
+	l.logger.Output(2, colorYellow+"WARN:   "+fmt.Sprintf(format, v...)+colorReset)
 }
 
 func (l *stdLogger) Warnw(msg string, keysAndValues ...any) {
@@ -166,7 +166,7 @@ func (l *stdLogger) Warnw(msg string, keysAndValues ...any) {
 			msg += fmt.Sprintf("%v=%v ", k, v)
 		}
 	}
-	l.logger.Output(2, "WARN:   "+msg)
+	l.logger.Output(2, colorYellow+"WARN:   "+msg+colorReset)
 }
 
 // Debug logs a simple debug message

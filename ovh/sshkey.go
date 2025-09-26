@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
 	"github.com/abtransitionit/gocore/jsonx"
@@ -13,7 +14,7 @@ func SshKeyGetList(ctx context.Context, logger logx.Logger) ([]string, error) {
 	// define response type
 	var resp []string
 
-	// define the action
+	// define the api action
 	ep := endpointReference["SshKeyGetList"]
 	endpoint, err := ep.BuildPath(nil)
 	if err != nil {
@@ -21,7 +22,7 @@ func SshKeyGetList(ctx context.Context, logger logx.Logger) ([]string, error) {
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// define the request structure
 	req := &apicli.Request{
@@ -31,9 +32,9 @@ func SshKeyGetList(ctx context.Context, logger logx.Logger) ([]string, error) {
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 }
@@ -41,7 +42,7 @@ func SshKeyGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.
 	// define response type
 	var resp jsonx.Json
 
-	// define the action
+	// define the api action
 	ep := endpointReference["SshKeyGetDetail"]
 	endpoint, err := ep.BuildPath(map[string]string{"id": id})
 	if err != nil {
@@ -49,7 +50,7 @@ func SshKeyGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.
 	}
 
 	// create a client
-	client := apicli.NewClient(DOMAIN_EU, logger).WithBearerToken(GetCachedAccessToken)
+	client := GetOvhClientCached(logger)
 
 	// define the request structure
 	req := &apicli.Request{
@@ -59,9 +60,37 @@ func SshKeyGetDetail(ctx context.Context, logger logx.Logger, id string) (jsonx.
 
 	// Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to %s %w", ep.Desc, err)
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
+	}
+	return resp, nil
+}
+func SshKeyGetDetailCached(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, error) {
+	// define response type
+	var resp jsonx.Json
+
+	// define the api action
+	ep := endpointReference["SshKeyGetDetail"]
+	endpoint, err := ep.BuildPath(map[string]string{"id": id})
+	if err != nil {
+		return nil, fmt.Errorf("failed to build path for %s: %w", ep.Desc, err)
+	}
+
+	// create a client
+	client := GetOvhClientCached(logger)
+
+	// define the request structure
+	req := &apicli.Request{
+		Verb:     ep.Verb,
+		Endpoint: endpoint,
+	}
+
+	// Play the request and get response
+	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
+	err = client.Do(ctx, req, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 	return resp, nil
 }
@@ -81,4 +110,18 @@ func SshKeyGetIdFromFile() (string, error) {
 	}
 	// success
 	return creds.SshKeyId, nil
+}
+
+// cache the result
+var (
+	cachedSshKeyId   string
+	cachedSshKeyOnce sync.Once
+	cachedSshKeyErr  error
+)
+
+func SshKeyGetIdFromFileCached() (string, error) {
+	cachedSshKeyOnce.Do(func() {
+		cachedSshKeyId, cachedSshKeyErr = SshKeyGetIdFromFile()
+	})
+	return cachedSshKeyId, cachedSshKeyErr
 }

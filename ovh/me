@@ -45,7 +45,7 @@ func MeInfo(ctx context.Context, logger logx.Logger) (any, error) {
 	client := apicli.NewClient(urlBase, logger)
 
 	// Play the request and get response
-	err = client.Do(req, &resp)
+	err = client.Do(ctx, req, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list VPS: %w", err)
 	}

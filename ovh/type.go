@@ -15,12 +15,12 @@ type VpsOsImage struct {
 }
 type MapVpsOsImage map[string]VpsOsImage
 
-type VpsInfo struct {
-	DisplayName string
-	NameId      string
-	Distro      string
-}
-type MapVpsInfo map[string]VpsInfo
+// type VpsInfo struct {
+// 	DisplayName string
+// 	NameId      string
+// 	Distro      string
+// }
+// type MapVpsInfo map[string]VpsInfo
 
 type CredentialStruct struct {
 	SshKeyId       string `json:"sshKeyId"`
@@ -31,13 +31,15 @@ type CredentialStruct struct {
 	} `json:"serviceAccount"`
 }
 
-type ListVpsStruct struct {
-	Vps []struct {
-		DisplayName string `json:"DisplayName"`
-		NameId      string `json:"NameId"`
-		Distro      string `json:"Distro"`
-	} `json:"vps"`
+type Vps struct {
+	DisplayName string `json:"displayName"`
+	NameId      string `json:"nameId"`
+	Distro      string `json:"distro"`
+	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
+
 }
+
+type ListVpsStruct map[string]Vps
 
 type VpsReinstallParam struct {
 	DoNotSendPassword bool   `json:"doNotSendPassword"`
