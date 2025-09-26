@@ -42,7 +42,7 @@ func GetFilteredJson(ctx context.Context, logger logx.Logger, jsonData Json, fie
 		return nil, fmt.Errorf("no json provided")
 	}
 
-	// 2 - Apply optional field filtering directly
+	// 2 - Apply optional field filtering
 	if field != "" {
 		val, ok := GetField(jsonData, field)
 		if !ok {
