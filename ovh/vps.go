@@ -236,7 +236,7 @@ func getListVpsFilePath() (string, error) {
 	return listVpsPath, nil
 }
 
-// Name: VpsReinstallHandler
+// Name: VpsReinstallHelper
 //
 // Description: api rebuild a VPS
 //
@@ -248,7 +248,7 @@ func getListVpsFilePath() (string, error) {
 // Returns:
 //   - jsonx.Json:
 //   - error
-func VpsReinstallHandler(ctx context.Context, logger logx.Logger, vpsNameId string) (jsonx.Json, error) {
+func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId string) (jsonx.Json, error) {
 	// get ssh key id
 	sshKeyId, err := SshKeyGetIdFromFileCached()
 	if err != nil {
@@ -308,17 +308,21 @@ func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsNameId string) 
 // Description: gets a VPS:detail or a VPS:detail:field according to field.
 // Returns
 // - an error instead of exiting, so the caller can handle it.
-func GetVpsDetailFiltered(ctx context.Context, logger logx.Logger, vpsDetail jsonx.Json, field string) (jsonx.Json, error) {
-	if vpsDetail == nil {
-		return nil, fmt.Errorf("vpsDetail is nil")
+func GetFilteredVpsDetail(ctx context.Context, logger logx.Logger, vpsID, field string) (jsonx.Json, error) {
+	// 1 - api get VPS detail
+	vpsDetail, err := VpsGetDetail(ctx, logger, vpsID)
+	if err != nil {
+		return nil, err
 	}
 
+	// 2 - Apply optional field filtering directly
 	if field != "" {
 		val, ok := jsonx.GetField(vpsDetail, field)
 		if !ok {
 			return nil, fmt.Errorf("field %s not found in VPS detail", field)
 		}
-		return jsonx.Json{field: val}, nil
+		// wrap in jsonx.Json to keep consistent type
+		vpsDetail = jsonx.Json{field: val}
 	}
 
 	return vpsDetail, nil
