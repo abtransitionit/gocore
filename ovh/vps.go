@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
 	"github.com/abtransitionit/gocore/filex"
@@ -133,35 +134,48 @@ func GetListOsImageFromStruct() MapVpsOsImage {
 	return vpsOsImageReference
 }
 
-func GetVpsImageId(vpsNameId string) (string, error) {
-	// load VPS list
-	listVps, err := GetListVpsFromFile()
+func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
+	// 1 - get VPS:list (static file)
+	listVps, err := GetListVpsFromFileCached()
 	if err != nil {
 		return "", fmt.Errorf("failed to load VPS list: %w", err)
 	}
-
-	// build a lookup map for NameId -> Distro
-	nameIdToDistro := make(map[string]string, len(*listVps))
-	for _, vps := range *listVps {
-		nameIdToDistro[vps.NameId] = vps.Distro
-	}
-
-	// lookup distro by vpsNameId
-	distro, ok := nameIdToDistro[vpsNameId]
-	if !ok {
-		return "", fmt.Errorf("no VPS found with NameId %s", vpsNameId)
-	}
-
-	// load images (static map)
+	// 2 - get OsIage:list (static map)
 	listImage := GetListOsImageFromStruct()
 
-	// lookup image by distro
-	image, ok := listImage[distro]
+	// 3 - lookup the vps which has the vpsNameId
+	var vps Vps
+	var vpsKey string
+
+	found := false
+	// loop over all vps object
+	for key, candidate := range *listVps {
+		if candidate.NameId == vpsNameId {
+			vps = candidate
+			vpsKey = key
+			found = true
+			break
+		}
+	}
+	if !found {
+		return "", fmt.Errorf("VPS not found with NameId: %s", vpsNameId)
+	}
+	// here we have the vps
+	logger.Infof("vpsNameId: %s, distro: %s, VpsShortName: %s", vpsNameId, vps.Distro, vpsKey)
+
+	// 4 - get the distro
+	if strings.TrimSpace(vps.Distro) == "" {
+		return "", fmt.Errorf("VPS %s has no distro defined", vpsNameId)
+	}
+
+	// 5 - lookup the image ID for this distro
+	image, ok := listImage[vps.Distro]
 	if !ok {
-		return "", fmt.Errorf("no image found for distro %s", distro)
+		return "", fmt.Errorf("no image found for distro: %s", vps.Distro)
 	}
 
 	return image.Id, nil
+
 }
 
 func GetListVpsFromFile() (*ListVpsStruct, error) {
@@ -179,6 +193,19 @@ func GetListVpsFromFile() (*ListVpsStruct, error) {
 	}
 	// success
 	return listVps, nil
+}
+
+var (
+	listVpsOnce sync.Once
+	listVpsVal  *ListVpsStruct
+	listVpsErr  error
+)
+
+func GetListVpsFromFileCached() (*ListVpsStruct, error) {
+	listVpsOnce.Do(func() {
+		listVpsVal, listVpsErr = GetListVpsFromFile()
+	})
+	return listVpsVal, listVpsErr
 }
 
 // Name: getCredentialStrut
@@ -204,14 +231,6 @@ func getlistVpsStruct() (*ListVpsStruct, error) {
 	if err := json.Unmarshal(fileContent, &listVpsStruct); err != nil {
 		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
-
-	// // inject a dynamic field
-	// for key, vps := range listVpsStruct {
-	// 	if len(vps.Distro) > 0 {
-	// 		vps.NameDynamic = key + strings.ToLower(string(vps.Distro[0]))
-	// 		listVpsStruct[key] = vps // reassign updated struct
-	// 	}
-	// }
 
 	// success - return credential as a pointer to a GO struct
 	return &listVpsStruct, nil
@@ -246,29 +265,28 @@ func getListVpsFilePath() (string, error) {
 //   - vpsNameId: string
 //
 // Returns:
-//   - jsonx.Json:
+//   - jsonx.Json: info concerning the rebuilded VPS
 //   - error
+//
+// Notes:
+//   - the returned Json is sended immediately after the API call is received and does not wait the VPS to be ready
 func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId string) (jsonx.Json, error) {
-	// get ssh key id
-	sshKeyId, err := SshKeyGetIdFromFileCached()
+	// 1 - get the Vps:SshKey:id
+	keyId, err := GetSshKeyIdFromFileCached()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SSH key id: %w", err)
+		logger.Errorf("failed to get ssh key id %v", err)
+		os.Exit(1)
 	}
 
-	// api get ssh key detail
-	sshKeyDetail, err := SshKeyGetDetail(ctx, logger, sshKeyId)
+	// 1 - get the Vps:SshKey:publicKey
+	sshPubKey, err := SshKeyGetPublicKeyCached(context.Background(), logger, keyId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SSH key detail: %w", err)
+		logger.Errorf("failed to get ssh public key %v", err)
+		os.Exit(1)
 	}
 
-	// api get ssh public key
-	sshPubKey, err := SshKeyGetPublic(ctx, logger, sshKeyDetail)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get SSH public key: %w", err)
-	}
-
-	// get OS image id
-	imageId, err := GetVpsImageId(vpsNameId)
+	// 3 - get the Vps:OS:ImageId
+	imageId, err := GetVpsImageId(vpsNameId, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve image id for VPS %s: %w", vpsNameId, err)
 	}
@@ -279,6 +297,8 @@ func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId strin
 		ImageId:           imageId,
 		PublicSshKey:      sshPubKey, // example
 	}
+
+	// jsonx.PrettyPrintColor(reinstallParam)
 
 	// reinstall the vps via api
 	vpsInfo, err := VpsReinstall(ctx, logger, vpsNameId, reinstallParam)
@@ -308,22 +328,22 @@ func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsNameId string) 
 // Description: gets a VPS:detail or a VPS:detail:field according to field.
 // Returns
 // - an error instead of exiting, so the caller can handle it.
-func GetFilteredVpsDetail(ctx context.Context, logger logx.Logger, vpsID, field string) (jsonx.Json, error) {
-	// 1 - api get VPS detail
-	vpsDetail, err := VpsGetDetail(ctx, logger, vpsID)
-	if err != nil {
-		return nil, err
-	}
+// func GetFilteredVpsDetail(ctx context.Context, logger logx.Logger, vpsID, field string) (jsonx.Json, error) {
+// 	// 1 - api get VPS detail
+// 	vpsDetail, err := VpsGetDetail(ctx, logger, vpsID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// 2 - Apply optional field filtering directly
-	if field != "" {
-		val, ok := jsonx.GetField(vpsDetail, field)
-		if !ok {
-			return nil, fmt.Errorf("field %s not found in VPS detail", field)
-		}
-		// wrap in jsonx.Json to keep consistent type
-		vpsDetail = jsonx.Json{field: val}
-	}
+// 	// 2 - Apply optional field filtering directly
+// 	if field != "" {
+// 		val, ok := jsonx.GetField(vpsDetail, field)
+// 		if !ok {
+// 			return nil, fmt.Errorf("field %s not found in VPS detail", field)
+// 		}
+// 		// wrap in jsonx.Json to keep consistent type
+// 		vpsDetail = jsonx.Json{field: val}
+// 	}
 
-	return vpsDetail, nil
-}
+// 	return vpsDetail, nil
+// }

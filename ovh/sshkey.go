@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
@@ -94,15 +95,16 @@ func SshKeyGetDetailCached(ctx context.Context, logger logx.Logger, id string) (
 	}
 	return resp, nil
 }
-func SshKeyGetPublic(ctx context.Context, logger logx.Logger, sshKeyDetail jsonx.Json) (string, error) {
-	// check parameters
-	if sshKeyDetail == nil {
-		return "", fmt.Errorf("sshKeyDetail is nil")
-	}
-	return sshKeyDetail["key"].(string), nil
-}
 
-func SshKeyGetIdFromFile() (string, error) {
+// func SshKeyGetPublicKey2(ctx context.Context, logger logx.Logger, sshKeyDetail jsonx.Json) (string, error) {
+// 	// check parameters
+// 	if sshKeyDetail == nil {
+// 		return "", fmt.Errorf("sshKeyDetail is nil")
+// 	}
+// 	return sshKeyDetail["key"].(string), nil
+// }
+
+func GetSshKeyIdFromFile() (string, error) {
 	// get credential as a GO struct
 	creds, err := getCredentialStrut()
 	if err != nil {
@@ -114,14 +116,61 @@ func SshKeyGetIdFromFile() (string, error) {
 
 // cache the result
 var (
-	cachedSshKeyId   string
 	cachedSshKeyOnce sync.Once
 	cachedSshKeyErr  error
+	cachedSshKeyId   string
 )
 
-func SshKeyGetIdFromFileCached() (string, error) {
+func GetSshKeyIdFromFileCached() (string, error) {
 	cachedSshKeyOnce.Do(func() {
-		cachedSshKeyId, cachedSshKeyErr = SshKeyGetIdFromFile()
+		cachedSshKeyId, cachedSshKeyErr = GetSshKeyIdFromFile()
 	})
 	return cachedSshKeyId, cachedSshKeyErr
+}
+
+func SshKeyGetPublicKey(ctx context.Context, logger logx.Logger, sshKeyId string) (string, error) {
+	// 1 - check parameters
+	if strings.TrimSpace(sshKeyId) == "" {
+		return "", fmt.Errorf("sshKeyId not provided")
+	}
+	// 2 - api get ssh key detail
+	sshKeyDetail, err := SshKeyGetDetail(ctx, logger, sshKeyId)
+	if err != nil {
+		return "", fmt.Errorf("failed to get SSH key detail from key id: %s: %w", sshKeyId, err)
+	}
+	// 3 - rertieve the public key as a json
+	field := "key"
+	sshPubKeyJson, err := jsonx.GetFilteredJson(ctx, logger, sshKeyDetail, field)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve field %s from %s : %v", field, sshKeyDetail, err)
+	}
+	// 4 - extract the value from the kvpair
+	val, ok := sshPubKeyJson[field]
+	if !ok {
+		return "", fmt.Errorf("field %s not found in JSON", field)
+	}
+	// 5 - check the value is indeed a string
+	sshPubKeyString, ok := val.(string)
+	if !ok {
+		return "", fmt.Errorf("field %s is not a string", field)
+	}
+
+	return sshPubKeyString, nil
+
+}
+
+var (
+	sshPubKeyOnce sync.Once
+	sshPubKeyErr  error
+	sshPubKey     string
+)
+
+func SshKeyGetPublicKeyCached(ctx context.Context, logger logx.Logger, sshKeyId string) (string, error) {
+	sshPubKeyOnce.Do(func() {
+		// the closure execute the function only during the program's lifetime once no matter sshKeyId
+		// and always return the same couple (sshPubKey, sshPubKeyErr)
+		sshPubKey, sshPubKeyErr = SshKeyGetPublicKey(ctx, logger, sshKeyId)
+	})
+	// This returns the result stored in the GLOBAL variables.
+	return sshPubKey, sshPubKeyErr
 }

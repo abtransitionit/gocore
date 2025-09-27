@@ -36,6 +36,7 @@ func PrettyPrintColor(v interface{}) {
 // Description: gets a VPS:detail or a VPS:detail:field according to field.
 // Returns
 // - an error instead of exiting, so the caller can handle it.
+// - jsonx.Json: the filtered json
 func GetFilteredJson(ctx context.Context, logger logx.Logger, jsonData Json, field string) (Json, error) {
 	// 1 - check parameter
 	if jsonData == nil {
