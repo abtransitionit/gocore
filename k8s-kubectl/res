@@ -1,0 +1,25 @@
+package kubectl
+
+import "strings"
+
+func (node Node) List() (string, error) {
+	var cmds = []string{
+		`kubectl get nodes`,
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}
+func (node Pod) List() (string, error) {
+	var cmds = []string{
+		`kubectl get pods`,
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}
+func (ns Ns) List() (string, error) {
+	var cmds = []string{
+		`kubectl get namespaces`,
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}

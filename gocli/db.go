@@ -9,6 +9,11 @@ var goCliReference = MapGoCli{
 		Name: "containerd",
 		Url:  "https://github.com/$NAME/$NAME/releases/download/v$TAG/$NAME-$TAG-$OS-$ARCH.tar.gz",
 	},
+	"cilium": {
+		Name: "cilium",
+		Url:  "https://github.com/$NAME/$NAME-cli/releases/download/v$TAG/$NAME-$OS-$ARCH.tar.gz",
+		Doc:  []string{"https://github.com/cilium", "https://github.com/cilium/cilium-cli", "https://docs.cilium.io/en/stable/", "https://cilium.io/"},
+	},
 	"helm": {
 		Name: "helm", OsName: "helm",
 		Url: "https://get.helm.sh/helm-v$TAG-$OS-$ARCH.tar.gz",

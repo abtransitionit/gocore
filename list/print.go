@@ -3,8 +3,10 @@ package list
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
+	"github.com/abtransitionit/gocore/color"
 	"github.com/jedib0t/go-pretty/table"
 )
 
@@ -40,6 +42,60 @@ func PrettyPrintTable(raw string) {
 		}
 		t.AppendRow(row)
 	}
+
+	t.Render()
+}
+
+// PrettyPrint prints []string with rotating colors
+func PrettyPrint(list []string) {
+	colors := []string{
+		color.Red,
+		color.Green,
+		color.Yellow,
+		color.Blue,
+		color.Magenta,
+		color.Cyan,
+	}
+	for i, item := range list {
+		fmt.Println(color.Colorize(fmt.Sprintf("- %s", item), colors[i%len(colors)]))
+	}
+}
+
+func PrettyPrintKvpair(raw string) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		fmt.Println("(no data)")
+		return
+	}
+
+	lines := strings.Split(raw, "\n")
+
+	// Table writer setup
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.SetStyle(table.StyleLight)
+
+	// Prepare rows
+	re := regexp.MustCompile(`^([^=]+)=(.*)$`)
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		m := re.FindStringSubmatch(line)
+		if len(m) == 3 {
+			key := strings.TrimSpace(m[1])
+			val := strings.Trim(strings.TrimSpace(m[2]), `"`)
+			t.AppendRow(table.Row{key, val})
+		} else {
+			// fallback: single column if format unexpected
+			t.AppendRow(table.Row{line})
+		}
+	}
+
+	// Optional: set column headers (can be commented out if unwanted)
+	t.AppendHeader(table.Row{"Key", "Value"})
 
 	t.Render()
 }

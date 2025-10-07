@@ -35,7 +35,7 @@ func (repo HelmRepo) List(ctx context.Context, logger logx.Logger) (string, erro
 	return cli, nil
 }
 
-// List chrats for a given helm repos
+// List charts for a given helm repo
 func (repo HelmRepo) ListChart(ctx context.Context, logger logx.Logger) (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm search repo %s`, repo.Name),

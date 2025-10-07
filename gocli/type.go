@@ -7,6 +7,7 @@ type GoCli struct {
 	Version string
 	Url     string
 	OsName  string
+	Doc     []string
 }
 
 type SliceGoCli []GoCli

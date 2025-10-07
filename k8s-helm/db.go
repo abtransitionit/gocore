@@ -15,6 +15,7 @@ var MapHelmRepoReference = MapHelmRepo{
 		Desc: "The cilium  Helm repository",
 		Url:  "https://helm.cilium.io/",
 		Name: "cilium",
+		Doc:  []string{"https://github.com/cilium", "https://github.com/cilium/cilium-cli", "https://docs.cilium.io/en/stable/", "https://cilium.io/"},
 	},
 	"kdashb": {
 		Desc: "The standard kubernetes dashboard Helm repository",
