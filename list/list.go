@@ -2,6 +2,7 @@
 package list
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -49,4 +50,29 @@ func GetStringWithSepFromSlice(ListString []string, separator string) string {
 
 func GetStringWithSpaceFromSlice(ListString []string) string {
 	return GetStringWithSepFromSlice(ListString, " ")
+}
+
+// Name: GetFieldByID
+//
+// Description: returns the field value at column index `fieldIndex` for row number `id`.
+//
+// Example Usage:
+//
+//	value, err := GetFieldByID(raw, 3, 2) // in
+func GetFieldByID(rawContent string, id int, fieldIndex int) (string, error) {
+	lines := strings.Split(strings.TrimSpace(rawContent), "\n")
+	if len(lines) < 2 {
+		return "", fmt.Errorf("no data")
+	}
+
+	if id <= 0 || id >= len(lines) {
+		return "", fmt.Errorf("id %d out of range", id)
+	}
+
+	fields := strings.Fields(lines[id]) // works even if columns are space-aligned
+	if fieldIndex < 0 || fieldIndex >= len(fields) {
+		return "", fmt.Errorf("field index %d out of range", fieldIndex)
+	}
+
+	return fields[fieldIndex], nil
 }

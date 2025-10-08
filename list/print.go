@@ -26,19 +26,22 @@ func PrettyPrintTable(raw string) {
 	// Parse headers (first line)
 	// headers := strings.Fields(lines[0])
 	headers := strings.Split(lines[0], "\t")
-	headerRow := make(table.Row, len(headers))
+
+	headerRow := make(table.Row, len(headers)+1)
+	headerRow[0] = "ID"
 	for i, h := range headers {
-		headerRow[i] = h
+		headerRow[i+1] = h
 	}
 	t.AppendHeader(headerRow)
 
 	// Parse and append data rows
-	for _, line := range lines[1:] {
+	for i, line := range lines[1:] {
 		// fields := strings.Fields(line)
 		fields := strings.Split(line, "\t")
-		row := make(table.Row, len(fields))
-		for i, f := range fields {
-			row[i] = f
+		row := make(table.Row, len(fields)+1)
+		row[0] = i + 1 // ID starts at 1
+		for j, f := range fields {
+			row[j+1] = f
 		}
 		t.AppendRow(row)
 	}
@@ -77,6 +80,11 @@ func PrettyPrintKvpair(raw string) {
 
 	// Prepare rows
 	re := regexp.MustCompile(`^([^=]+)=(.*)$`)
+
+	// Add header with ID column
+	t.AppendHeader(table.Row{"ID", "Key", "Value"})
+
+	id := 1
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -87,15 +95,19 @@ func PrettyPrintKvpair(raw string) {
 		if len(m) == 3 {
 			key := strings.TrimSpace(m[1])
 			val := strings.Trim(strings.TrimSpace(m[2]), `"`)
-			t.AppendRow(table.Row{key, val})
+			// t.AppendRow(table.Row{key, val})
+			t.AppendRow(table.Row{id, key, val})
 		} else {
 			// fallback: single column if format unexpected
-			t.AppendRow(table.Row{line})
+			// t.AppendRow(table.Row{line})
+			t.AppendRow(table.Row{id, line, ""})
+
 		}
+		id++
 	}
 
-	// Optional: set column headers (can be commented out if unwanted)
-	t.AppendHeader(table.Row{"Key", "Value"})
+	// // Optional: set column headers (can be commented out if unwanted)
+	// t.AppendHeader(table.Row{"Key", "Value"})
 
 	t.Render()
 }

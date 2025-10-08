@@ -4,6 +4,7 @@ package kubectl
 type Resource struct {
 	Name string
 	Type string
+	Ns   string
 }
 
 // type Node struct {

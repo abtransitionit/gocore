@@ -4,12 +4,14 @@ package run
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/abtransitionit/gocore/errorx"
+	"github.com/abtransitionit/gocore/logx"
 )
 
 func RunCliSshLive(vmName, cli string) error {
@@ -162,4 +164,71 @@ func RunOnLocal(cli string) (string, error) {
 		return string(output), fmt.Errorf("failed to run command locally: %v, output: %s", err, string(output))
 	}
 	return string(output), nil
+}
+
+// Name: CustomErrorHandler
+//
+// Description: This is the signature for functions that check for a "soft" or "handled" error (e.g., specific Helm warnings).
+//
+// Inputs:
+// - err: error: The error to check.
+// - logger: *logx.Logger: A logger to use for logging messages.
+//
+// Return:
+// - bool: true if the error was handled and execution should continue (output empty).
+type CustomErrorHandler func(err error, logger logx.Logger) bool
+
+// Name: NoOpErrorHandler
+//
+// Description: A NoOp (No Operation) Handler for commands that don't need special error checking.
+//
+// Notes:
+// - This is critical for making the 'errorHandler' argument optional in practice.
+func NoOpErrorHandler(err error, logger logx.Logger) bool {
+	return false // Never handle the error; let the main function decide if it's fatal.
+}
+
+// Name: RunCliQuery
+//
+// Description: runs the provided command string (cli) either locally or remotely.
+//
+// Inputs:
+// - cli: string: The command string to be executed (e.g., "ls -la", "kubectl get pods", "helm repo list", "goluc list").
+// - logger: *logx.Logger: A logger to use for logging messages.
+// - isLocal: bool: Whether to run the command locally or remotely.
+// - remoteHost: string: The hostname or IP address of the remote host if running remotely.
+// Notes:
+//   - It uses isLocal to decide the execution method and remoteHost for SSH connection.
+func ExecuteCliQuery(cli string, logger logx.Logger, isLocal bool, remoteHost string, errorHandler CustomErrorHandler) (string, error) {
+	var output string
+	var err error
+
+	// 1. Determine execution environment and run the command
+	if isLocal {
+		logger.Debugf("running on local: %s", cli)
+		output, err = RunOnLocal(cli)
+	} else {
+		// Ensure remoteHost is not empty if running remotely (good practice)
+		if remoteHost == "" {
+			return "", errors.New("remote host cannot be empty when running remotely")
+		}
+		logger.Debugf("running on remote: %s : %s", remoteHost, cli)
+		output, err = RunCliSsh(remoteHost, cli)
+	}
+
+	// 2. Handle "errors" that are not true errors
+	if errorHandler(err, logger) {
+		return "", nil
+	}
+	// if handleHelmError(err, logger) {
+	// 	return "", nil // Handled gracefully
+	// }
+
+	// 3. Handle true execution errors
+	if err != nil {
+		// Return a wrapped error that includes the command run
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	return output, nil
 }

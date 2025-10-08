@@ -18,7 +18,7 @@ func QueryHelm(helmHost, helmQuery string, logger logx.Logger) (string, error) {
 	}
 
 	// Handle "helm errors" that are not true errors
-	if handleHelmError(err, logger) {
+	if HandleHelmError(err, logger) {
 		return "", nil // handled gracefully, nothing to print
 	}
 
@@ -26,7 +26,7 @@ func QueryHelm(helmHost, helmQuery string, logger logx.Logger) (string, error) {
 	return output, nil
 }
 
-func handleHelmError(err error, logger logx.Logger) bool {
+func HandleHelmError(err error, logger logx.Logger) bool {
 	if err == nil {
 		return false
 	}
