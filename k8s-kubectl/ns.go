@@ -8,9 +8,9 @@ import (
 )
 
 // Returns the list of node as a string
-func ListNode(local bool, remoteHost string, logger logx.Logger) (string, error) {
+func ListNs(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// define cli
-	cli, err := Resource{Type: "node"}.List()
+	cli, err := Resource{Type: "ns"}.List()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}

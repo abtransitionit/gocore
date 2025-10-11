@@ -8,7 +8,7 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// List chrats for a given helm repos
+// Return: The cli to list the helm charts in a repo
 func (chart HelmChart) List(ctx context.Context, logger logx.Logger) (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm search repo %s`, chart.Repo.Name),

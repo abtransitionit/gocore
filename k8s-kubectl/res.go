@@ -5,6 +5,15 @@ import (
 	"strings"
 )
 
+// Return: The cli:Flag for the namespacetspecific to the resource
+func (res Resource) nsFlag() string {
+	if res.Ns != "" {
+		return fmt.Sprintf("-n %s", res.Ns)
+	}
+	return ""
+}
+
+// Return: The cli to list that resource
 func (res Resource) List() (string, error) {
 	// check parameters
 	if res.Type == "" {
@@ -27,13 +36,7 @@ func (res Resource) List() (string, error) {
 	return cli, nil
 }
 
-func (res Resource) nsFlag() string {
-	if res.Ns != "" {
-		return fmt.Sprintf("-n %s", res.Ns)
-	}
-	return ""
-}
-
+// Return: The cli to describe that resource
 func (res Resource) Describe() (string, error) {
 	// check parameters
 	if res.Type == "" {
@@ -51,6 +54,7 @@ func (res Resource) Describe() (string, error) {
 	return cli, nil
 }
 
+// Return: The cli to yaml that resource
 func (res Resource) Yaml() (string, error) {
 	// check parameters
 	if res.Type == "" {

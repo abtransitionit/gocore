@@ -218,16 +218,13 @@ func ExecuteCliQuery(cli string, logger logx.Logger, isLocal bool, remoteHost st
 
 	// 2. Handle "errors" that are not true errors
 	if errorHandler(err, logger) {
-		return "", nil
+		return output, nil
 	}
-	// if handleHelmError(err, logger) {
-	// 	return "", nil // Handled gracefully
-	// }
 
 	// 3. Handle true execution errors
 	if err != nil {
 		// Return a wrapped error that includes the command run
-		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+		return output, fmt.Errorf("failed to run command: %s: %w", cli, err)
 	}
 
 	return output, nil

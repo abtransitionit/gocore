@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// list helm envars
+// Return: The cli to list the helm client envars
 func GetEnv() (string, error) {
 	var cmds = []string{
 		`helm env`,

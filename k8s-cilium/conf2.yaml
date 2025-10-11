@@ -1,0 +1,28 @@
+# custom-cilium-values.yaml
+# Minimal Cilium Helm values for a CRI-O based Kubernetes cluster
+
+# Runtime integration
+containerRuntime:
+  integration: crio
+
+# CNI configuration
+cni:
+  exclusive: true     # Let Cilium manage all pod networking
+  chainingMode: none  # No chaining with other CNIs
+
+# IP Address Management (IPAM)
+ipam:
+  mode: kubernetes    # Standard mode for most clusters
+
+# Enable Hubble (Cilium’s observability layer)
+hubble:
+  enabled: false      # You can set to true later if you want flow visibility
+
+# Network policies (safe defaults)
+policyEnforcementMode: default  # Enforce only when policies exist
+
+# Disable kube-proxy replacement for simplicity
+kubeProxyReplacement: "disabled"
+
+# Enable automatic restarts when configuration changes
+rollOutCiliumPods: true

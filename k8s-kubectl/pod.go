@@ -7,10 +7,9 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
-// Returns the list of node as a string
-func ListNode(local bool, remoteHost string, logger logx.Logger) (string, error) {
+func ListPod(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// define cli
-	cli, err := Resource{Type: "node"}.List()
+	cli, err := Resource{Type: "pod"}.List()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}

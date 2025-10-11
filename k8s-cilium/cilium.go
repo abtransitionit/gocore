@@ -1,12 +1,35 @@
 package cilium
 
-import "strings"
+import (
+	"fmt"
+	"strings"
 
-func Status() (string, error) {
+	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/run"
+)
+
+// func DisplayStatus() (string, error) {
+// 	var cmds = []string{
+// 		`cilium status`,
+// 	}
+// 	cli := strings.Join(cmds, " && ")
+// 	return cli, nil
+
+// }
+
+func DisplayStatus(local bool, remoteHost string, logger logx.Logger) (string, error) {
+
+	// define cli
 	var cmds = []string{
 		`cilium status`,
 	}
 	cli := strings.Join(cmds, " && ")
-	return cli, nil
 
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, HandleCiliumError)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	return output, nil
 }

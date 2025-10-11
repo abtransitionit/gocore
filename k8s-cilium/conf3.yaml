@@ -1,0 +1,40 @@
+# my-cilium-values.yaml
+# Minimal Cilium Helm values for a CRI-O based Kubernetes cluster, with Hubble enabled
+
+# --- Runtime integration ---
+containerRuntime:
+  integration: crio
+
+# --- CNI settings ---
+cni:
+  exclusive: true        # Cilium manages all pod networking
+  chainingMode: none     # No chaining with other CNIs
+
+# --- IP Address Management ---
+ipam:
+  mode: kubernetes        # Use Kubernetes CRDs for IP allocation
+
+# --- Network policy enforcement ---
+policyEnforcementMode: default   # Enforce only when policies exist
+
+# --- kube-proxy replacement ---
+kubeProxyReplacement: "disabled"  # Keep kube-proxy active for simplicity
+
+# --- Hubble observability ---
+hubble:
+  enabled: true
+  relay:
+    enabled: true           # Enables the relay (aggregates flow data)
+  ui:
+    enabled: true           # Enables Hubble UI (accessible as a service)
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - flow
+      - port-distribution
+      - icmp
+
+# --- Resource management ---
+rollOutCiliumPods: true
