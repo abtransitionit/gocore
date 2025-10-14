@@ -8,15 +8,6 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
-// func DisplayStatus() (string, error) {
-// 	var cmds = []string{
-// 		`cilium status`,
-// 	}
-// 	cli := strings.Join(cmds, " && ")
-// 	return cli, nil
-
-// }
-
 func DisplayStatus(local bool, remoteHost string, logger logx.Logger) (string, error) {
 
 	// define cli

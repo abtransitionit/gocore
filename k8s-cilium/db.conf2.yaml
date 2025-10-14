@@ -1,5 +1,4 @@
-# custom-cilium-values.yaml
-# Minimal Cilium Helm values for a CRI-O based Kubernetes cluster
+# cilium-values.yaml
 
 # Runtime integration
 containerRuntime:

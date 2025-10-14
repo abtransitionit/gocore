@@ -6,14 +6,15 @@ import (
 	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/run"
 )
 
 // Returns the cli to create a release from a chart into a k8s cluster
-func (release HelmRelease) Create(ctx context.Context, logger logx.Logger) (string, error) {
+func (release HelmRelease) create() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`
-			helm install %s %s/%s --atomic --wait --version %s --namespace kube-system -f %s
-			`, release.Name, release.ChartName, release.Repo.Name, release.Version, release.ValueFile),
+			helm install %s %s --atomic --wait --version %s --namespace %s -f %s
+			`, release.Name, release.Chart.FullName, release.Chart.Version, release.Namespace, release.ValueFile),
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil
@@ -41,4 +42,44 @@ func (release HelmRelease) List(ctx context.Context, logger logx.Logger) (string
 	return cli, nil
 }
 
-// helm status mymaria -n db      # release status, notes, and resources
+// create a helm release into a kubernetes cluster
+func ListRelease(local bool, remoteHost string, logger logx.Logger) (string, error) {
+	// Check parameters
+
+	// define cli
+	var cmds = []string{
+		`helm list`,
+	}
+	cli := strings.Join(cmds, " && ")
+
+	// // play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+
+}
+
+func CreateRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+	// Check parameters
+
+	// define cli
+	cli, err := release.create()
+	if err != nil {
+		return "", fmt.Errorf("failed to create helm add release command: %w", err)
+	}
+
+	// // play cli
+	// output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	// }
+
+	// // return response
+	// return output, nil
+
+	return cli, nil
+}

@@ -66,25 +66,6 @@ func ListRepo(local bool, remoteHost string, logger logx.Logger) (string, error)
 	return output, nil
 }
 
-// Returns the list of helm charts in a helm repo
-func ListChar(local bool, remoteHost string, logger logx.Logger) (string, error) {
-
-	// define cli
-	cli, err := HelmRepo{}.ListChart()
-	if err != nil {
-		return "", fmt.Errorf("failed to build helm list command: %w", err)
-	}
-
-	// play cli
-	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
-	if err != nil {
-		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
-	}
-
-	// return response
-	return output, nil
-}
-
 // Returns the list of helm reposotories referenced in the whitelist
 func ListRepoReferenced(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	var output strings.Builder

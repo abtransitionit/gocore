@@ -3,9 +3,10 @@
 # Disable kube-proxy replacement for simplicity
 kubeProxyReplacement: true # other choice: disable
 
-k8sServiceHost: %s
+k8sServiceHost: {{.K8sApiServerIp}}
 
 k8sServicePort: 6443
+
 # Enable Hubble (Cilium’s observability layer)
 hubble:
   enabled: false      # You can set to true later if you want flow visibility
@@ -15,9 +16,8 @@ ipam:
   mode: cluster-pool # other choice: kubernetes (Standard mode for most clusters)
   operator:
     clusterPoolIPv4PodCIDRList:
-      - %s
+      - {{.K8sPodCidr}}
     clusterPoolIPv4MaskSize: 24
-`, apiServerIp, config.KbePodCidr)
 
 # # Runtime integration
 # containerRuntime:

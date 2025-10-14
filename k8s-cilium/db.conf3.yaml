@@ -1,5 +1,4 @@
-# my-cilium-values.yaml
-# Minimal Cilium Helm values for a CRI-O based Kubernetes cluster, with Hubble enabled
+# cilium-values.yaml
 
 # --- Runtime integration ---
 containerRuntime:

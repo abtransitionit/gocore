@@ -7,17 +7,17 @@ type HelmRepo struct {
 	Doc  []string
 }
 type HelmChart struct {
-	Name string
-	Desc string
-	Repo HelmRepo
+	FullName string //ie. RepoName/ChartName
+	Version  string
+	Desc     string
+	Repo     HelmRepo
 }
 type HelmRelease struct {
-	Name          string
-	Version       string
-	Repo          HelmRepo
-	ChartName     []string
-	CharNamespace string
-	ValueFile     string
+	Name      string
+	Repo      HelmRepo
+	Chart     HelmChart
+	Namespace string
+	ValueFile string
 }
 
 type MapHelmRepo map[string]HelmRepo
