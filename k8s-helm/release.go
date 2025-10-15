@@ -9,12 +9,24 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
+func (release HelmRelease) valueFlag() string {
+	if release.ValueFile != "" {
+		return fmt.Sprintf("-f %s", release.ValueFile)
+	}
+	return ""
+}
+
 // Returns the cli to create a release from a chart into a k8s cluster
 func (release HelmRelease) create() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`
-			helm install %s %s --atomic --wait --version %s --namespace %s -f %s
-			`, release.Name, release.Chart.FullName, release.Chart.Version, release.Namespace, release.ValueFile),
+			helm install %s %s --atomic --wait --version %s --namespace %s %s
+			`,
+			release.Name,
+			release.Chart.FullName,
+			release.Chart.Version,
+			release.Namespace,
+			release.valueFlag()),
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil

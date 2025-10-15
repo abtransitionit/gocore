@@ -9,6 +9,15 @@ import (
 )
 
 // Return: The cli to list the helm charts in a repo
+func (chart HelmChart) Create() (string, error) {
+	var cmds = []string{
+		fmt.Sprintf(`helm create %s`, chart.FullPath),
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}
+
+// Return: The cli to list the helm charts in a repo
 func (chart HelmChart) List() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm search repo %s`, chart.Repo.Name),
@@ -34,6 +43,23 @@ func ListChart(local bool, remoteHost string, repo HelmRepo, logger logx.Logger)
 	// define cli
 	// cli, err := helm.HelmRepo{Name: repoName}.ListChart()
 	cli, err := repo.ListChart()
+	if err != nil {
+		return "", fmt.Errorf("failed to build cli: %w", err)
+	}
+
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+}
+func CreateChart(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
+
+	// define cli
+	cli, err := chart.Create()
 	if err != nil {
 		return "", fmt.Errorf("failed to build cli: %w", err)
 	}

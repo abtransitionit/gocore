@@ -8,9 +8,9 @@ import (
 )
 
 // Returns the list of node as a string
-func ListNode(local bool, remoteHost string, logger logx.Logger) (string, error) {
+func ListSa(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// define cli
-	cli, err := Resource{Type: "node"}.List()
+	cli, err := Resource{Type: "sa"}.List()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}
@@ -24,10 +24,10 @@ func ListNode(local bool, remoteHost string, logger logx.Logger) (string, error)
 	return output, nil
 }
 
-func DescribeNode(local bool, remoteHost string, node Resource, logger logx.Logger) (string, error) {
+func DescribeSa(local bool, remoteHost string, sa Resource, logger logx.Logger) (string, error) {
 
 	// define cli
-	cli, err := node.Describe()
+	cli, err := sa.Describe()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}
@@ -41,10 +41,10 @@ func DescribeNode(local bool, remoteHost string, node Resource, logger logx.Logg
 	return output, nil
 }
 
-func YamlNode(local bool, remoteHost string, node Resource, logger logx.Logger) (string, error) {
+func YamlSa(local bool, remoteHost string, sa Resource, logger logx.Logger) (string, error) {
 
 	// define cli
-	cli, err := node.Yaml()
+	cli, err := sa.Yaml()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}

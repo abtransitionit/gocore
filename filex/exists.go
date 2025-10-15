@@ -71,6 +71,17 @@ func ExistsFile(filePath string) (bool, error) {
 //   - bool:  True if the path exists and is a directory.
 //   - error: If an error occurred other than "file not found."
 //
+// Usage examples:
+// folder := chart.FullPath
+// exists, err := filex.ExistsFolder(folder)
+// if err != nil {
+// 	return "", fmt.Errorf("error checking folder %q: %w", folder, err)
+// }
+
+//	if !exists {
+//		return "", fmt.Errorf("folder does not exist: %s", folder)
+//	}
+//
 // Notes:
 //
 //   - This function follows symbolic links to their target.

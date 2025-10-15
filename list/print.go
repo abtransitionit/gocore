@@ -10,6 +10,17 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 )
 
+func CountNbLine(raw string) int {
+	lines := strings.Split(strings.TrimSpace(raw), "\n")
+	count := 0
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			count++
+		}
+	}
+	return count
+}
+
 // PrettyPrintTable takes plain-text Helm output and prints it as a formatted table.
 func PrettyPrintTable(raw string) {
 	lines := strings.Split(strings.TrimSpace(raw), "\n")
@@ -17,7 +28,6 @@ func PrettyPrintTable(raw string) {
 		fmt.Println("(no data)")
 		return
 	}
-
 	// Create table writer
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)

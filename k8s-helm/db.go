@@ -1,5 +1,10 @@
 package helm
 
+import (
+	"fmt"
+	"strings"
+)
+
 var MapHelmRepoReference = MapHelmRepo{
 	"calico": {
 		Desc: "The calico operator Helm repository",
@@ -27,6 +32,17 @@ var MapHelmRepoReference = MapHelmRepo{
 		Url:  "https://kubernetes.github.io/ingress-nginx",
 		Name: "ingressNginx",
 	},
+}
+
+func (mapHelmRepo MapHelmRepo) ConvertToString() string {
+	var sb strings.Builder
+	sb.WriteString("Name\tDescription\tURL\n") // header
+
+	for _, r := range mapHelmRepo {
+		sb.WriteString(fmt.Sprintf("%s\t%s\t%s\n", r.Name, r.Desc, r.Url))
+	}
+
+	return sb.String()
 }
 
 // var ListHelmRepo = []HelmRepoProperty{
