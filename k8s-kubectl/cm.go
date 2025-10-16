@@ -7,10 +7,10 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
-// Returns the list of ServiceAccount as a string
-func ListSa(local bool, remoteHost string, logger logx.Logger) (string, error) {
+// Returns the list of ConfigMap as a string
+func ListCm(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// define cli
-	cli, err := Resource{Type: "sa"}.List()
+	cli, err := Resource{Type: "cm"}.List()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}
@@ -24,10 +24,10 @@ func ListSa(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	return output, nil
 }
 
-func DescribeSa(local bool, remoteHost string, sa Resource, logger logx.Logger) (string, error) {
+func DescribeCm(local bool, remoteHost string, cm Resource, logger logx.Logger) (string, error) {
 
 	// define cli
-	cli, err := sa.Describe()
+	cli, err := cm.Describe()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}
@@ -41,10 +41,10 @@ func DescribeSa(local bool, remoteHost string, sa Resource, logger logx.Logger) 
 	return output, nil
 }
 
-func YamlSa(local bool, remoteHost string, sa Resource, logger logx.Logger) (string, error) {
+func YamlCm(local bool, remoteHost string, cm Resource, logger logx.Logger) (string, error) {
 
 	// define cli
-	cli, err := sa.Yaml()
+	cli, err := cm.Yaml()
 	if err != nil {
 		return "", fmt.Errorf("failed to build kubectl list command: %w", err)
 	}

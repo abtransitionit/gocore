@@ -7,8 +7,7 @@ type HelmRepo struct {
 	Doc  []string
 }
 type HelmChart struct {
-	FullPath string //ie. /tmp/ChartName
-	FullName string //ie. RepoName/ChartName
+	FullName string //ie. RepoName/ChartName or /tmp/chart/ChartName
 	Version  string
 	Desc     string
 	Repo     HelmRepo

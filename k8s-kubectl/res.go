@@ -23,6 +23,7 @@ func (res Resource) List() (string, error) {
 	// Define options dynamically
 	resourceOptions := map[string]string{
 		"sa":   "-A",
+		"cm":   "-A",
 		"pod":  "-A",
 		"node": "-o wide | awk '{print $1,$8,$(NF-1),$6,$2,$4,$3}' | column -t",
 		// "node": "-o wide ",

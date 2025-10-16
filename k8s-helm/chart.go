@@ -11,7 +11,7 @@ import (
 // Return: The cli to list the helm charts in a repo
 func (chart HelmChart) Create() (string, error) {
 	var cmds = []string{
-		fmt.Sprintf(`helm create %s`, chart.FullPath),
+		fmt.Sprintf(`helm create %s`, chart.FullName),
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil
@@ -21,6 +21,19 @@ func (chart HelmChart) Create() (string, error) {
 func (chart HelmChart) List() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm search repo %s`, chart.Repo.Name),
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}
+
+// Return: The cli to list the kind of all templates a helm charts it will create
+// Todo: it is linux specific. should be in library:golinux not gocore. or change the code to be OS agnostic
+func (chart HelmChart) ListKind() (string, error) {
+	// helm template cilium/cilium      | ...
+	// helm template ~/wkspc/chart/nlos | ...
+
+	var cmds = []string{
+		fmt.Sprintf(`helm template %s | grep '^kind:' | sort | uniq -c | sort -nr`, chart.FullName),
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil
@@ -56,6 +69,25 @@ func ListChart(local bool, remoteHost string, repo HelmRepo, logger logx.Logger)
 	// return response
 	return output, nil
 }
+
+// Returns the list of all kind the chart will create
+func ListChartKind(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
+
+	// define cli
+	cli, err := chart.ListKind()
+	if err != nil {
+		return "", fmt.Errorf("failed to build cli: %w", err)
+	}
+
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+}
 func CreateChart(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
 
 	// define cli
@@ -72,4 +104,22 @@ func CreateChart(local bool, remoteHost string, chart HelmChart, logger logx.Log
 
 	// return response
 	return output, nil
+}
+
+func ListKind(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
+	// define cli
+	cli, err := chart.ListKind()
+	if err != nil {
+		return "", fmt.Errorf("failed to build cli: %w", err)
+	}
+
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+
 }

@@ -102,3 +102,24 @@ func AddRepo(local bool, remoteHost string, repo HelmRepo, logger logx.Logger) (
 	return output, nil
 
 }
+
+func DeleteRepo(local bool, remoteHost string, repo HelmRepo, logger logx.Logger) (string, error) {
+
+	// Check parameters
+
+	// define cli
+	cli, err := repo.Delete()
+	if err != nil {
+		return "", fmt.Errorf("failed to add helm repository command: %w", err)
+	}
+
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+
+}
