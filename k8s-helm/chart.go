@@ -33,7 +33,8 @@ func (chart HelmChart) ListKind() (string, error) {
 	// helm template ~/wkspc/chart/nlos | ...
 
 	var cmds = []string{
-		fmt.Sprintf(`helm template %s | grep '^kind:' | sort | uniq -c | sort -nr`, chart.FullName),
+		fmt.Sprintf(`echo -e "Kind\tCount" && helm template %s | grep '^kind:' | sort | uniq -c | sed 's/kind: *//' | awk '{printf "%%s\t%%s\n", $2, $1}'`, chart.FullName),
+		// fmt.Sprintf(`echo "COUNT  KIND" && helm template %s | grep '^kind:' | sort | uniq -c | sed 's/kind: *//' | awk '{print $1, $2":", $3}'`, chart.FullName),
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil

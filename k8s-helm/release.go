@@ -42,6 +42,23 @@ func (release HelmRelease) create() (string, error) {
 	return cli, nil
 }
 
+func (release HelmRelease) dryCreate() (string, error) {
+
+	// 1 - create the release
+	var cmds = []string{
+		fmt.Sprintf(`
+			helm install %s %s --debug --dry-run=server %s --namespace %s %s
+			`,
+			release.Name,
+			release.Chart.FullName,
+			release.versionFlag(),
+			release.Namespace,
+			release.valueFlag()),
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+}
+
 // Returns the cli to delete a release in a k8s cluster
 func (release HelmRelease) delete() (string, error) {
 	var cmds = []string{
@@ -95,6 +112,26 @@ func CreateRelease(local bool, remoteHost string, release HelmRelease, logger lo
 
 	// define cli
 	cli, err := release.create()
+	if err != nil {
+		return "", fmt.Errorf("failed to create helm add release command: %w", err)
+	}
+
+	// play cli
+	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+	}
+
+	// return response
+	return output, nil
+
+	// return cli, nil
+}
+func DryCreateRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+	// Check parameters
+
+	// define cli
+	cli, err := release.dryCreate()
 	if err != nil {
 		return "", fmt.Errorf("failed to create helm add release command: %w", err)
 	}
