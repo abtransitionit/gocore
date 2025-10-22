@@ -29,8 +29,6 @@ func (chart HelmChart) List() (string, error) {
 // Return: The cli to list the kind of all templates a helm charts it will create
 // Todo: it is linux specific. should be in library:golinux not gocore. or change the code to be OS agnostic
 func (chart HelmChart) ListKind() (string, error) {
-	// helm template cilium/cilium      | ...
-	// helm template ~/wkspc/chart/nlos | ...
 
 	var cmds = []string{
 		fmt.Sprintf(`echo -e "Kind\tCount" && helm template %s | grep '^kind:' | sort | uniq -c | sed 's/kind: *//' | awk '{printf "%%s\t%%s\n", $2, $1}'`, chart.FullName),
@@ -39,17 +37,6 @@ func (chart HelmChart) ListKind() (string, error) {
 	cli := strings.Join(cmds, " && ")
 	return cli, nil
 }
-
-// display chart metadata - chart.yaml
-// helm show chart $chartName/$RepoName
-
-// display chart metadata - values.yaml
-// helm show values $chartName/$RepoName
-
-// var releaseValueShortDesc = "Display user defined values about a relase"
-// 	Example: `
-// 	xxx kbe-cilicium  kube-system
-// cli := fmt.Sprintf(`helm get values %s -n %s`, args[0], args[1])
 
 // Returns the list of helm charts in a helm repo
 func ListChart(local bool, remoteHost string, repo HelmRepo, logger logx.Logger) (string, error) {
@@ -107,20 +94,31 @@ func CreateChart(local bool, remoteHost string, chart HelmChart, logger logx.Log
 	return output, nil
 }
 
-func ListKind(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
-	// define cli
-	cli, err := chart.ListKind()
-	if err != nil {
-		return "", fmt.Errorf("failed to build cli: %w", err)
-	}
+// func ListKind(local bool, remoteHost string, chart HelmChart, logger logx.Logger) (string, error) {
+// 	// define cli
+// 	cli, err := chart.ListKind()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to build cli: %w", err)
+// 	}
 
-	// play cli
-	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
-	if err != nil {
-		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
-	}
+// 	// play cli
+// 	output, err := run.ExecuteCliQuery(cli, logger, local, remoteHost, run.NoOpErrorHandler)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to run command: %s: %w", cli, err)
+// 	}
 
-	// return response
-	return output, nil
+// 	// return response
+// 	return output, nil
 
-}
+// }
+
+// display chart metadata - chart.yaml
+// helm show chart $chartName/$RepoName
+
+// display chart metadata - values.yaml
+// helm show values $chartName/$RepoName
+
+// var releaseValueShortDesc = "Display user defined values about a relase"
+// 	Example: `
+// 	xxx kbe-cilicium  kube-system
+// cli := fmt.Sprintf(`helm get values %s -n %s`, args[0], args[1])
