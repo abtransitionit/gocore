@@ -25,7 +25,7 @@ func (release HelmRelease) versionFlag() string {
 //
 // Notes:
 //   - it can create a release from chart in a repo or chart given as path in the FS
-func (release HelmRelease) create() (string, error) {
+func (release HelmRelease) cliCreate() (string, error) {
 
 	// 1 - create the release
 	var cmds = []string{
@@ -42,7 +42,7 @@ func (release HelmRelease) create() (string, error) {
 	return cli, nil
 }
 
-func (release HelmRelease) dryCreate() (string, error) {
+func (release HelmRelease) cliDryCreate() (string, error) {
 
 	// 1 - create the release
 	var cmds = []string{
@@ -60,7 +60,7 @@ func (release HelmRelease) dryCreate() (string, error) {
 }
 
 // Returns the cli to delete a release in a k8s cluster
-func (release HelmRelease) delete() (string, error) {
+func (release HelmRelease) cliDelete() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm uninstall %s --namespace %s`, release.Name, release.Namespace),
 	}
@@ -69,7 +69,7 @@ func (release HelmRelease) delete() (string, error) {
 }
 
 // Returns the cli to describe a release in a k8s cluster - ie. display all prints out all the Kubernetes resources that were uploaded to the server
-func (release HelmRelease) describe() (string, error) {
+func (release HelmRelease) cliDescribe() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm get manifest %s --namespace %s`, release.Name, release.Namespace),
 	}
@@ -78,7 +78,7 @@ func (release HelmRelease) describe() (string, error) {
 }
 
 // Returns the cli to list the releases installed in a k8s cluster
-func (release HelmRelease) List() (string, error) {
+func (release HelmRelease) cliList() (string, error) {
 	var cmds = []string{
 		"helm list -A", //  list releases in namespace dd
 	}
@@ -87,11 +87,11 @@ func (release HelmRelease) List() (string, error) {
 }
 
 // create a helm release into a kubernetes cluster
-func ListRelease(local bool, remoteHost string, logger logx.Logger) (string, error) {
+func (release HelmRelease) List(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// Check parameters
 
 	// define cli
-	cli, err := HelmRelease{}.List()
+	cli, err := HelmRelease{}.cliList()
 	if err != nil {
 		return "", fmt.Errorf("failed to build helm list command: %w", err)
 	}
@@ -107,11 +107,11 @@ func ListRelease(local bool, remoteHost string, logger logx.Logger) (string, err
 
 }
 
-func CreateRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+func (release HelmRelease) Create(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// Check parameters
 
 	// define cli
-	cli, err := release.create()
+	cli, err := release.cliCreate()
 	if err != nil {
 		return "", fmt.Errorf("failed to create helm add release command: %w", err)
 	}
@@ -127,11 +127,11 @@ func CreateRelease(local bool, remoteHost string, release HelmRelease, logger lo
 
 	// return cli, nil
 }
-func DryCreateRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+func (release HelmRelease) DryCreate(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// Check parameters
 
 	// define cli
-	cli, err := release.dryCreate()
+	cli, err := release.cliDryCreate()
 	if err != nil {
 		return "", fmt.Errorf("failed to create helm add release command: %w", err)
 	}
@@ -148,11 +148,11 @@ func DryCreateRelease(local bool, remoteHost string, release HelmRelease, logger
 	// return cli, nil
 }
 
-func DeleteRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+func (release HelmRelease) Delete(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// Check parameters
 
 	// define cli
-	cli, err := release.delete()
+	cli, err := release.cliDelete()
 	if err != nil {
 		return "", fmt.Errorf("failed to create helm add release command: %w", err)
 	}
@@ -167,11 +167,11 @@ func DeleteRelease(local bool, remoteHost string, release HelmRelease, logger lo
 	return output, nil
 }
 
-func DescribeRelease(local bool, remoteHost string, release HelmRelease, logger logx.Logger) (string, error) {
+func (release HelmRelease) Describe(local bool, remoteHost string, logger logx.Logger) (string, error) {
 	// Check parameters
 
 	// define cli
-	cli, err := release.describe()
+	cli, err := release.cliDescribe()
 	if err != nil {
 		return "", fmt.Errorf("failed to create helm add release command: %w", err)
 	}
