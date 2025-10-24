@@ -9,7 +9,7 @@ import (
 )
 
 // Returns the cli to add a repo
-func (repo HelmRepo) Add() (string, error) {
+func (repo HelmRepo) cliAdd() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm repo add %s %s`, repo.Name, repo.Url),
 		`helm repo update`,
@@ -20,7 +20,7 @@ func (repo HelmRepo) Add() (string, error) {
 }
 
 // Returns the cli to delete a repo
-func (repo HelmRepo) Delete() (string, error) {
+func (repo HelmRepo) cliDelete() (string, error) {
 	var cmds = []string{
 		fmt.Sprintf(`helm repo remove %s`, repo.Name),
 	}
@@ -30,7 +30,7 @@ func (repo HelmRepo) Delete() (string, error) {
 }
 
 // Returns the cli to list all repositories
-func (repo HelmRepo) List() (string, error) {
+func (repo HelmRepo) cliList() (string, error) {
 	var cmds = []string{
 		`helm repo list`,
 	}
@@ -48,10 +48,11 @@ func (repo HelmRepo) ListChart() (string, error) {
 }
 
 // Returns the list of helm repositories
+
 func ListRepo(local bool, remoteHost string, logger logx.Logger) (string, error) {
 
 	// define cli
-	cli, err := HelmRepo{}.List()
+	cli, err := HelmRepo{}.cliList()
 	if err != nil {
 		return "", fmt.Errorf("failed to build helm list command: %w", err)
 	}
@@ -87,7 +88,7 @@ func AddRepo(local bool, remoteHost string, repo HelmRepo, logger logx.Logger) (
 	// Check parameters
 
 	// define cli
-	cli, err := repo.Add()
+	cli, err := repo.cliAdd()
 	if err != nil {
 		return "", fmt.Errorf("failed to add helm repository command: %w", err)
 	}
@@ -108,7 +109,7 @@ func DeleteRepo(local bool, remoteHost string, repo HelmRepo, logger logx.Logger
 	// Check parameters
 
 	// define cli
-	cli, err := repo.Delete()
+	cli, err := repo.cliDelete()
 	if err != nil {
 		return "", fmt.Errorf("failed to add helm repository command: %w", err)
 	}
