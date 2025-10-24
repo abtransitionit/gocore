@@ -21,35 +21,50 @@ func CountNbLine(raw string) int {
 	return count
 }
 
-// PrettyPrintTable takes plain-text Helm output and prints it as a formatted table.
+// PrettyPrintTable prints a table from raw input, using the first line as header.
+// PrettyPrintTable prints a table from raw input, using the first line as header.
+// Compatible with existing calls.
 func PrettyPrintTable(raw string) {
+	printTablePretty(raw, 0) // skipLines = 0 → first line is header
+}
+
+// PrettyPrintTableWithSkipLine prints a table skipping the first skipLines lines.
+// Use this when you want to skip any number of lines at the top.
+func PrettyPrintTableWithSkipLine(raw string, skipLines int) {
+	printTablePretty(raw, skipLines)
+}
+
+// printTablePretty handles printing, skipping the first skipLines lines
+func printTablePretty(raw string, skipLines int) {
 	lines := strings.Split(strings.TrimSpace(raw), "\n")
 	if len(lines) == 0 {
 		fmt.Println("(no data)")
 		return
 	}
-	// Create table writer
+
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.SetStyle(table.StyleLight) // or StyleRounded, StyleColoredBright, etc.
+	t.SetStyle(table.StyleLight)
 
-	// Parse headers (first line)
-	// headers := strings.Fields(lines[0])
-	headers := strings.Split(lines[0], "\t")
+	startLine := skipLines
 
-	headerRow := make(table.Row, len(headers)+1)
-	headerRow[0] = "ID"
-	for i, h := range headers {
-		headerRow[i+1] = h
+	// If skipLines == 0, treat first line as header
+	if skipLines == 0 {
+		headers := strings.Split(lines[0], "\t")
+		headerRow := make(table.Row, len(headers)+1)
+		headerRow[0] = "ID"
+		for i, h := range headers {
+			headerRow[i+1] = h
+		}
+		t.AppendHeader(headerRow)
+		startLine = 1
 	}
-	t.AppendHeader(headerRow)
 
-	// Parse and append data rows
-	for i, line := range lines[1:] {
-		// fields := strings.Fields(line)
+	// Append data rows
+	for i, line := range lines[startLine:] {
 		fields := strings.Split(line, "\t")
 		row := make(table.Row, len(fields)+1)
-		row[0] = i + 1 // ID starts at 1
+		row[0] = i + 1
 		for j, f := range fields {
 			row[j+1] = f
 		}
