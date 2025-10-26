@@ -1,9 +1,9 @@
 package cilium
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
+
+	"github.com/abtransitionit/gocore/tpl"
 )
 
 func getConfig(ciliumConf CiliumConf) (string, error) {
@@ -15,7 +15,7 @@ func getConfig(ciliumConf CiliumConf) (string, error) {
 	}
 
 	// resolve the templated file
-	CiliumConfigFile, err := resolveTplConfig(configFileTpl, ciliumConfigFileTplVar)
+	CiliumConfigFile, err := tpl.ResolveTplConfig(configFileTpl, ciliumConfigFileTplVar)
 	if err != nil {
 		return "", fmt.Errorf("faild to resolve templated repo file, for the file: %s", configFileTpl)
 	}
@@ -23,18 +23,4 @@ func getConfig(ciliumConf CiliumConf) (string, error) {
 	// resturn the YamlString
 	return CiliumConfigFile, nil
 
-}
-
-func resolveTplConfig(tplFile string, vars CiliumConf) (string, error) {
-	tpl, err := template.New("repo").Parse(tplFile)
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err := tpl.Execute(&buf, vars); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
 }
