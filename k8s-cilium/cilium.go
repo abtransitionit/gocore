@@ -8,7 +8,7 @@ import (
 	"github.com/abtransitionit/gocore/run"
 )
 
-func DisplayStatus(local bool, remoteHost string, logger logx.Logger) (string, error) {
+func (Cilium) DisplayStatus(local bool, remoteHost string, logger logx.Logger) (string, error) {
 
 	// define cli
 	var cmds = []string{

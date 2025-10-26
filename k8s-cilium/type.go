@@ -4,3 +4,4 @@ type CiliumConf struct {
 	K8sPodCidr   string
 	K8sApiServer string
 }
+type Cilium struct{}
