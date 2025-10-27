@@ -3,7 +3,6 @@ package phase
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/abtransitionit/gocore/list"
@@ -21,22 +20,23 @@ func (wf *Workflow2) printInternal(showParams bool) {
 	var b strings.Builder
 
 	if showParams {
-		b.WriteString("Phase\tNode\tDescription\tDep\tParams\n")
+		b.WriteString("Phase\tNode\tDescription\tDependencies\tParams\n")
 	} else {
-		b.WriteString("Phase\tNode\tDescription\tDep\n")
+		b.WriteString("Phase\tNode\tDescription\tDependencies\n")
 	}
 
-	names := make([]string, 0, len(wf.Phases))
-	for name := range wf.Phases {
-		names = append(names, name)
+	// Topologically sort phases
+	sorted, err := wf.TopoSorted2()
+	if err != nil {
+		fmt.Println("Error sorting workflow:", err)
+		return
 	}
-	sort.Strings(names)
 
-	for _, name := range names {
-		p := wf.Phases[name]
-		next := "none"
+	// Iterate over sorted phases
+	for _, p := range sorted {
+		deps := "none"
 		if len(p.Dependencies) > 0 {
-			next = strings.Join(p.Dependencies, ", ")
+			deps = strings.Join(p.Dependencies, ", ")
 		}
 
 		node := p.Node
@@ -54,11 +54,12 @@ func (wf *Workflow2) printInternal(showParams bool) {
 				params = strings.Join(kv, ", ")
 			}
 			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n",
-				name, node, p.Description, next, params))
+				p.Name, node, p.Description, deps, params))
 		} else {
 			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\n",
-				name, node, p.Description, next))
+				p.Name, node, p.Description, deps))
 		}
 	}
+
 	list.PrettyPrintTable(b.String())
 }

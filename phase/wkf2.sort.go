@@ -11,46 +11,48 @@ func (wf *Workflow2) TopoSorted2() ([]PhaseYAML, error) {
 	graph := make(map[string][]string)
 
 	// Initialize graph and in-degree map
-	for name := range wf.Phases {
-		inDegree[name] = 0
-		graph[name] = []string{}
+	for key := range wf.Phases {
+		inDegree[key] = 0
+		graph[key] = []string{}
 	}
 
 	// Build graph based on dependencies
-	for name, phase := range wf.Phases {
+	for key, phase := range wf.Phases {
 		for _, dep := range phase.Dependencies {
-			graph[dep] = append(graph[dep], name) // dep -> name
-			inDegree[name]++
+			graph[dep] = append(graph[dep], key) // dep -> key
+			inDegree[key]++
 		}
 	}
 
-	// Initialize queue with nodes having zero in-degree
+	// Queue for zero in-degree nodes
 	queue := []string{}
-	for name, deg := range inDegree {
+	for key, deg := range inDegree {
 		if deg == 0 {
-			queue = append(queue, name)
+			queue = append(queue, key)
 		}
 	}
 	sort.Strings(queue) // deterministic order
 
 	var sorted []PhaseYAML
 	for len(queue) > 0 {
-		name := queue[0]
+		key := queue[0]
 		queue = queue[1:]
-		sorted = append(sorted, wf.Phases[name])
 
-		for _, neighbor := range graph[name] {
+		phase := wf.Phases[key]
+		phase.Name = key // populate Name from map key
+		sorted = append(sorted, phase)
+
+		for _, neighbor := range graph[key] {
 			inDegree[neighbor]--
 			if inDegree[neighbor] == 0 {
 				queue = append(queue, neighbor)
 			}
 		}
-		sort.Strings(queue) // deterministic ordering
+		sort.Strings(queue) // deterministic
 	}
 
 	if len(sorted) != len(wf.Phases) {
 		return nil, fmt.Errorf("circular dependency detected")
 	}
-
 	return sorted, nil
 }
