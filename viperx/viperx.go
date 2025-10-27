@@ -142,3 +142,23 @@ func BindFlags(cmd *cobra.Command, v *viper.Viper, workflowName string) {
 
 // 	return sub, nil
 // }
+// log current package
+// pc, file, _, _ := runtime.Caller(0)
+// pkg := path.Dir(runtime.FuncForPC(pc).Name())
+// logger.Infof("Package: %s", pkg)
+// logger.Infof("Package: %s", path.Dir(file))
+
+// pc, _, _, _ := runtime.Caller(0)
+// fn := runtime.FuncForPC(pc).Name() // e.g. "github.com/.../cmd/workflow/kindn.init"
+// pkg := path.Base(path.Dir(fn))
+// logger.Infof("Package: %s", pkg)
+// log current package
+// pc, file, _, _ := runtime.Caller(0)
+// pkg := path.Dir(runtime.FuncForPC(pc).Name())
+// logger.Infof("Package: %s", pkg)
+// logger.Infof("Package: %s", path.Dir(file))
+
+// pc, _, _, _ := runtime.Caller(0)
+// fn := runtime.FuncForPC(pc).Name() // e.g. "github.com/.../cmd/workflow/kindn.init"
+// pkg := path.Base(path.Dir(fn))
+// logger.Infof("Package: %s", pkg)

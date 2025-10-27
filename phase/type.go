@@ -7,6 +7,37 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
+// Name: Workflow
+//
+// Description: represents a set of phases with defined dependencies.
+//
+// Notes:
+//   - Can be easily iterated over to execute each phase in a defined order.
+//   - primarily a map of Phases/tasks.
+//   - designed to be a Directed Acyclic Graph (DAG) of tasks.
+type Workflow struct {
+	Name   string
+	Phases map[string]Phase
+}
+
+type Workflow2 struct {
+	Name        string               `yaml:"name"`
+	Description string               `yaml:"description"`
+	Phases      map[string]PhaseYAML `yaml:"phases"`
+}
+type PhaseYAML struct {
+	Name         string            `yaml:"name"`
+	Description  string            `yaml:"description"`
+	Fn           string            `yaml:"fn"`
+	Dependencies []string          `yaml:"dependencies,omitempty"` // replace Next
+	Params       map[string]string `yaml:"params,omitempty"`
+	Node         string            `yaml:"node,omitempty"`
+}
+
+// type WorkflowYAML struct {
+// 	Phases map[string]PhaseYAML `yaml:"phases"`
+// }
+
 // Name: PhaseFunc
 //
 // Description: a type that represents a function to be executed as a phase.
@@ -33,19 +64,6 @@ type Phase struct {
 	Description  string
 	fn           PhaseFunc
 	Dependencies []string
-}
-
-// Name: Workflow
-//
-// Description: represents a set of phases with defined dependencies.
-//
-// Notes:
-//   - Can be easily iterated over to execute each phase in a defined order.
-//   - primarily a map of Phases/tasks.
-//   - designed to be a Directed Acyclic Graph (DAG) of tasks.
-type Workflow struct {
-	Name   string
-	Phases map[string]Phase
 }
 
 // // Name: PhaseList

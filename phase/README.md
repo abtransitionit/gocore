@@ -2,6 +2,7 @@
 - a framework to create pipeline like actions
 
 # Phase
+define a phase
 ```go
 type Phase struct {
 Name         string     // phase:name
@@ -10,7 +11,50 @@ fn           PhaseFunc  // function that performs the phase work
 Dependencies []string   // other phases that must run first
 }
 ```
+create a phase
+```go
+func NewPhase(name, description string, fn PhaseFunc, dependencies []string) Phase {
+	return Phase{
+		Name:         name,
+		Description:  description,
+		fn:           fn,
+		Dependencies: dependencies,
+	}
+}
+```
+example:
+```go
+NewPhase("checkVmAccess",  "Check if VMs are ",           vm.CheckVmSshAccess,                           nil)
+NewPhase("copyAgent",      "copy LUC CLI agent to ",      luc.DeployLuc,                                 []string{"checkVmAccess"})
+NewPhase("upgradeOs",      "provision OS nodes with lat", dnfapt.UpgradeVmOs,                            []string{"copyAgent"}),
+NewPhase("installGoCli",   "provision Go CLI(s).",        taskgocli.InstallGoCliOnVm(listGoCli, targets),[]string{"updateApp"}),
+NewPhase("installOsService", "provision Os service(s).",  oservice.InstallOsService(listOsService),      []string{"installGoCli"}),
+NewPhase("enableLinger",   "Allows user services to be ", oservice.EnableLinger,                         []string{"installGoCli"}),
+NewPhase("createRcFile",   "create a custom RC file in ", util.CreateCustomRcFile(customRcFileName),     []string{"enableLinger"}),
+NewPhase("setPathEnvar",   "configure PATH envvar into ", util.SetPath(binFolderPath, customRcFileName), []string{"createRcFile"}),
+NewPhase("setEnvar",       "define envvars into current", util.SetEnvar(customRcFileName, listEnvVar),   []string{"setPathEnvar"}),
+NewPhase("setContainerd",  "sets up a rootless containe", ctd.SetContainerd,                             []string{"startOsService"}),
+NewPhase("startOsService", "start OS services needed by", oservice.StartOsService(listOsService),        []string{"setEnvar"}),
+```
 
+# `Workflow`
+```go
+func NewWorkflowFromPhases(phases ...Phase) (*Workflow, error) {
+	workflow := NewWorkflow()
+	for _, p := range phases {
+		if err := workflow.AddPhase(p); err != nil {
+			// return nil, err
+			// handle specific error explicitly: expected outcome: The phase already exists
+			return nil, fmt.Errorf("failed to add phase %q: %w", p.Name, err)
+		}
+	}
+	return workflow, nil
+}
+```
+essentially:
+- A set of phases,
+- If a phase already exists, it returns a wrapped error.
+- The order of execution is handled later.
 
 # Intro
 

@@ -1,0 +1,64 @@
+// File in gocore/phase/adapter.go
+package phase
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/abtransitionit/gocore/list"
+)
+
+func (wf *Workflow2) Print() {
+	wf.printInternal(false)
+}
+
+func (wf *Workflow2) PrintWithParams() {
+	wf.printInternal(true)
+}
+
+func (wf *Workflow2) printInternal(showParams bool) {
+	var b strings.Builder
+
+	if showParams {
+		b.WriteString("Phase\tNode\tDescription\tDep\tParams\n")
+	} else {
+		b.WriteString("Phase\tNode\tDescription\tDep\n")
+	}
+
+	names := make([]string, 0, len(wf.Phases))
+	for name := range wf.Phases {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		p := wf.Phases[name]
+		next := "none"
+		if len(p.Dependencies) > 0 {
+			next = strings.Join(p.Dependencies, ", ")
+		}
+
+		node := p.Node
+		if node == "" {
+			node = "none"
+		}
+
+		if showParams {
+			params := "none"
+			if len(p.Params) > 0 {
+				var kv []string
+				for k, v := range p.Params {
+					kv = append(kv, fmt.Sprintf("%s=%s", k, v))
+				}
+				params = strings.Join(kv, ", ")
+			}
+			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n",
+				name, node, p.Description, next, params))
+		} else {
+			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\n",
+				name, node, p.Description, next))
+		}
+	}
+	list.PrettyPrintTable(b.String())
+}
