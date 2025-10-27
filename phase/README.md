@@ -1,3 +1,17 @@
+# Purpose
+- a framework to create pipeline like actions
+
+# Phase
+```go
+type Phase struct {
+Name         string     // phase:name
+Description  string     // phase:desc
+fn           PhaseFunc  // function that performs the phase work
+Dependencies []string   // other phases that must run first
+}
+```
+
+
 # Intro
 
 

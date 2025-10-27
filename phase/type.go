@@ -33,8 +33,6 @@ type Phase struct {
 	Description  string
 	fn           PhaseFunc
 	Dependencies []string
-	// Add a new field for phase-specific arguments
-	// Args         []string
 }
 
 // Name: Workflow

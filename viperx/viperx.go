@@ -1,0 +1,144 @@
+package viperx
+
+import (
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+)
+
+// description: loads global and project-local YAML config and returns a Viper instance
+// Notes:
+//
+// - 1 - Global config (~/.config/goluc/workflow/conf.yaml or GOLUC_CONFIG env)
+// - 2 - Workflow-local config (cmd/workflow/<workflowName>/conf.yaml)
+func LoadConfig() (*viper.Viper, error) {
+
+	// define instance
+	v := viper.New()
+
+	// 1 - define package yaml config file location
+	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetSection
+	packagePath := filepath.Join(path.Dir(file), "conf.yaml")
+	// load (initial merge)
+	if err := mergeIfExists(v, packagePath); err != nil {
+		return nil, err
+	}
+
+	// 2 - define global yaml config file location
+	globalPath := os.Getenv("GOLUC_CONFIG")
+	if globalPath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("getting home directory: %w", err)
+		}
+		globalPath = filepath.Join(homeDir, "wkspc", ".config", "goluc", "workflow", "conf.yaml")
+	}
+	// merge
+	if err := mergeIfExists(v, globalPath); err != nil {
+		return nil, err
+	}
+
+	// 3 - define current working dir yaml config file location
+	localPath := "conf.yaml"
+	// merge
+	if err := mergeIfExists(v, localPath); err != nil {
+		return nil, err
+	}
+
+	// check viper instance is not empty
+	if len(v.AllKeys()) == 0 {
+		return nil, fmt.Errorf("no configuration file loaded (checked %q and %q and %q in working dir)", packagePath, globalPath, localPath)
+	}
+
+	return v, nil
+}
+
+// Description merges the given config file into the viper instance
+//
+// Notes:
+// - It merge the new one to the existing one (which can be even a merge)
+// - If the file exists, it is merged into the viper instance
+// - If the file does not exist, it does nothing (it keeps the existing viper instance)
+func mergeIfExists(v *viper.Viper, path string) error {
+	if _, err := os.Stat(path); err == nil {
+		v.SetConfigFile(path)
+		if err := v.MergeInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				return fmt.Errorf("merging config %q: %w", path, err)
+			}
+		}
+	}
+	return nil
+}
+
+// Description: returns a Viper instance scoped to a specific section of the YAML
+func GetSection(name string) (*viper.Viper, error) {
+	v, err := LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("loading config: %w", err)
+	}
+
+	sub := v.Sub("workflow." + name)
+	if sub == nil {
+		return nil, fmt.Errorf("section %q not found", name)
+	}
+
+	return sub, nil
+}
+
+// Description: binds all Cobra command flags to Viper keys so that flags, env vars, and config files work together.
+//
+// Usage Example:
+//  - export GOLUC_WKF_KINDN_EXAMPLE_KEY="env_value"
+//  - goluc wkf kindn --example_key="flag_value"
+
+func BindFlags(cmd *cobra.Command, v *viper.Viper, workflowName string) {
+	envPrefix := "GOLUC_WKF"
+	v.SetEnvPrefix(envPrefix)
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		key := f.Name
+		if workflowName != "" {
+			key = workflowName + "." + key
+		}
+		if err := v.BindPFlag(key, f); err != nil {
+			panic(err)
+		}
+	})
+}
+
+// _, file, _, _ := runtime.Caller(0)
+// fmt.Println("yo Package:", path.Dir(file))
+// // If globalPath does not exist, fallback to absolute YAML
+// if _, err := os.Stat(globalPath); err != nil {
+// 	// globalPath = "/Users/max/wkspc/git/goluc/cmd/workflow/kindn/conf.yaml"
+// }
+// var defaultConf []byte
+
+// func GetSection2(name string, logger logx.Logger) (*viper.Viper, error) {
+// 	v, err := LoadConfig(logger)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("loading config: %w", err)
+// 	}
+
+// 	// Create a new Viper instance for the workflow subtree
+// 	sub := viper.New()
+// 	workflowKey := "workflow." + name
+
+// 	for _, key := range v.AllKeys() {
+// 		if len(key) >= len(workflowKey) && key[:len(workflowKey)] == workflowKey {
+// 			sub.Set(key[len(workflowKey)+1:], v.Get(key))
+// 		}
+// 	}
+
+// 	return sub, nil
+// }
