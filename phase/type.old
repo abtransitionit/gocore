@@ -11,18 +11,16 @@ import (
 type Workflow2 struct {
 	Name        string            `yaml:"name"`
 	Description string            `yaml:"description"`
-	Phases      map[string]Phase2 `yaml:"phases"`
+	Phases      map[string]Phase2{
+		Name         string            `yaml:"name"`
+		Description  string            `yaml:"description"`
+		Fn           string            `yaml:"fn"`
+		Dependencies []string          `yaml:"dependencies,omitempty"` // replace Next
+		Params       map[string]string `yaml:"params,omitempty"`
+		Node         string            `yaml:"node,omitempty"`
+	} `yaml:"phases"`
 }
 
-// Description: represents a phase
-type Phase2 struct {
-	Name         string            `yaml:"name"`
-	Description  string            `yaml:"description"`
-	Fn           string            `yaml:"fn"`
-	Dependencies []string          `yaml:"dependencies,omitempty"` // replace Next
-	Params       map[string]string `yaml:"params,omitempty"`
-	Node         string            `yaml:"node,omitempty"`
-}
 
 // Name: PhaseFunc
 //

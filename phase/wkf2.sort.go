@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func (wf *Workflow2) TopoSorted2() ([]PhaseYAML, error) {
+func (wf *Workflow2) TopoSorted2() ([]Phase2, error) {
 	inDegree := make(map[string]int)
 	graph := make(map[string][]string)
 
@@ -33,7 +33,7 @@ func (wf *Workflow2) TopoSorted2() ([]PhaseYAML, error) {
 	}
 	sort.Strings(queue) // deterministic order
 
-	var sorted []PhaseYAML
+	var sorted []Phase2
 	for len(queue) > 0 {
 		key := queue[0]
 		queue = queue[1:]
