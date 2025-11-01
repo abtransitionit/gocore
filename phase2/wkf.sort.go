@@ -109,7 +109,7 @@ func (wf *Workflow) buildDependencyGraph() (map[string]int, map[string][]string,
 	}
 
 	for name, phase := range wf.Phases {
-		for _, dep := range phase.Dependencies {
+		for _, dep := range phase.Dependency {
 			if _, ok := wf.Phases[dep]; !ok {
 				return nil, nil, fmt.Errorf("dependency %q for phase %q does not exist", dep, name)
 			}

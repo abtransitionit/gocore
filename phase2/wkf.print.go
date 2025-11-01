@@ -34,8 +34,8 @@ func (wf *Workflow) getTablePhaseInternal(showParams bool) (string, error) {
 	// Iterate over sorted phases
 	for _, p := range sorted {
 		deps := "none"
-		if len(p.Dependencies) > 0 {
-			deps = strings.Join(p.Dependencies, ", ")
+		if len(p.Dependency) > 0 {
+			deps = strings.Join(p.Dependency, ", ")
 		}
 
 		node := p.Node
@@ -50,9 +50,9 @@ func (wf *Workflow) getTablePhaseInternal(showParams bool) (string, error) {
 
 		if showParams {
 			params := "none"
-			if len(p.Params) > 0 {
+			if len(p.Param) > 0 {
 				var kv []string
-				for k, v := range p.Params {
+				for k, v := range p.Param {
 					kv = append(kv, fmt.Sprintf("%s=%s", k, v))
 				}
 				params = strings.Join(kv, ", ")
@@ -98,8 +98,8 @@ func (wf *Workflow) getTableTierInternal(showParams bool) (string, error) {
 			idp := phaseIndex + 1
 
 			deps := "none"
-			if len(p.Dependencies) > 0 {
-				deps = strings.Join(p.Dependencies, ", ")
+			if len(p.Dependency) > 0 {
+				deps = strings.Join(p.Dependency, ", ")
 			}
 
 			node := p.Node
@@ -109,9 +109,9 @@ func (wf *Workflow) getTableTierInternal(showParams bool) (string, error) {
 
 			if showParams {
 				params := "none"
-				if len(p.Params) > 0 {
+				if len(p.Param) > 0 {
 					var kv []string
-					for k, v := range p.Params {
+					for k, v := range p.Param {
 						kv = append(kv, fmt.Sprintf("%s=%s", k, v))
 					}
 					params = strings.Join(kv, ", ")

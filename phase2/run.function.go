@@ -7,7 +7,7 @@ import (
 
 func (goFunc *GoFunc) Execute(logger logx.Logger) (string, error) {
 	// log
-	logger.Infof("• Executing function: %s", goFunc.Name)
+	logger.Infof("🅕 Executing function: %s", goFunc.Name)
 
 	// success
 	return "", nil

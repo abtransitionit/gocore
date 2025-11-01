@@ -7,7 +7,9 @@ import (
 
 func (phase *Phase) Execute(logger logx.Logger) (string, error) {
 	// log
-	logger.Infof("• Starting phase: %s", phase.Name)
+	logger.Infof("🅟 Starting phase: %s", phase.Name)
+	logger.Infof("Node: %s", phase.Node)
+	logger.Infof("Fn: %s", phase.Fn)
 
 	// success
 	return "", nil
