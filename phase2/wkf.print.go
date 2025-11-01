@@ -17,10 +17,11 @@ func (wf *Workflow) GetTablePhaseWithParams() (string, error) {
 func (wf *Workflow) getTablePhaseInternal(showParams bool) (string, error) {
 	var b strings.Builder
 
+	// Header
 	if showParams {
-		b.WriteString("Phase\tNode\tDescription\tDependencies\tParams\n")
+		b.WriteString("Phase\tNode\tFn\tDescription\tDependencies\tParams\n")
 	} else {
-		b.WriteString("Phase\tNode\tDescription\tDependencies\n")
+		b.WriteString("Phase\tNode\tFn\tDescription\tDependencies\n")
 	}
 
 	// Topologically sort phases
@@ -42,6 +43,11 @@ func (wf *Workflow) getTablePhaseInternal(showParams bool) (string, error) {
 			node = "none"
 		}
 
+		fn := p.Fn
+		if fn == "" {
+			fn = "none"
+		}
+
 		if showParams {
 			params := "none"
 			if len(p.Params) > 0 {
@@ -51,17 +57,16 @@ func (wf *Workflow) getTablePhaseInternal(showParams bool) (string, error) {
 				}
 				params = strings.Join(kv, ", ")
 			}
-			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n",
-				p.Name, node, p.Description, deps, params))
+			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\n",
+				p.Name, node, fn, p.Description, deps, params))
 		} else {
-			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\n",
-				p.Name, node, p.Description, deps))
+			b.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n",
+				p.Name, node, fn, p.Description, deps))
 		}
 	}
 
 	return b.String(), nil
 }
-
 func (wf *Workflow) GetTableTier() (string, error) {
 	return wf.getTableTierInternal(false)
 }
