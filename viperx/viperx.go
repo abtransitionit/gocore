@@ -22,14 +22,14 @@ import (
 // - 1 - Package config (cmd/workflow/<workflowName>/conf.yaml)
 // - 2 - Global config ($GOLUC_CONFIG env if set elese ~/.config/goluc/workflow/conf.yaml or )
 // - 3 - Local config (aka. current working dir ./conf.yaml)
-func getConfig() (*viper.Viper, error) {
+func getConfig(name string) (*viper.Viper, error) {
 
 	// define instance
 	v := viper.New()
 
 	// 1 - define package yaml config file location
 	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetConfigSection
-	packagePath := filepath.Join(path.Dir(file), "conf.yaml")
+	packagePath := filepath.Join(path.Dir(file), "..", name, "conf.yaml")
 	// 11 - merge (initial load)
 	if err := mergeIfExists(v, packagePath); err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func mergeIfExists(v *viper.Viper, path string) error {
 // Description: returns a Viper instance scoped to a specific section of the YAML
 func GetConfig(name string) (*Config, error) {
 	// load all config
-	v, err := getConfig()
+	v, err := getConfig(name)
 	if err != nil {
 		return nil, fmt.Errorf("loading config: %w", err)
 	}

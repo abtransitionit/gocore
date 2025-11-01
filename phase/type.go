@@ -26,7 +26,7 @@ type Phase2 struct {
 
 // Name: PhaseFunc
 //
-// Description: a type that represents a function to be executed as a phase.
+// Description: represents a function of a phase.
 //
 // Parameters:
 //   - ctx: The context for the phase's execution.
@@ -36,4 +36,5 @@ type Phase2 struct {
 // Notes:
 // - The function is designed to play some code on a Target (VM, Container, etc).
 // - The cmd...string here is meant to pass the same arguments to all phases of a workflow via Execute
-type PhaseFunc2 func(ctx context.Context, l logx.Logger, targets []Target, cmd ...string) (string, error)
+type PhaseFunc2 func(ctx context.Context, node []string, l logx.Logger) (string, error)
+type PhaseFunc3 func(ctx context.Context, l logx.Logger) error
