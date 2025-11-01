@@ -25,4 +25,9 @@ type Phase struct {
 }
 
 // type PhaseFunc func(ctx context.Context, node []string, l logx.Logger) (string, error)
-type PhaseFunc func(ctx context.Context, l logx.Logger) error
+// type GoFunc func(ctx context.Context, l logx.Logger) error
+
+type GoFunc struct {
+	Name string
+	Func func(ctx context.Context, logger logx.Logger) error
+}

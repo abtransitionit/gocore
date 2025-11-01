@@ -2,6 +2,6 @@ package viperx
 
 import "github.com/spf13/viper"
 
-type Config struct {
+type CViper struct {
 	*viper.Viper
 }

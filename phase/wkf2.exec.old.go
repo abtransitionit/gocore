@@ -13,7 +13,7 @@ var ResolveFn = map[string]func([]string){
 	"osUpgrade":     func(nodes []string) { fmt.Println("mock: osUpgrade") },
 }
 
-func (wf *Workflow2) Execute(cfg *viperx.Config) {
+func (wf *Workflow2) Execute(cfg *viperx.CViper) {
 	// toposort the phases of the workflow
 	phases, _ := wf.TopoSorted2()
 	// Loop over the phases

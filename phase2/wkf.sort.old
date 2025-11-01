@@ -1,0 +1,122 @@
+// File in gocore/phase/adapter.go
+package phase2
+
+import (
+	"fmt"
+	"sort"
+)
+
+func (wf *Workflow) TopoSorted() ([]Phase, error) {
+	inDegree := make(map[string]int)
+	graph := make(map[string][]string)
+
+	// Initialize graph and in-degree map
+	for key := range wf.Phases {
+		inDegree[key] = 0
+		graph[key] = []string{}
+	}
+
+	// Build graph based on dependencies
+	for key, phase := range wf.Phases {
+		for _, dep := range phase.Dependencies {
+			graph[dep] = append(graph[dep], key) // dep -> key
+			inDegree[key]++
+		}
+	}
+
+	// Queue for zero in-degree nodes
+	queue := []string{}
+	for key, deg := range inDegree {
+		if deg == 0 {
+			queue = append(queue, key)
+		}
+	}
+	sort.Strings(queue) // deterministic order
+
+	var sorted []Phase
+	for len(queue) > 0 {
+		key := queue[0]
+		queue = queue[1:]
+
+		phase := wf.Phases[key]
+		phase.Name = key // populate Name from map key
+		sorted = append(sorted, phase)
+
+		for _, neighbor := range graph[key] {
+			inDegree[neighbor]--
+			if inDegree[neighbor] == 0 {
+				queue = append(queue, neighbor)
+			}
+		}
+		sort.Strings(queue) // deterministic
+	}
+
+	if len(sorted) != len(wf.Phases) {
+		return nil, fmt.Errorf("circular dependency detected")
+	}
+	return sorted, nil
+}
+
+func (w *Workflow) topologicalSort() ([][]Phase, error) {
+	inDegree := make(map[string]int)
+	graph := make(map[string][]string)
+
+	for name := range w.Phases {
+		inDegree[name] = 0
+		graph[name] = []string{}
+	}
+
+	for name, phase := range w.Phases {
+		for _, depName := range phase.Dependencies {
+			if _, exists := w.Phases[depName]; !exists {
+				return nil, fmt.Errorf("dependency %q for phase %q does not exist", depName, name)
+			}
+			graph[depName] = append(graph[depName], name)
+			inDegree[name]++
+		}
+	}
+
+	queue := make([]string, 0)
+	for name, degree := range inDegree {
+		if degree == 0 {
+			queue = append(queue, name)
+		}
+	}
+	// Ensure deterministic ordering of phases in the same tier
+	sort.Strings(queue)
+
+	sortedTiers := make([][]Phase, 0)
+	for len(queue) > 0 {
+		tierSize := len(queue)
+		currentTier := make([]Phase, 0, tierSize)
+		nextQueue := make([]string, 0)
+
+		for i := 0; i < tierSize; i++ {
+			name := queue[i]
+			currentTier = append(currentTier, w.Phases[name])
+			for _, neighbor := range graph[name] {
+				inDegree[neighbor]--
+				if inDegree[neighbor] == 0 {
+					nextQueue = append(nextQueue, neighbor)
+				}
+			}
+		}
+
+		// Sort again to keep deterministic order across tiers
+		sort.Strings(nextQueue)
+		sortedTiers = append(sortedTiers, currentTier)
+		queue = nextQueue
+	}
+
+	if len(sortedTiers) > 0 {
+		totalSortedPhases := 0
+		for _, tier := range sortedTiers {
+			totalSortedPhases += len(tier)
+		}
+		if totalSortedPhases != len(w.Phases) {
+			return nil, fmt.Errorf("circular dependency detected in workflow")
+		}
+	}
+
+	return sortedTiers, nil
+}

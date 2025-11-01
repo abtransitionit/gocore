@@ -22,14 +22,14 @@ import (
 // - 1 - Package config (cmd/workflow/<workflowName>/conf.yaml)
 // - 2 - Global config ($GOLUC_CONFIG env if set elese ~/.config/goluc/workflow/conf.yaml or )
 // - 3 - Local config (aka. current working dir ./conf.yaml)
-func getConfig(name string) (*viper.Viper, error) {
+func getConfig(fileName, cmdName string) (*viper.Viper, error) {
 
 	// define instance
 	v := viper.New()
 
 	// 1 - define package yaml config file location
 	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetConfigSection
-	packagePath := filepath.Join(path.Dir(file), "..", name, "wkf.conf.yaml")
+	packagePath := filepath.Join(path.Dir(file), "..", cmdName, fileName)
 	// 11 - merge (initial load)
 	if err := mergeIfExists(v, packagePath); err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func getConfig(name string) (*viper.Viper, error) {
 		if err != nil {
 			return nil, fmt.Errorf("getting home directory: %w", err)
 		}
-		globalPath = filepath.Join(homeDir, "wkspc", ".config", "goluc", "workflow", "conf.yaml")
+		globalPath = filepath.Join(homeDir, "wkspc", ".config", "goluc", "workflow", fileName)
 	}
 	// 21 - merge
 	if err := mergeIfExists(v, globalPath); err != nil {
@@ -50,7 +50,7 @@ func getConfig(name string) (*viper.Viper, error) {
 	}
 
 	// 3 - define current working dir yaml config file location
-	localPath := "conf.yaml"
+	localPath := fileName
 	// 31 - merge
 	if err := mergeIfExists(v, localPath); err != nil {
 		return nil, err
@@ -83,19 +83,22 @@ func mergeIfExists(v *viper.Viper, path string) error {
 }
 
 // Description: returns a Viper instance scoped to a specific section of the YAML
-func GetConfig(name string) (*Config, error) {
+// Parameters:
+// - cmdName: name of the command
+// - prefix: prefix of the root section in the config file
+func GetConfig(filename, prefix, cmdName string) (*CViper, error) {
 	// load all config
-	v, err := getConfig(name)
+	v, err := getConfig(filename, cmdName)
 	if err != nil {
 		return nil, fmt.Errorf("loading config: %w", err)
 	}
 
 	// make section items available via sub.xxx
-	sub := v.Sub("workflow." + name)
+	sub := v.Sub(prefix + "." + cmdName)
 	if sub == nil {
-		return nil, fmt.Errorf("section %q not found", name)
+		return nil, fmt.Errorf("section %q not found", cmdName)
 	}
-	return &Config{Viper: sub}, nil
+	return &CViper{Viper: sub}, nil
 }
 
 // Description: binds all Cobra command flags to Viper keys so that flags, env vars, and config files work together.
@@ -104,18 +107,18 @@ func GetConfig(name string) (*Config, error) {
 //  - export GOLUC_WKF_KINDN_EXAMPLE_KEY="env_value"
 //  - goluc wkf kindn --example_key="flag_value"
 
-func BindFlags(cmd *cobra.Command, v *Config, workflowName string) {
+func BindFlags(cmd *cobra.Command, c *CViper, workflowName string) {
 	envPrefix := "GOLUC_WKF"
-	v.SetEnvPrefix(envPrefix)
-	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	c.SetEnvPrefix(envPrefix)
+	c.AutomaticEnv()
+	c.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		key := f.Name
 		if workflowName != "" {
 			key = workflowName + "." + key
 		}
-		if err := v.BindPFlag(key, f); err != nil {
+		if err := c.BindPFlag(key, f); err != nil {
 			panic(err)
 		}
 	})

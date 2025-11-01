@@ -23,7 +23,7 @@ func ResolveNodeOld(nodeName string) []string {
 
 // ResolveNode takes a node selector string and resolves it to a list of node names
 // using the provided workflow configuration.
-func ResolveNode(cfg *viperx.Config, nodeSpec string) []string {
+func ResolveNode(cfg *viperx.CViper, nodeSpec string) []string {
 	if cfg == nil {
 		fmt.Println("⚠️  ResolveNode: config is nil, returning localhost")
 		return []string{"localhost"}
