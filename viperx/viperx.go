@@ -29,7 +29,7 @@ func getConfig(name string) (*viper.Viper, error) {
 
 	// 1 - define package yaml config file location
 	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetConfigSection
-	packagePath := filepath.Join(path.Dir(file), "..", name, "conf.yaml")
+	packagePath := filepath.Join(path.Dir(file), "..", name, "wkf.conf.yaml")
 	// 11 - merge (initial load)
 	if err := mergeIfExists(v, packagePath); err != nil {
 		return nil, err
