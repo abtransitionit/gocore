@@ -9,6 +9,7 @@ import (
 func (wf *Workflow) Execute(cfg *viperx.CViper, logger logx.Logger) error {
 	// log
 	logger.Infof("• Starting workflow: %s", wf.Name)
+	logger.Info("• Phases in the same tier run in parallel. Next tier starts when the previous one completes")
 
 	// toposort the phases of the workflow
 	phases, _ := wf.TopoPhaseSorted()
