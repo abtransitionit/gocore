@@ -10,13 +10,13 @@ import (
 	"github.com/abtransitionit/gocore/yamlx"
 )
 
-func GetWorkflow(cmdName string) (*Workflow, error) {
+func GetWorkflow(cmdPathName string) (*Workflow, error) {
 	// 1. Define YAML workflow file path
 	_, file, _, ok := runtime.Caller(1)
 	if !ok {
 		return nil, fmt.Errorf("could not get caller information")
 	}
-	workflowPath := filepath.Join(path.Dir(file), "..", cmdName, "wkf.phase.yaml")
+	workflowPath := filepath.Join(path.Dir(file), "..", cmdPathName, "wkf.phase.yaml")
 
 	fmt.Println("workflowPath:", workflowPath)
 

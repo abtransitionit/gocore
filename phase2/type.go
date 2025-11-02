@@ -16,12 +16,12 @@ type Workflow struct {
 
 // Description: represents a phase
 type Phase struct {
-	Name        string            `yaml:"name"`
-	Description string            `yaml:"description"`
-	Fn          string            `yaml:"fn"`
-	Dependency  []string          `yaml:"dependency,omitempty"` // replace Next
-	Param       map[string]string `yaml:"param,omitempty"`
-	Node        string            `yaml:"node,omitempty"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	Fn          string   `yaml:"fn"`
+	Dependency  []string `yaml:"dependency,omitempty"` // replace Next
+	Param       []string `yaml:"param,omitempty"`
+	Node        string   `yaml:"node,omitempty"`
 }
 
 // type PhaseFunc func(ctx context.Context, node []string, l logx.Logger) (string, error)

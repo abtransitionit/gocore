@@ -15,6 +15,10 @@ import (
 
 // description: loads the YAML config file and returns a Viper instance
 //
+// Parameters:
+// - fileName: the name of the YAML config file
+// - cmdName: the name of the command
+//
 // Notes:
 //
 // searches the file at this location and merge them all in the following order
@@ -22,14 +26,13 @@ import (
 // - 1 - Package config (cmd/workflow/<workflowName>/conf.yaml)
 // - 2 - Global config ($GOLUC_CONFIG env if set elese ~/.config/goluc/workflow/conf.yaml or )
 // - 3 - Local config (aka. current working dir ./conf.yaml)
-func getConfig(fileName, cmdName string) (*viper.Viper, error) {
-
+func getConfig(fileName, cmdPathName string) (*viper.Viper, error) {
 	// define instance
 	v := viper.New()
 
 	// 1 - define package yaml config file location
 	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetConfigSection
-	packagePath := filepath.Join(path.Dir(file), "..", cmdName, fileName)
+	packagePath := filepath.Join(path.Dir(file), "..", cmdPathName, fileName)
 	// 11 - merge (initial load)
 	if err := mergeIfExists(v, packagePath); err != nil {
 		return nil, err
@@ -83,12 +86,15 @@ func mergeIfExists(v *viper.Viper, path string) error {
 }
 
 // Description: returns a Viper instance scoped to a specific section of the YAML
+//
 // Parameters:
-// - cmdName: name of the command
+// - fileName: the name of the YAML config file
 // - prefix: prefix of the root section in the config file
-func GetConfig(filename, prefix, cmdName string) (*CViper, error) {
+// - cmdName: name of the command
+func GetConfig(filename, prefix, cmdPathName string) (*CViper, error) {
+	cmdName := filepath.Base(cmdPathName)
 	// load all config
-	v, err := getConfig(filename, cmdName)
+	v, err := getConfig(filename, cmdPathName)
 	if err != nil {
 		return nil, fmt.Errorf("loading config: %w", err)
 	}
