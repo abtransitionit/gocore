@@ -45,12 +45,22 @@ func (wkf *Workflow) Execute(config *viperx.CViper, fr *FunctionRegistry, logger
 		wg.Wait()
 		close(errCh)
 
-		if len(errCh) > 0 {
-			for e := range errCh {
-				logger.Errorf(e.Error())
-			}
-			return fmt.Errorf("occurring in tier %d", tierIdx)
+		// Collect all errors
+		var tierErrs []error
+		for e := range errCh {
+			logger.Errorf(e.Error())
+			tierErrs = append(tierErrs, e)
 		}
+		if len(tierErrs) > 0 {
+			return fmt.Errorf("errors occurred in tier %d", tierIdx)
+		}
+
+		// if len(errCh) > 0 {
+		// 	for e := range errCh {
+		// 		logger.Errorf(e.Error())
+		// 	}
+		// 	return fmt.Errorf("occurring in tier %d", tierIdx)
+		// }
 
 		logger.Infof("👉 Completed Tier %d", tierIdx)
 	}
