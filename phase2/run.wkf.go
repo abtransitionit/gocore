@@ -9,13 +9,13 @@ import (
 	"github.com/abtransitionit/gocore/viperx"
 )
 
-func (wf *Workflow) Execute(config *viperx.CViper, logger logx.Logger) error {
+func (wkf *Workflow) Execute(config *viperx.CViper, fr *FunctionRegistry, logger logx.Logger) error {
 	//log
-	logger.Infof("🅦 Starting workflow: %s", wf.Name)
+	logger.Infof("🅦 Starting workflow: %s > %s", wkf.Name, wkf.Description)
 	logger.Info("Phases in the same tier run in parallel. Next tier starts when the previous one completes")
 
 	// get tiers
-	tiers, err := wf.TopoTierSorted()
+	tiers, err := wkf.TopoTierSorted()
 	nbTier := len(tiers)
 	if err != nil {
 		return fmt.Errorf("sorting tier: %w", err)
@@ -35,13 +35,13 @@ func (wf *Workflow) Execute(config *viperx.CViper, logger logx.Logger) error {
 			wg.Add(1)
 			go func(p Phase) {
 				defer wg.Done()
-				if _, err := p.Execute(logger); err != nil {
+				if _, err := p.Execute(config, fr, logger); err != nil {
 					errCh <- fmt.Errorf("phase %s failed: %w", p.Name, err)
 				}
 			}(phase)
 		}
 
-		// Wait for all phases in this tier
+		// Wait for all phases in this tier to completes
 		wg.Wait()
 		close(errCh)
 
@@ -57,21 +57,5 @@ func (wf *Workflow) Execute(config *viperx.CViper, logger logx.Logger) error {
 
 	// success
 	logger.Info("• Workflow completed successfully")
-	return nil
-}
-
-func (wf *Workflow) Execute2(cfg *viperx.CViper, logger logx.Logger) error {
-	// log
-	logger.Infof("• Starting workflow: %s", wf.Name)
-	logger.Info("• Phases in the same tier run in parallel. Next tier starts when the previous one completes")
-
-	// toposort the phases of the workflow
-	phases, _ := wf.TopoPhaseSorted()
-
-	// Loop over sorted phases
-	for _, phase := range phases {
-		// Execute the phase
-		phase.Execute(logger)
-	}
 	return nil
 }

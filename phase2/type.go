@@ -19,13 +19,17 @@ type Phase struct {
 	Name        string   `yaml:"name"`
 	Description string   `yaml:"description"`
 	Fn          string   `yaml:"fn"`
-	Dependency  []string `yaml:"dependency,omitempty"` // replace Next
+	Dependency  []string `yaml:"dependency,omitempty"`
 	Param       []string `yaml:"param,omitempty"`
 	Node        string   `yaml:"node,omitempty"`
 }
 
-// type PhaseFunc func(ctx context.Context, node []string, l logx.Logger) (string, error)
-// type GoFunc func(ctx context.Context, l logx.Logger) error
+type FunctionRegistry struct {
+	funcs map[string]any
+}
+
+// // type PhaseFunc func(ctx context.Context, node []string, l logx.Logger) (string, error)
+// type GoFunc func(ctx context.Context, l logx.Logger) (string, error)
 
 type GoFunc struct {
 	Name string
