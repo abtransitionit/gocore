@@ -66,3 +66,11 @@ workflow:
       worker: ["o2a", "o3r", "o4f", "o5d"]
 ```      
 
+# Todo
+```
+config.GetStringSlice("node.all")
+config.Get("da.repo.node")
+config.Get("da.pkg.node")
+config.Get("helm.release")
+config.Get("cluster")
+```

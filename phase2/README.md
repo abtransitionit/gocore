@@ -269,5 +269,15 @@ At **runtime** (when executing this command)
 This consist of mapping a function defined as a string to a real Go function inside a package. 
 - the function is added to the registry 
 
+# Code Detail
+## Tier
+- a **tier** is a slice of phases (i.e. `[][]phase`)
+- for each tier we globally
+  - run all phase concurently (i.e. each phase in its own goroutine)
+  - wait for all phases ti finish
+  - collect errors
+  - when any phase failed   → the code stop and return an error.
+  - when all phases succeed → move to next tier.
+
 # Todo
 - skip and retain

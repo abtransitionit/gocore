@@ -1,0 +1,37 @@
+// File in gocore/phase/adapter.go
+package phase2
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/syncx"
+)
+
+// description: fetch a function in the registry and execute it
+func (gf *GoFunc) Execute(ctx context.Context, fr *FunctionRegistry, nodeList []string, logger logx.Logger) (string, error) {
+	var goFunc *GoFunc
+
+	// resolve
+	goFunc, err := resolveFunction(gf.PhaseFuncName, fr, logger)
+	if err != nil {
+		return "", err
+	}
+
+	logger.Infof("🅕 Executing function: %s concurently on nodes %v", goFunc.PhaseFuncName, nodeList)
+	err = syncx.ExecConcurrently(ctx, nodeList, logger, func(node string) error {
+		logger.Infof("🅝 Node %s > Starting function", node)
+		if err := goFunc.Func(ctx, logger); err != nil {
+			return fmt.Errorf("🅝 Node %s > function failed: %w", node, err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("errors occurred on nodes: %w", err)
+	}
+
+	// success
+	return "ok", nil
+}

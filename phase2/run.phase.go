@@ -2,29 +2,32 @@
 package phase2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/viperx"
 )
 
-func (phase *Phase) Execute(config *viperx.CViper, fr *FunctionRegistry, logger logx.Logger) (string, error) {
-	// resolve member
+func (phase *Phase) Execute(ctx context.Context, config *viperx.CViper, fr *FunctionRegistry, logger logx.Logger) (string, error) {
+	// resolve
 	nodeList := resolveNode(phase.Node, config)
-	paramList := resolveParam(phase.Param, config)
-	nbParam := len(paramList)
+	// resolve
+	paramMap := resolveParam(phase.Param, config)
+	nbParam := len(paramMap)
 
 	// log
 	logger.Debugf("🅟 Starting Phase : %s > NodeSet:  %s (%v)", phase.Name, phase.Node, nodeList)
 	// logger.Debugf("Phase : %s > Fn      reolve to:  %s", phase.Name, phase.Fn)
 	if nbParam > 0 {
-		logger.Debugf("Phase : %s > %d Param(s) reolve to:  %s", phase.Name, nbParam, paramList)
+		logger.Debugf("Phase : %s > %d Param(s) reolve to:  %s", phase.Name, nbParam, paramMap)
 	}
-	if fr.Has(phase.Fn) {
-		logger.Debugf("Phase : %s > Function %s exists in registry", phase.Name, phase.Fn)
-	} else {
-		return "", fmt.Errorf("function %q not found in registry", phase.Fn)
+
+	// Execute the function
+	_, err := GetGoFunc(phase.Fn).Execute(ctx, fr, nodeList, logger)
+	if err != nil {
+		return "", err
 	}
+
 	// success
 	return "", nil
 }

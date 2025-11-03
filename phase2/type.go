@@ -24,14 +24,30 @@ type Phase struct {
 	Node        string   `yaml:"node,omitempty"`
 }
 
+// Description: represents a registry to store functions
+//
+// Notes:
+//   - The registry is a map of functions indexed by their PhaseName.
 type FunctionRegistry struct {
 	funcs map[string]any
 }
 
-// // type PhaseFunc func(ctx context.Context, node []string, l logx.Logger) (string, error)
-// type GoFunc func(ctx context.Context, l logx.Logger) (string, error)
-
+// Description: represents a Go function
 type GoFunc struct {
-	Name string
-	Func func(ctx context.Context, logger logx.Logger) error
+	PhaseFuncName string
+	Func          func(ctx context.Context, logger logx.Logger) error
+}
+
+// description: constructor that return an instance of GoFunc
+func GetGoFunc(phaseFunction string) *GoFunc {
+	return &GoFunc{
+		PhaseFuncName: phaseFunction,
+	}
+}
+
+// description: constructor that return an instance of a FunctionRegistry
+func GetFunctionRegistry() *FunctionRegistry {
+	return &FunctionRegistry{
+		funcs: make(map[string]any),
+	}
 }

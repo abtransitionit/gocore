@@ -1,0 +1,63 @@
+// File in gocore/phase/adapter.go
+package phase2
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/abtransitionit/gocore/logx"
+)
+
+// description: get a function from the registry
+func (r *FunctionRegistry) getFunction(phaseFunction string) *GoFunc {
+
+	// get the function from registry
+	registredFunction := r.funcs[phaseFunction]
+
+	switch typed := registredFunction.(type) {
+	case func(ctx context.Context, logger logx.Logger) error:
+		return &GoFunc{PhaseFuncName: phaseFunction, Func: typed}
+	case func() (string, error):
+		return &GoFunc{
+			PhaseFuncName: phaseFunction,
+			Func: func(ctx context.Context, logger logx.Logger) error {
+				out, err := typed()
+				logger.Infof("Result: %s", out)
+				return err
+			},
+		}
+	case func() string:
+		return &GoFunc{
+			PhaseFuncName: phaseFunction,
+			Func: func(ctx context.Context, logger logx.Logger) error {
+				logger.Infof("Result: %s", typed())
+				return nil
+			},
+		}
+	default:
+		return &GoFunc{
+			PhaseFuncName: phaseFunction,
+			Func: func(ctx context.Context, logger logx.Logger) error {
+				return fmt.Errorf("invalid function signature: %s", phaseFunction)
+			},
+		}
+	}
+}
+
+// description: add a function to the registry
+func (r *FunctionRegistry) Add(phaseFunction string, fn any) error {
+	if phaseFunction == "" || fn == nil {
+		return fmt.Errorf("invalid function or name")
+	}
+	if _, exists := r.funcs[phaseFunction]; exists {
+		return fmt.Errorf("function %q already registered", phaseFunction)
+	}
+	r.funcs[phaseFunction] = fn
+	return nil
+}
+
+// description: check if a PhaseFuncName is in the registry
+func (fr *FunctionRegistry) Has(key string) bool {
+	_, ok := fr.funcs[key]
+	return ok
+}

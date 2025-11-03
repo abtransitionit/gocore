@@ -5,87 +5,64 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time" // Added for demonstration of a timeout context.
+
+	"github.com/abtransitionit/gocore/logx"
 )
 
-// Func represents a function that can be executed in a concurrent group.
-// It returns an error to indicate failure.
-type Func func() error
-
-// Name: RunConcurrently
-//
-// Description: executes a slice of Funcs concurrently.
+// Description: runs a function concurrently for each item in a slice.
 //
 // Parameters:
+//   - itemList: a slice of items to process concurrently.
+//   - fn: a function to be executed concurrently for each item.
+//   - logger: a logger instance for logging errors.
 //
-//   - ctx: one context, the same for all goroutines
-//   - funcs: A slice of Funcs to be executed concurrently.
-//
-// Returns:
-//   - A slice of errors, one for each function that failed to execute or a context cancellation error.
-func RunConcurrently(ctx context.Context, funcs []Func) []error {
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var errs []error
-
-	// Start a goroutine to log the cancellation reason.
-	// This goroutine will wait until the context is done and then log the reason.
-	go func() {
-		<-ctx.Done()
-		// Determine the reason for the cancellation and log it.
-		select {
-		case <-time.After(50 * time.Millisecond): // A small delay to allow other goroutines to log their status.
-		default:
-		}
-
-		switch ctx.Err() {
-		case context.Canceled:
-			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled by user (e.g., via Ctrl+C).")
-		case context.DeadlineExceeded:
-			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled due to timeout.")
-		default:
-			fmt.Println("INFO\tlogx/loggerZap.go:41\tContext canceled for an unknown reason.")
-		}
-	}()
-
-	for _, fn := range funcs {
-		// Stop if the context is already canceled.
-		if ctx.Err() != nil {
-			return []error{ctx.Err()}
-		}
-
-		wg.Add(1)
-		go func(fn Func) {
-			defer wg.Done()
-			select {
-			case <-ctx.Done():
-				// Do not run the function if the context is canceled.
-				return
-			default:
-				if err := fn(); err != nil {
-					mu.Lock()
-					errs = append(errs, err)
-					mu.Unlock()
-				}
-			}
-		}(fn)
-	}
-
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-
-	select {
-	case <-ctx.Done():
-		// Context was canceled; return the cancellation error.
-		return []error{ctx.Err()}
-	case <-done:
-		// All goroutines finished; return any collected errors.
-		if len(errs) > 0 {
-			return errs
-		}
+// ConcurrentExec runs a set of tasks concurrently and collects errors.
+// Each task is a function returning error.
+func ExecConcurrently[T any](context context.Context, itemList []T, logger logx.Logger, fn func(T) error) error {
+	// check parameter
+	if len(itemList) == 0 {
 		return nil
 	}
+
+	// channel to collect as errors as goroutines - one per item in itemList
+	errCh := make(chan error, len(itemList))
+	// channel to collect as errors of each goroutines - one per phaseitem in item
+	var wg sync.WaitGroup
+
+	// loop over each item in the items
+	for _, item := range itemList {
+		// increment the WaitGroup counter - signal that a new goroutine is starting
+		wg.Add(1)
+		item := item // capture loop variable
+		// launch a goroutine - one per item in the list - all goroutines will run concurrently
+		go func() {
+			// decrement the WaitGroup counter - when the goroutine completes
+			defer wg.Done()
+			// execute the function's code
+			if err := fn(item); err != nil {
+				// way to get each goroutine's error (nil or error)
+				errCh <- err
+			}
+		}()
+	}
+
+	// Wait for all phases in this tier to completes (mechanism of WaitGroup's counter)
+	wg.Wait()
+	// close the channel - signal that no more error will be sent
+	close(errCh)
+
+	// loop over the channel to log any error reported by the goroutines
+	var errs []error
+	for e := range errCh {
+		logger.Errorf(e.Error())
+		errs = append(errs, e)
+	}
+
+	// if an error occurred in this tier, return
+	if len(errs) > 0 {
+		return fmt.Errorf("%d error(s) occurred", len(errs))
+	}
+
+	// success
+	return nil
 }
