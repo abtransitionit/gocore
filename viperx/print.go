@@ -31,6 +31,11 @@ func (c *Viperx) GetContentAsString() (string, error) {
 	return string(b), nil
 }
 
+// Description: returns the viperx instance as a string to be as a table
+//
+// Notes:
+//
+// - Allow to view the content of the viperx instance
 func (c *Viperx) GetContentAsTable() (string, error) {
 	if c == nil || c.Viper == nil {
 		return "", fmt.Errorf("Viperx instance is nil")
@@ -100,57 +105,3 @@ func (c *Viperx) GetContentAsTable() (string, error) {
 
 	return sb.String(), nil
 }
-
-// Description: returns the viperx instance as a string to be as a table
-//
-// Notes:
-//
-// - Allow to view the content of the viperx instance
-
-// func (c *Viperx) GetContentAsTable() (string, error) {
-// 	// List the keys you want to display
-// 	keys := []struct {
-// 		Name string
-// 		Type string
-// 	}{
-// 		{"node.all", "[]string"},
-// 		{"da.repo.node", "[]any"},
-// 		{"da.pkg.required", "[]any"},
-// 		{"helm.release", "any"},
-// 		{"cluster", "any"},
-// 	}
-
-// 	var b strings.Builder
-// 	b.WriteString("Name\tType\tValue\n") // header
-
-// 	for _, k := range keys {
-// 		var val any
-
-// 		switch k.Name {
-// 		case "node.all":
-// 			val = c.GetStringSlice(k.Name)
-// 		default:
-// 			val = c.Get(k.Name)
-// 		}
-
-// 		var valStr string
-// 		switch v := val.(type) {
-// 		case string:
-// 			valStr = v
-// 		case []string:
-// 			valStr = strings.Join(v, ", ")
-// 		case []any:
-// 			parts := []string{}
-// 			for _, e := range v {
-// 				parts = append(parts, fmt.Sprintf("%v", e))
-// 			}
-// 			valStr = strings.Join(parts, ", ")
-// 		default:
-// 			valStr = fmt.Sprintf("%v", v)
-// 		}
-
-// 		b.WriteString(fmt.Sprintf("%s\t%s\t%s\n", k.Name, k.Type, valStr))
-// 	}
-
-// 	return b.String(), nil
-// }
