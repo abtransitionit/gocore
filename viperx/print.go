@@ -41,66 +41,104 @@ func (c *Viperx) GetContentAsTable() (string, error) {
 		return "", fmt.Errorf("Viperx instance is nil")
 	}
 
+	const lenValue = 90
+
 	type Entry struct {
-		Path string
-		Type string
+		Path  string
+		Type  string
+		Value string
 	}
 
 	var entries []Entry
 
-	// file
-	if v := c.Get("file.customRcFileName"); v != nil {
-		entries = append(entries, Entry{"file.customRcFileName", "string"})
-	}
-	if v := c.Get("file.binFolderPath"); v != nil {
-		entries = append(entries, Entry{"file.binFolderPath", "string"})
-	}
-
-	// node
-	if v := c.GetStringSlice("node.all"); len(v) > 0 {
-		entries = append(entries, Entry{"node.all", "[]string"})
-	}
-
-	// da.pkg.required
-	if v := c.GetStringSlice("da.pkg.required"); len(v) > 0 {
-		entries = append(entries, Entry{"da.pkg.required", "[]string"})
-	}
-
-	// da.repo.node
-	if v := c.Get("da.repo.node"); v != nil {
-		entries = append(entries, Entry{"da.repo.node", "[]any"})
-	}
-
-	// goCli
-	if v := c.Get("goCli"); v != nil {
-		entries = append(entries, Entry{"goCli", "[]any"})
+	detectType := func(value interface{}) string {
+		switch v := value.(type) {
+		case []interface{}:
+			if len(v) == 0 {
+				return "[]any"
+			}
+			allStrings := true
+			for _, elem := range v {
+				if _, ok := elem.(string); !ok {
+					allStrings = false
+					break
+				}
+			}
+			if allStrings {
+				return "[]string"
+			}
+			return "[]any"
+		default:
+			return "string"
+		}
 	}
 
-	// service
-	if v := c.Get("service"); v != nil {
-		entries = append(entries, Entry{"service", "[]any"})
+	formatValue := func(value interface{}) string {
+		if value == nil {
+			return ""
+		}
+		var s string
+		switch v := value.(type) {
+		case string:
+			s = v
+		case []interface{}:
+			parts := make([]string, len(v))
+			for i, elem := range v {
+				parts[i] = fmt.Sprintf("%v", elem)
+			}
+			s = strings.Join(parts, "; ")
+		default:
+			b, err := yaml.Marshal(v)
+			if err != nil {
+				s = fmt.Sprintf("%v", v)
+			} else {
+				s = string(b)
+				s = strings.ReplaceAll(s, "\n", "; ")
+				s = strings.ReplaceAll(s, "  ", "")
+			}
+		}
+		if len(s) > lenValue {
+			s = s[:lenValue-3] + "..."
+		}
+		return s
 	}
 
-	// envar
-	if v := c.Get("envar"); v != nil {
-		entries = append(entries, Entry{"envar", "[]any"})
+	var walk func(prefix string, value interface{})
+	walk = func(prefix string, value interface{}) {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			for k, val := range v {
+				newPrefix := k
+				if prefix != "" {
+					newPrefix = prefix + "." + k
+				}
+				walk(newPrefix, val)
+			}
+		default:
+			entries = append(entries, Entry{
+				Path:  prefix,
+				Type:  detectType(v),
+				Value: formatValue(v),
+			})
+		}
 	}
 
-	// helm.release
-	if v := c.Get("helm.release"); v != nil {
-		entries = append(entries, Entry{"helm.release", "[]any"})
+	walk("", c.AllSettings())
+
+	// simple insertion sort by Type
+	for i := 1; i < len(entries); i++ {
+		j := i
+		for j > 0 && entries[j-1].Type > entries[j].Type {
+			entries[j-1], entries[j] = entries[j], entries[j-1]
+			j--
+		}
 	}
 
-	// cluster
-	if v := c.Get("cluster"); v != nil {
-		entries = append(entries, Entry{"cluster", "[]any"})
-	}
-
-	// build raw string with tab-separated columns
+	// build tab-separated string
 	var sb strings.Builder
-	sb.WriteString("Name\tType\n") // header
+	sb.WriteString("Var Name\tType\tValue\n")
 	for _, e := range entries {
-		sb.WriteString(fmt.Sprintf("%s\t%s\n", e.Path, e.Type))
+		sb.WriteString(fmt.Sprintf("%s\t%s\t%s\n", e.Path, e.Type, e.Value))
 	}
 
 	return sb.String(), nil
