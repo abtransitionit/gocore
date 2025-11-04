@@ -3,31 +3,73 @@ package phase2
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	"github.com/abtransitionit/gocore/logx"
 	"github.com/abtransitionit/gocore/viperx"
 )
 
 func (phase *Phase) Execute(ctx context.Context, config *viperx.CViper, fr *FunctionRegistry, logger logx.Logger) (string, error) {
-	// resolve
 	nodeList := resolveNode(phase.Node, config)
-	// resolve
 	paramMap := resolveParam(phase.Param, config)
-	nbParam := len(paramMap)
 
-	// log
-	logger.Debugf("🅟 Starting Phase : %s > NodeSet:  %s (%v)", phase.Name, phase.Node, nodeList)
-	// logger.Debugf("Phase : %s > Fn      reolve to:  %s", phase.Name, phase.Fn)
-	if nbParam > 0 {
-		logger.Debugf("Phase : %s > %d Param(s) reolve to:  %s", phase.Name, nbParam, paramMap)
+	logger.Debugf("🅟 Starting Phase : %s > NodeSet: %v", phase.Name, nodeList)
+
+	// Fetch the registered GoFunc
+	goFunc, ok := fr.Get(phase.Fn)
+	if !ok {
+		return "", fmt.Errorf("function %q not registered", phase.Fn)
 	}
 
-	// Execute the function
-	_, err := GetGoFunc(phase.Fn).Execute(ctx, fr, nodeList, logger)
-	if err != nil {
-		return "", err
+	// Execute on all nodes concurrently
+	errCh := make(chan error, len(nodeList))
+	var wg sync.WaitGroup
+
+	for _, node := range nodeList {
+		wg.Add(1)
+		node := node
+		go func() {
+			defer wg.Done()
+			logger.Infof("🅝 Node %s > Starting PhaseFunction %s", node, goFunc.PhaseFuncName)
+
+			// Pass parameters to the function
+			if err := goFunc.Func(ctx, paramMap, logger); err != nil {
+				errCh <- fmt.Errorf("🅝 Node %s > function failed: %w", node, err)
+			}
+		}()
 	}
 
-	// success
-	return "", nil
+	wg.Wait()
+	close(errCh)
+
+	var nodeErrs []error
+	for e := range errCh {
+		logger.Errorf(e.Error())
+		nodeErrs = append(nodeErrs, e)
+	}
+
+	if len(nodeErrs) > 0 {
+		return "", fmt.Errorf("errors occurred on %d node(s)", len(nodeErrs))
+	}
+
+	return "ok", nil
 }
+
+// func (phase *Phase) Execute(ctx context.Context, config *viperx.CViper, fr *FunctionRegistry, logger logx.Logger) (string, error) {
+// 	// resolve
+// 	nodeList := resolveNode(phase.Node, config)
+// 	paramMap := resolveParam(phase.Param, config)
+
+// 	// log
+// 	logger.Debugf("🅟 Starting Phase : %s > NodeSet:  %s (%v)", phase.Name, phase.Node, nodeList)
+
+// 	// Execute the function
+// 	_, err := GetGoFunc(phase.Fn).Execute(ctx, fr, nodeList, paramMap, logger)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	// success
+// 	return "", nil
+// }

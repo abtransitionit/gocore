@@ -165,6 +165,17 @@ that also can be sumarized when we introduced the concept of **tier** as:
   - tier 3 consist of the only phase `DPhase` that will be executed after all phase of **tier 2**` complete.
 
 
+## GoFunc
+### formal definition
+```go
+type GoFunc struct {
+	PhaseFuncName string
+	Func          func(ctx context.Context, logger logx.Logger) error
+}
+```
+### definition
+the function to be executed (locally or remotely on a node)
+
 ## function registry
 ### formal definition
 ```go
@@ -278,6 +289,23 @@ This consist of mapping a function defined as a string to a real Go function ins
   - collect errors
   - when any phase failed   → the code stop and return an error.
   - when all phases succeed → move to next tier.
+
+# Todo
+
+The idea:
+
+|object|desc|
+|-|-|
+|Workflow|orchestrates **tiers of phases|
+|Phase|orchestrates **functions** across nodes|
+|GoFunc|runs **a function per node concurrently|
+|Node|will execute a **CLI command** (local or remote) concurrently, using `ExecuteCliQuery`|
+
+- `Node.Execute` 
+  - wraps `ExecuteCliQuery`
+  - handles errors, 
+  - integrates logging, concurrency, and error collection just like the other layers.
+
 
 # Todo
 - skip and retain

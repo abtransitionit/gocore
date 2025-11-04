@@ -1,4 +1,3 @@
-// File in gocore/phase/adapter.go
 package phase2
 
 import (
@@ -21,5 +20,6 @@ func resolveFunction(PhaseFuncName string, fr *FunctionRegistry, logger logx.Log
 	}
 
 	// success
-	return fr.getFunction(PhaseFuncName), nil
+	// return fr.getFunction(PhaseFuncName), nil
+	return fr.funcs[PhaseFuncName], nil
 }

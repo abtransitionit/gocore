@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/golinux/onpm"
 )
 
 // description: get a function from the registry
 func (r *FunctionRegistry) getFunction(phaseFunction string) *GoFunc {
 
-	// get the function from registry
+	// get the RAW function from registry
 	registredFunction := r.funcs[phaseFunction]
 
 	switch typed := registredFunction.(type) {
@@ -26,6 +27,15 @@ func (r *FunctionRegistry) getFunction(phaseFunction string) *GoFunc {
 				return err
 			},
 		}
+	case func(string) (string, error):
+		return &GoFunc{
+			PhaseFuncName: phaseFunction,
+			Func: func(ctx context.Context, logger logx.Logger) error {
+				out, err := typed("")
+				logger.Infof("Result: %s", out)
+				return err
+			},
+		}
 	case func() string:
 		return &GoFunc{
 			PhaseFuncName: phaseFunction,
@@ -34,6 +44,20 @@ func (r *FunctionRegistry) getFunction(phaseFunction string) *GoFunc {
 				return nil
 			},
 		}
+
+	case func(string, onpm.ListRepo) (string, error):
+		return &GoFunc{
+			PhaseFuncName: phaseFunction,
+			Func: func(ctx context.Context, logger logx.Logger) error {
+				var nodeName string
+				var repoList onpm.ListRepo
+
+				_, err := typed(nodeName, repoList)
+				logger.Infof("repoList: %v", repoList)
+				return err
+			},
+		}
+
 	default:
 		return &GoFunc{
 			PhaseFuncName: phaseFunction,
