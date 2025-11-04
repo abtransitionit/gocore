@@ -3,108 +3,62 @@ package viperx
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
+	"github.com/abtransitionit/gocore/logx"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-// description: loads the YAML config file and returns a Viper instance
-//
-// Parameters:
-// - fileName: the name of the YAML config file
-// - cmdName: the name of the command
-//
-// Notes:
-//
-// searches the file at this location and merge them all in the following order
-// - 0 order is package+global+local with overwrite
-// - 1 - Package config (cmd/workflow/<workflowName>/conf.yaml)
-// - 2 - Global config ($GOLUC_CONFIG env if set elese ~/.config/goluc/workflow/conf.yaml or )
-// - 3 - Local config (aka. current working dir ./conf.yaml)
-func getConfig(fileName, cmdPathName string) (*viper.Viper, error) {
-	// define instance
-	v := viper.New()
-
-	// 1 - define package yaml config file location
-	_, file, _, _ := runtime.Caller(2) // because it is not called directly but through GetConfigSection
-	packagePath := filepath.Join(path.Dir(file), "..", cmdPathName, fileName)
-	// 11 - merge (initial load)
-	if err := mergeIfExists(v, packagePath); err != nil {
-		return nil, err
-	}
-
-	// 2 - define global yaml config file location
-	globalPath := os.Getenv("GOLUC_CONFIG")
-	if globalPath == "" {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("getting home directory: %w", err)
-		}
-		globalPath = filepath.Join(homeDir, "wkspc", ".config", "goluc", "workflow", fileName)
-	}
-	// 21 - merge
-	if err := mergeIfExists(v, globalPath); err != nil {
-		return nil, err
-	}
-
-	// 3 - define current working dir yaml config file location
-	localPath := fileName
-	// 31 - merge
-	if err := mergeIfExists(v, localPath); err != nil {
-		return nil, err
-	}
-
-	// 4 - check viper instance is not empty
-	if len(v.AllKeys()) == 0 {
-		return nil, fmt.Errorf("no configuration file loaded (checked %q and %q and %q in working dir)", packagePath, globalPath, localPath)
-	}
-
-	return v, nil
-}
-
-// Description merges the given config file into the viper instance
+// Description merges the given config file into the Viperx instance (ie. an existing config file)
 //
 // Notes:
 // - It merge the new one to the existing one (which can be even a merge)
 // - If the file exists, it is merged into the viper instance
 // - If the file does not exist, it does nothing (it keeps the existing viper instance)
-func mergeIfExists(v *viper.Viper, path string) error {
+// - the first merge => merge the file with nothing
+func mergeIfExists(viperx *Viperx, path string, logger logx.Logger) error {
+	// merge
 	if _, err := os.Stat(path); err == nil {
-		v.SetConfigFile(path)
-		if err := v.MergeInConfig(); err != nil {
+		viperx.SetConfigFile(path)
+		if err := viperx.MergeInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 				return fmt.Errorf("merging config %q: %w", path, err)
 			}
 		}
 	}
+	// log when a config file is found
+	if _, err := os.Stat(path); err == nil {
+		logger.Debugf("found config file: %s", path)
+	}
 	return nil
 }
 
-// Description: returns a Viper instance scoped to a specific section of the YAML
+// Description: returns a Viperx instance scoped to a specific section of the config file
 //
 // Parameters:
-// - fileName: the name of the YAML config file
+// - fileName: the name of the config file
 // - prefix: prefix of the root section in the config file
-// - cmdName: name of the command
-func GetConfig(filename, prefix, cmdPathName string) (*CViper, error) {
+// - cmdPathName: the rel path of the cobra command
+func GetViperx(filename, prefix, cmdPathName string, logger logx.Logger) (*Viperx, error) {
+
+	// define cmd name
 	cmdName := filepath.Base(cmdPathName)
-	// load all config
-	v, err := getConfig(filename, cmdPathName)
+
+	// load the file into a viperx instance
+	viperx, err := getViperx(filename, cmdPathName, logger)
 	if err != nil {
 		return nil, fmt.Errorf("loading config: %w", err)
 	}
 
 	// make section items available via sub.xxx
-	sub := v.Sub(prefix + "." + cmdName)
+	sub := viperx.Sub(prefix + "." + cmdName)
 	if sub == nil {
 		return nil, fmt.Errorf("section %q not found", cmdName)
 	}
-	return &CViper{Viper: sub}, nil
+	return &Viperx{Viper: sub}, nil
 }
 
 // Description: binds all Cobra command flags to Viper keys so that flags, env vars, and config files work together.
@@ -113,7 +67,7 @@ func GetConfig(filename, prefix, cmdPathName string) (*CViper, error) {
 //  - export GOLUC_WKF_KINDN_EXAMPLE_KEY="env_value"
 //  - goluc wkf kindn --example_key="flag_value"
 
-func BindFlags(cmd *cobra.Command, c *CViper, workflowName string) {
+func BindFlags(cmd *cobra.Command, c *Viperx, workflowName string) {
 	envPrefix := "GOLUC_WKF"
 	c.SetEnvPrefix(envPrefix)
 	c.AutomaticEnv()
