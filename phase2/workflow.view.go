@@ -15,7 +15,7 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 	var b strings.Builder
 
 	// Header
-	b.WriteString("Phase\tNode\tFn\tParam\n")
+	b.WriteString("Phase\tExe Node\tFn\tParam\n")
 
 	// Topologically sort phases
 	sorted, err := wf.topoSortByPhase()
@@ -60,7 +60,7 @@ func (wf *Workflow) GetTierView() (string, error) {
 	var b strings.Builder
 
 	// Table header (no Params column anymore)
-	b.WriteString("Tier\tIdP\tPhase\tNode\tDescription\tDependencies\n")
+	b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
 
 	// Iterate through tiers
 	for tierIndex, tier := range sortedTiers {

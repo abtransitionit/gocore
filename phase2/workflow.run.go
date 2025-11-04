@@ -11,8 +11,8 @@ import (
 func (wf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, logger logx.Logger) error {
 
 	// log
-	logger.Infof("🅦 Runing workflow %s to %s", wf.Name, wf.Description)
-
+	logger.Infof("🅦 Runing workflow %q to %s", wf.Name, wf.Description)
+	logger.Info("Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
 	// success
 	return nil
 }
