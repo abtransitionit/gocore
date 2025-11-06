@@ -3,7 +3,6 @@ package phase2
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/abtransitionit/gocore/list"
 	"github.com/abtransitionit/gocore/logx"
@@ -43,39 +42,13 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	for tierId, tier := range tierListFiltered {
 		tierIdx := tierId + 1
 		nbPhase := len(tier)
-		logger.Infof("👉 Starting Tier %d / %d with %d concurrent phase(s)", tierIdx, nbTier, nbPhase)
-
-		var wgTier sync.WaitGroup
+		logger.Infof("👉 Starting Tier %d / %d with %d concurent phase(s)", tierIdx, nbTier, nbPhase)
 
 		for _, p := range tier {
-			wgTier.Add(1)
-
-			go func(ph Phase) {
-				defer wgTier.Done()
-
-				// Determine execution nodes
-				nodes := resolveNode(ph.Node, cfg)
-				if len(nodes) == 0 {
-					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
-					return
-				}
-
-				var wgNodes sync.WaitGroup
-				for _, node := range nodes {
-					wgNodes.Add(1)
-					go func(n string) {
-						defer wgNodes.Done()
-						logger.Debugf("   ↪ running phase %q on node: %s (fn=%s, paramList=%v)", ph.Name, n, ph.FnAlias, ph.Param)
-						// Here, call your actual execution function
-						// runPhaseOnNode(ph, n)
-					}(node)
-				}
-
-				wgNodes.Wait()
-			}(p)
+			logger.Debugf("   ↪ would run concurrently: phase %q (node=%s, fn=%s, paramList=%v)", p.Name, p.Node, p.FnAlias, p.Param)
+			logger.Debugf("   ↪ would run concurrently on node: %v", resolveNode(p.Node, cfg))
 		}
 
-		wgTier.Wait()
 		logger.Infof("✔ Tier %d complete. Waiting for next tier...", tierIdx)
 	} // tier loop
 
