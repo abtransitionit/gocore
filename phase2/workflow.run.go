@@ -13,8 +13,10 @@ import (
 func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainSkipRange string, logger logx.Logger) error {
 	// log
 	logger.Infof("🅦 Runing workflow %q to %s", wkf.Name, wkf.Description)
-	logger.Info("• Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
-	logger.Info("• Phases run concurently on each node.")
+	// logger.Info("• Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
+	// logger.Info("• Phases run concurently on each node.")
+	logger.Info("• Tier concurrency:    all phases in tier run at the same time. Next tier starts when the previous one completes")
+	logger.Info("• Phase concurrency:   each phase can run on multiple nodes at the same time")
 
 	// get the tiers
 	tierList, err := wkf.TopoSortByTier(logger)
@@ -43,7 +45,8 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 		logger.Infof("👉 Starting Tier %d / %d with %d concurent phase(s)", tierIdx, nbTier, nbPhase)
 
 		for _, p := range tier {
-			logger.Debugf("   ↪ would run concurrently: phase %q (node=%s, fn=%s)", p.Name, p.Node, p.FnAlias)
+			logger.Debugf("   ↪ would run concurrently: phase %q (node=%s, fn=%s, paramList=%v)", p.Name, p.Node, p.FnAlias, p.Param)
+			logger.Debugf("   ↪ would run concurrently on node: %v", resolveNode(p.Node, cfg))
 		}
 
 		logger.Infof("✔ Tier %d complete. Waiting for next tier...", tierIdx)
@@ -53,9 +56,28 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	return nil
 }
 
-func resolveNode(PhaseNode string, config *viperx.Viperx) []string {
-	if config == nil || PhaseNode == "" {
+func resolveNode(PhaseNode string, cfg *viperx.Viperx) []string {
+	if cfg == nil || PhaseNode == "" {
 		return nil
 	}
-	return config.GetStringSlice("node." + PhaseNode)
+	return cfg.GetStringSlice(PhaseNode)
 }
+
+// var wgTier sync.WaitGroup
+// for _, phase := range tier {
+//     wgTier.Add(1)
+//     go func(p Phase) {
+//         defer wgTier.Done()
+//         nodes := resolveNode(p.Node, cfg) // could return multiple nodes
+//         var wgNodes sync.WaitGroup
+//         for _, n := range nodes {
+//             wgNodes.Add(1)
+//             go func(node string) {
+//                 defer wgNodes.Done()
+//                 runPhaseOnNode(p, node)
+//             }(n)
+//         }
+//         wgNodes.Wait()
+//     }(phase)
+// }
+// wgTier.Wait()
