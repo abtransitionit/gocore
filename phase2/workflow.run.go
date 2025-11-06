@@ -9,21 +9,36 @@ import (
 )
 
 // Description: execute a workflow
-func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainRanges string, skipRanges string, logger logx.Logger) error {
+func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainRange string, skipRange string, logger logx.Logger) error {
+	// check range parameter
+	if retainRange != "" && skipRange != "" {
+		return fmt.Errorf("only one of retainRange or skipRange can be set, not both")
+	}
 
 	// log
 	logger.Infof("🅦 Runing workflow %q to %s", wkf.Name, wkf.Description)
-	logger.Info("Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
+	logger.Info("• Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
+
+	// Get the provided range AND log
+	var rangeVal string
+	if retainRange != "" {
+		rangeVal = retainRange
+		logger.Info("• workflow running with retained phase(s)")
+	} else if skipRange != "" {
+		rangeVal = skipRange
+		logger.Info("• workflow running with skipped phase(s)")
+	}
 
 	// // display the workflow
-	// phaseView, err := wkf.GetTierView()
+	// phaseView, err := wkf.GetTierView(logger, rangeVal)
 	// if err != nil {
 	// 	return fmt.Errorf("getting phase table: %w", err)
 	// }
 	// list.PrettyPrintTable(phaseView)
+	// os.Exit(0)
 
 	// get the tiers
-	tiers, err := wkf.topoSortByTier()
+	tiers, err := wkf.topoSortByTier(logger, rangeVal)
 	if err != nil {
 		return fmt.Errorf("cannot sort tiers: %w", err)
 	}

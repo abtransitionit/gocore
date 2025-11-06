@@ -3,6 +3,8 @@ package phase2
 import (
 	"fmt"
 	"strings"
+
+	"github.com/abtransitionit/gocore/logx"
 )
 
 // Description: returns a view of the phases in the workflow
@@ -50,8 +52,8 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 	return b.String(), nil
 }
 
-func (wf *Workflow) GetTierView() (string, error) {
-	sortedTiers, err := wf.topoSortByTier()
+func (wf *Workflow) GetTierView(logger logx.Logger, skipRetainRange ...string) (string, error) {
+	sortedTiers, err := wf.topoSortByTier(logger, skipRetainRange...)
 	if err != nil {
 		fmt.Println("Error sorting workflow by tiers:", err)
 		return "", err
