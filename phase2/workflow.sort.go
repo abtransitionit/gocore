@@ -3,6 +3,8 @@ package phase2
 import (
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
 )
@@ -55,7 +57,7 @@ func (wf *Workflow) topoSortByPhase() ([]Phase, error) {
 // - If nothing is passed, all tiers are returned.
 // - Strings must have a prefix: "r" for retain, "s" for skip (like "r1-3", "s2-4").
 // - Internally, parse it and separate retain and skip lists.
-func (wf *Workflow) topoSortByTier(logger logx.Logger, skipRetainRange ...string) ([][]Phase, error) {
+func (wf *Workflow) TopoSortByTier(logger logx.Logger) ([][]Phase, error) {
 	inDegree, graph, err := wf.buildDependencyGraph()
 	if err != nil {
 		return nil, err
@@ -127,4 +129,78 @@ func (wf *Workflow) buildDependencyGraph() (map[string]int, map[string][]string,
 	}
 
 	return inDegree, graph, nil
+}
+
+func (wf *Workflow) filterPhase(logger logx.Logger, tierList [][]Phase, skipRetainRange string) ([][]Phase, error) {
+
+	if skipRetainRange == "" {
+		return tierList, nil
+	}
+	logger.Infof("• workflow phases fltering activated with : %s", skipRetainRange)
+	mode := ""
+	ranges := ""
+
+	if strings.HasPrefix(skipRetainRange, "-r") {
+		mode = "retain"
+		ranges = skipRetainRange[2:]
+	} else if strings.HasPrefix(skipRetainRange, "-s") {
+		mode = "skip"
+		ranges = skipRetainRange[2:]
+	} else {
+		return nil, fmt.Errorf("invalid filter flag: %s", skipRetainRange)
+	}
+
+	// Parse ranges WITHOUT a helper
+	allowed := make(map[int]struct{})
+	for _, p := range strings.Split(ranges, ",") {
+		if strings.Contains(p, "-") {
+			b := strings.Split(p, "-")
+			if len(b) != 2 {
+				continue
+			}
+			start, err1 := strconv.Atoi(strings.TrimSpace(b[0]))
+			end, err2 := strconv.Atoi(strings.TrimSpace(b[1]))
+			if err1 != nil || err2 != nil || start > end {
+				continue
+			}
+			for i := start; i <= end; i++ {
+				allowed[i] = struct{}{}
+			}
+		} else {
+			if n, err := strconv.Atoi(strings.TrimSpace(p)); err == nil {
+				allowed[n] = struct{}{}
+			}
+		}
+	}
+
+	// Filter
+	var filtered [][]Phase
+	globalIndex := 1
+
+	for _, tier := range tierList {
+		var newTier []Phase
+		for _, ph := range tier {
+
+			_, exists := allowed[globalIndex]
+
+			include := false
+			if mode == "retain" {
+				include = exists
+			} else if mode == "skip" {
+				include = !exists
+			}
+
+			if include {
+				newTier = append(newTier, ph)
+			}
+
+			globalIndex++
+		}
+
+		if len(newTier) > 0 {
+			filtered = append(filtered, newTier)
+		}
+	}
+
+	return filtered, nil
 }
