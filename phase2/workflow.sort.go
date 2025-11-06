@@ -44,7 +44,15 @@ func (wf *Workflow) topoSortByPhase() ([]Phase, error) {
 	return sorted, nil
 }
 
-func (wf *Workflow) topoSortByTier() ([][]Phase, error) {
+// Description: topological sort by tier
+//
+// Notes:
+//
+// - skipRetainRange is optional.
+// - If nothing is passed, all tiers are returned.
+// - Strings must have a prefix: "r" for retain, "s" for skip (like "r1-3", "s2-4").
+// - Internally, parse it and separate retain and skip lists.
+func (wf *Workflow) topoSortByTier(skipRetainRange ...string) ([][]Phase, error) {
 	inDegree, graph, err := wf.buildDependencyGraph()
 	if err != nil {
 		return nil, err
