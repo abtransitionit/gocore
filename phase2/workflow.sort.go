@@ -184,10 +184,13 @@ func (wf *Workflow) filterPhase(logger logx.Logger, tierList [][]Phase, skipReta
 			_, exists := allowed[globalIndex]
 
 			include := false
-			if mode == "retain" {
+			switch mode {
+			case "retain":
 				include = exists
-			} else if mode == "skip" {
+			case "skip":
 				include = !exists
+			default:
+				return nil, fmt.Errorf("unknown mode: %s", mode)
 			}
 
 			if include {
