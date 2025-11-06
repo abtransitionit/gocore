@@ -52,22 +52,18 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 	return b.String(), nil
 }
 
-func (wf *Workflow) GetTierView(tier [][]Phase, logger logx.Logger) (string, error) {
-	// sortedTiers, err := wf.topoSortByTier(logger)
-	// if err != nil {
-	// 	fmt.Println("Error sorting workflow by tiers:", err)
-	// 	return "", err
-	// }
+func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string, error) {
 
 	var b strings.Builder
+	// sep := "-\t-\t-\t-\t-\t-\n" // ✅ separator row
 
 	// Table header (no Params column anymore)
 	b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
 
 	// Iterate through tiers
-	for tierIndex, tier := range tier {
+	for tierIndex, tierList := range tierList {
 		tierID := tierIndex + 1
-		for phaseIndex, p := range tier {
+		for phaseIndex, p := range tierList {
 			idp := phaseIndex + 1
 
 			deps := "none"
@@ -83,6 +79,8 @@ func (wf *Workflow) GetTierView(tier [][]Phase, logger logx.Logger) (string, err
 			b.WriteString(fmt.Sprintf("%d\t%d\t%s\t%s\t%s\t%s\n",
 				tierID, idp, p.Name, node, p.Description, deps))
 		}
+
+		// b.WriteString(sep)
 	}
 
 	return b.String(), nil

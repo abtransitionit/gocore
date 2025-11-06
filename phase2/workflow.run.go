@@ -52,3 +52,10 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	// success
 	return nil
 }
+
+func resolveNode(PhaseNode string, config *viperx.Viperx) []string {
+	if config == nil || PhaseNode == "" {
+		return nil
+	}
+	return config.GetStringSlice("node." + PhaseNode)
+}
