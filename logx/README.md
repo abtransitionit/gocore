@@ -327,3 +327,108 @@ func main() {
 }
 
 ```
+
+
+# The process
+
+1. `GetLogger()` is called
+
+	```go
+	if globalLogger == nil {
+			Init()
+	}
+	```
+
+	Since `globalLogger` is nil (first call), it calls `Init()`.
+
+
+1. `Init()` runs
+
+	```go
+	once.Do(InitLogger)
+	```
+
+	So it calls `InitLogger()` exactly once.
+
+
+1. `InitLogger()` calls `NewLogger()`
+
+	```go
+	globalLogger = NewLogger()
+	```
+
+
+1. `NewLogger()` executes
+
+	If **no env vars are set**:
+
+	* `appLogDriver := os.Getenv("APP_LOG_DRIVER")` → `""`
+	* `appEnv := os.Getenv("APP_ENV")` → `""`
+
+	So: First switch: `APP_LOG_DRIVER`
+
+	```go
+	switch appLogDriver {
+	case "zap":
+			...
+	default:
+	```
+
+    Because it's empty, the **default case** is used: Use the **standard logger** (not zap).
+
+
+    Inside default case: check environment `APP_ENV`
+
+	```go
+	if appEnv == "prod" {
+			return NewStdLogger(NewStdProdConfig())
+	}
+	return NewStdLogger(NewStdDevConfig())
+	```
+
+	* `appEnv` is empty (`""`), so **not prod** → use `NewStdDevConfig()`.
+
+
+Final Result (when no env vars is set) **You get:** 👉 `NewStdLogger(NewStdDevConfig())`
+
+So the logger will be:
+
+* **Standard Go logger**, NOT zap.
+* **Development configuration**, NOT production mode.
+* **Only initialized once** due to `once.Do()`.
+
+Here is the **full decision matrix** covering every possible combination of
+`APP_LOG_DRIVER` × `APP_ENV`.
+
+This shows exactly which logger is created in each case.
+
+---
+
+# ✅ Full Decision Matrix
+
+| `APP_LOG_DRIVER` | `APP_ENV`     | Selected Logger Type | Selected Config | Final Result                       |
+| ---------------- | ------------- | -------------------- | --------------- | ---------------------------------- |
+| *empty*          | *empty*       | Standard Logger      | Dev config      | `NewStdLogger(NewStdDevConfig())`  |
+| *empty*          | `prod`        | Standard Logger      | Prod config     | `NewStdLogger(NewStdProdConfig())` |
+| *empty*          | anything else | Standard Logger      | Dev config      | `NewStdLogger(NewStdDevConfig())`  |
+| `zap`            | *empty*       | Zap Logger           | Dev config      | `NewZapLogger(NewDevConfig())`     |
+| `zap`            | `prod`        | Zap Logger           | Prod config     | `NewZapLogger(NewProdConfig())`    |
+| `zap`            | anything else | Zap Logger           | Dev config      | `NewZapLogger(NewDevConfig())`     |
+| anything else    | *empty*       | Standard Logger      | Dev config      | `NewStdLogger(NewStdDevConfig())`  |
+| anything else    | `prod`        | Standard Logger      | Prod config     | `NewStdLogger(NewStdProdConfig())` |
+| anything else    | anything else | Standard Logger      | Dev config      | `NewStdLogger(NewStdDevConfig())`  |
+
+---
+
+# ✅ Summary Logic (human-readable)
+
+* **APP_LOG_DRIVER = "zap"** → always use Zap
+
+  * `APP_ENV = "prod"` → Zap + Prod config
+  * otherwise → Zap + Dev config
+
+* **APP_LOG_DRIVER anything else (including empty)** → use Std logger
+
+  * `APP_ENV = "prod"` → Std + Prod config
+  * otherwise → Std + Dev config
+

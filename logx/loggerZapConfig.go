@@ -21,16 +21,22 @@ import (
 // Notes:
 // - It includes customizations like colorized levels and short caller paths.
 func NewDevConfig() zap.Config {
+
+	// default config
 	cfg := zap.NewDevelopmentConfig()
+
+	// customizations
 	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	// cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 	cfg.EncoderConfig.EncodeCaller = shortCallerWithLineEncoder
 	cfg.EncoderConfig.EncodeTime = func(time.Time, zapcore.PrimitiveArrayEncoder) {
 		// This empty function will skip timestamp encoding
 	}
-	// cfg.EncoderConfig.EncodeCaller = fixedWidthCallerEncoder
-	// cfg.Development = true // enable stack traces for warnings and errors
+	// cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel) // default level
 
+	// customizations - Todo
+	// cfg.EncoderConfig.EncodeCaller = fixedWidthCallerEncoder
+	// cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	// cfg.Development = true // enable stack traces for warnings and errors
 	return cfg
 }
 
@@ -40,13 +46,17 @@ func NewDevConfig() zap.Config {
 // Notes:
 // - This is standard the default zap production config.
 func NewProdConfig() zap.Config {
-	// cfg := zap.NewProductionConfig()
+
+	// default config
+	cfg := zap.NewProductionConfig()
+
+	// customizations - Todo
+	// cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel) // default level
 	// cfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder       // Uppercase levels
 	// cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder         // Standard timestamps
 	// cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder       // Short file paths
 	// cfg.Sampling = &zap.SamplingConfig{Initial: 100, Thereafter: 100} // Optional, avoids log spam
-	// return cfg
-	return zap.NewProductionConfig()
+	return cfg
 }
 
 // Custom caller encoder to show file:line only (similar to Std logger)
