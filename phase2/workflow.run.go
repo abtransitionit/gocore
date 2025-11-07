@@ -2,6 +2,7 @@ package phase2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -54,25 +55,29 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 			go func(ph Phase) {
 				defer wgTier.Done()
 
-				// Determine target nodes
+				// resolve target nodes
 				nodes := resolveNode(ph.Node, cfg)
 				if len(nodes) == 0 {
 					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
 					return
 				}
 
-				// Determine function parameters
-				param := resolveParam(ph.Param, cfg, logger)
-				if len(nodes) == 0 {
-					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
-					return
-				}
+				// resolve function parameters
+				// resolveParam(ph.Param, cfg, logger)
+				paramStr := resolveParam(ph.Param, cfg, logger)
+				paramNodes := strings.Split(paramStr, ",") // convert to slice
+				logger.Debugf("   ↪ paramNodes %q ", paramNodes)
+				// if len(paramNodes) > 0 {
+				// 	nodes = paramNodes // override execution nodes with param nodes
+				// }
 
 				// log
 				logger.Debugf("   ↪ phase %q > fn: %s", ph.Name, ph.FnAlias)
-				if param != "" {
-					logger.Debugf("   ↪ phase %q > param: %v (%s)", ph.Name, ph.Param, param)
-				}
+				logger.Debugf("   ↪ phase %q > nodes: %v", ph.Name, nodes)
+				// logger.Debugf("   ↪ phase %q > fn: %s", ph.Name, ph.FnAlias)
+				// if param != "" {
+				// 	logger.Debugf("   ↪ phase %q > param: %v (%s)", ph.Name, ph.Param, param)
+				// }
 
 				var wgNodes sync.WaitGroup
 				for _, node := range nodes {
@@ -113,44 +118,46 @@ func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) s
 		return ""
 	}
 
-	var resolved []string
+	resolved := make([]string, 0, len(phaseParam))
+
 	for _, key := range phaseParam {
-		// logger.Debugf("   ↪ resolving param: %s", key)
 		value := cfg.Get(key)
 		if value == nil {
-			return ""
+			logger.Warnf("   ↪ param key %q not found in config", key)
+			resolved = append(resolved, "")
+			continue
 		}
 
-		switch v := value.(type) {
-		case string:
-			resolved = append(resolved, v)
-		case []interface{}:
-			for _, item := range v {
-				resolved = append(resolved, fmt.Sprintf("%v", item))
-			}
-		default:
-			resolved = append(resolved, fmt.Sprintf("%v", v))
-		}
+		// Convert to a readable string
+		str := paramToString(value)
+		resolved = append(resolved, str)
+
+		logger.Debugf("   ↪ resolved param %q = %s", key, str)
 	}
 
-	return strings.Join(resolved, " ")
+	// Join params with space to pass to CLI-like function
+	return strings.TrimSpace(strings.Join(resolved, " "))
 }
 
-// var wgTier sync.WaitGroup
-// for _, phase := range tier {
-//     wgTier.Add(1)
-//     go func(p Phase) {
-//         defer wgTier.Done()
-//         nodes := resolveNode(p.Node, cfg) // could return multiple nodes
-//         var wgNodes sync.WaitGroup
-//         for _, n := range nodes {
-//             wgNodes.Add(1)
-//             go func(node string) {
-//                 defer wgNodes.Done()
-//                 runPhaseOnNode(p, node)
-//             }(n)
-//         }
-//         wgNodes.Wait()
-//     }(phase)
-// }
-// wgTier.Wait()
+func paramToString(v interface{}) string {
+	switch vv := v.(type) {
+
+	case string:
+		return vv
+
+	case []interface{}:
+		parts := make([]string, len(vv))
+		for i, item := range vv {
+			parts[i] = fmt.Sprintf("%v", item)
+		}
+		return strings.Join(parts, ",")
+
+	case map[string]interface{}:
+		// stable JSON like {"a":1,"b":2}
+		b, _ := json.Marshal(vv)
+		return string(b)
+
+	default:
+		return fmt.Sprintf("%v", vv)
+	}
+}

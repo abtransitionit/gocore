@@ -1,7 +1,6 @@
 package phase2
 
 import (
-	"context"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -28,23 +27,13 @@ type Phase struct {
 	Node        string   `yaml:"node,omitempty"`
 }
 
-// Description: represents a Go function
-type PhaseFn struct {
-	Name string
-	Func func(ctx context.Context, params any, logger logx.Logger) error
-}
-
-// Description: represents a registry to store functions
-//
-// Notes:
-//   - The registry is a map of functions indexed by their PhaseName.
-type FnRegistry struct {
-	funcs map[string]*PhaseFn
-}
-
-// ---------- CONSTRUCTOR ----------
-
 // Description: constructor that returns an instance of a Workflow
+//
+// Parameters:
+//
+// - fileName: The name of the YAML file containing the workflow definition.
+// - cmdPathName: The name of the directory containing the YAML file (relative to the worflow folder).
+// - logger: The logger to use for logging.
 func GetWorkflow(fileName, cmdPathName string, logger logx.Logger) (*Workflow, error) {
 
 	// 1. Define the path of the workflow YAML
@@ -65,18 +54,4 @@ func GetWorkflow(fileName, cmdPathName string, logger logx.Logger) (*Workflow, e
 
 	return workflow, nil
 
-}
-
-// description: constructor that return an instance of PhaseFn
-func GetPhaseFn(phaseFunction string) *PhaseFn {
-	return &PhaseFn{
-		Name: phaseFunction,
-	}
-}
-
-// description: constructor that return an instance of a FnRegistry
-func GetFnRegistry() *FnRegistry {
-	return &FnRegistry{
-		funcs: make(map[string]*PhaseFn),
-	}
 }
