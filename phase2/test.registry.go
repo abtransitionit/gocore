@@ -1,11 +1,19 @@
 package phase2
 
+var globalRegistry = &FnRegistry{
+	functionMap: make(map[string]PhaseFn),
+}
+
 // Description: returns an instance of FnRegistry
 func GetFnRegistry() *FnRegistry {
-	return &FnRegistry{
-		functionMap: make(map[string]PhaseFn),
-	}
+	return globalRegistry
 }
+
+// func GetFnRegistry() *FnRegistry {
+// 	return &FnRegistry{
+// 		functionMap: make(map[string]PhaseFn),
+// 	}
+// }
 
 // Description: adds a function to the registry
 func (registry *FnRegistry) Add(name string, phaseFn PhaseFn) {
