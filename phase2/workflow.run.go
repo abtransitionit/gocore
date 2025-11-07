@@ -56,7 +56,7 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 				defer wgTier.Done()
 
 				// resolve target nodes
-				nodes := resolveNode(ph.Node, cfg)
+				nodes := resolveNode(ph.Node, cfg, logger)
 				if len(nodes) == 0 {
 					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
 					return
@@ -106,13 +106,22 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	return nil
 }
 
-func resolveNode(phaseNode string, cfg *viperx.Viperx) []string {
+func resolveNode(phaseNode string, cfg *viperx.Viperx, logger logx.Logger) []string {
 	if cfg == nil || phaseNode == "" {
 		return nil
 	}
-	return cfg.GetStringSlice(phaseNode)
-}
 
+	nodes := cfg.GetStringSlice(phaseNode)
+	if len(nodes) == 0 {
+		logger.Warnf("   ↪ node key %q not found or empty in config", phaseNode)
+		return nil
+	}
+
+	// Join for logging like "o1u,o2a,o3r"
+	logger.Debugf("   ↪ lookup > target > %s > %s", phaseNode, strings.Join(nodes, ","))
+
+	return nodes
+}
 func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) string {
 	if cfg == nil || len(phaseParam) == 0 {
 		return ""
@@ -132,7 +141,7 @@ func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) s
 		str := paramToString(value)
 		resolved = append(resolved, str)
 
-		logger.Debugf("   ↪ resolved param %q = %s", key, str)
+		logger.Debugf("   ↪ lookup > param > %s > %s", key, str)
 	}
 
 	// Join params with space to pass to CLI-like function

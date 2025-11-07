@@ -17,7 +17,7 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 	var b strings.Builder
 
 	// Header
-	b.WriteString("Phase\tExe Node\tFn\tParam\n")
+	b.WriteString("Phase\tDescription\tExe Node\tFn\tParam\n")
 
 	// Topologically sort phases
 	sorted, err := wf.topoSortByPhase()
@@ -46,7 +46,13 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 			params = strings.Join(p.Param, ", ")
 		}
 
-		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\n", p.Name, node, fn, params)
+		// description
+		desc := p.Description
+		if desc == "" {
+			desc = "none"
+		}
+
+		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\t%s\n", p.Name, p.Description, node, fn, params)
 	}
 
 	return b.String(), nil
@@ -59,7 +65,7 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 
 	// Table header (no Params column anymore)
 	// b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
-	b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tParam\n")
+	b.WriteString("Tier\tIdP\tPhase\tExe Node\tParam\n")
 
 	// Iterate through tiers
 	for tierIndex, tierList := range tierList {
@@ -82,8 +88,8 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 				param = strings.Join(p.Param, ", ")
 			}
 
-			b.WriteString(fmt.Sprintf("%d\t%d\t%s\t%s\t%s\t%s\n",
-				tierID, idp, p.Name, node, p.Description, param))
+			b.WriteString(fmt.Sprintf("%d\t%d\t%s\t%s\t%s\n",
+				tierID, idp, p.Name, node, param))
 		}
 
 		// b.WriteString(sep)
