@@ -15,7 +15,7 @@ import (
 // Description: execute a workflow
 func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainSkipRange string, logger logx.Logger) error {
 	// TODO: Before running the workflow:
-	//   - check syntax if easy then/and/or do:
+	//   - check syntax then/and/or do:
 	//     - check fn is resolved in the config
 	//     - check param is resolved in the config
 	//     - check node is resolved in the config
