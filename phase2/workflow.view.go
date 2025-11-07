@@ -58,7 +58,8 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 	// sep := "-\t-\t-\t-\t-\t-\n" // ✅ separator row
 
 	// Table header (no Params column anymore)
-	b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
+	// b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
+	b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tParam\n")
 
 	// Iterate through tiers
 	for tierIndex, tierList := range tierList {
@@ -66,18 +67,23 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 		for phaseIndex, p := range tierList {
 			idp := phaseIndex + 1
 
-			deps := "none"
-			if len(p.Dependency) > 0 {
-				deps = strings.Join(p.Dependency, ", ")
-			}
+			// deps := "none"
+			// if len(p.Dependency) > 0 {
+			// 	deps = strings.Join(p.Dependency, ", ")
+			// }
 
 			node := p.Node
 			if node == "" {
 				node = "none"
 			}
 
+			param := "none"
+			if len(p.Param) > 0 { // assuming Param is a slice of strings
+				param = strings.Join(p.Param, ", ")
+			}
+
 			b.WriteString(fmt.Sprintf("%d\t%d\t%s\t%s\t%s\t%s\n",
-				tierID, idp, p.Name, node, p.Description, deps))
+				tierID, idp, p.Name, node, p.Description, param))
 		}
 
 		// b.WriteString(sep)

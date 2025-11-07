@@ -3,6 +3,8 @@ package phase2
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/abtransitionit/gocore/list"
 	"github.com/abtransitionit/gocore/logx"
@@ -42,13 +44,56 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	for tierId, tier := range tierListFiltered {
 		tierIdx := tierId + 1
 		nbPhase := len(tier)
-		logger.Infof("👉 Starting Tier %d / %d with %d concurent phase(s)", tierIdx, nbTier, nbPhase)
+		logger.Infof("👉 Starting Tier %d / %d with %d concurrent phase(s)", tierIdx, nbTier, nbPhase)
+
+		var wgTier sync.WaitGroup
 
 		for _, p := range tier {
-			logger.Debugf("   ↪ would run concurrently: phase %q (node=%s, fn=%s, paramList=%v)", p.Name, p.Node, p.FnAlias, p.Param)
-			logger.Debugf("   ↪ would run concurrently on node: %v", resolveNode(p.Node, cfg))
+			wgTier.Add(1)
+
+			go func(ph Phase) {
+				defer wgTier.Done()
+
+				// Determine target nodes
+				nodes := resolveNode(ph.Node, cfg)
+				if len(nodes) == 0 {
+					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
+					return
+				}
+
+				// Determine function parameters
+				param := resolveParam(ph.Param, cfg, logger)
+				if len(nodes) == 0 {
+					logger.Warnf("   ↪ phase %q has no nodes resolved, skipping", ph.Name)
+					return
+				}
+
+				// log
+				logger.Debugf("   ↪ phase %q > fn: %s", ph.Name, ph.FnAlias)
+				if param != "" {
+					logger.Debugf("   ↪ phase %q > param: %v (%s)", ph.Name, ph.Param, param)
+				}
+
+				var wgNodes sync.WaitGroup
+				for _, node := range nodes {
+					wgNodes.Add(1)
+					go func(n string) {
+						defer wgNodes.Done()
+						logger.Debugf("   ↪ running phase %q > node: %s", ph.Name, node)
+						// logger.Debugf("   ↪ running phase %q > node: %s (fn=%s, paramList=%v)", ph.Name, ph.FnAlias, ph.Param)
+						// Here, call your actual execution function
+						// runPhaseOnNode(ph, n)
+						// - As an example the function loop over a list or map of item, and for each item, thethe function does:
+						//    - actions locally
+						//    - connect to ssh on the node and play a CLI
+					}(node)
+				}
+
+				wgNodes.Wait()
+			}(p)
 		}
 
+		wgTier.Wait()
 		logger.Infof("✔ Tier %d complete. Waiting for next tier...", tierIdx)
 	} // tier loop
 
@@ -56,11 +101,39 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	return nil
 }
 
-func resolveNode(PhaseNode string, cfg *viperx.Viperx) []string {
-	if cfg == nil || PhaseNode == "" {
+func resolveNode(phaseNode string, cfg *viperx.Viperx) []string {
+	if cfg == nil || phaseNode == "" {
 		return nil
 	}
-	return cfg.GetStringSlice(PhaseNode)
+	return cfg.GetStringSlice(phaseNode)
+}
+
+func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) string {
+	if cfg == nil || len(phaseParam) == 0 {
+		return ""
+	}
+
+	var resolved []string
+	for _, key := range phaseParam {
+		// logger.Debugf("   ↪ resolving param: %s", key)
+		value := cfg.Get(key)
+		if value == nil {
+			return ""
+		}
+
+		switch v := value.(type) {
+		case string:
+			resolved = append(resolved, v)
+		case []interface{}:
+			for _, item := range v {
+				resolved = append(resolved, fmt.Sprintf("%v", item))
+			}
+		default:
+			resolved = append(resolved, fmt.Sprintf("%v", v))
+		}
+	}
+
+	return strings.Join(resolved, " ")
 }
 
 // var wgTier sync.WaitGroup
