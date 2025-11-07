@@ -65,7 +65,7 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 
 	// Table header (no Params column anymore)
 	// b.WriteString("Tier\tIdP\tPhase\tExe Node\tDescription\tDependencies\n")
-	b.WriteString("Tier\tIdP\tPhase\tExe Node\tParam\n")
+	b.WriteString("Tier\tIdP\tPhase\tTarget\tParam\n")
 
 	// Iterate through tiers
 	for tierIndex, tierList := range tierList {

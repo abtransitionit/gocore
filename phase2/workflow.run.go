@@ -14,6 +14,14 @@ import (
 
 // Description: execute a workflow
 func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainSkipRange string, logger logx.Logger) error {
+	// TODO: Before running the workflow:
+	//   - check syntax if easy then/and/or do:
+	//     - check fn is resolved in the config
+	//     - check param is resolved in the config
+	//     - check node is resolved in the config
+	//     - Then
+	//       - check fn is registred
+
 	// log
 	logger.Infof("🅦 Runing workflow %q to %s", wkf.Name, wkf.Description)
 	// logger.Info("• Phases in the same tier run concurrently. Next tier starts when the previous one completes.")
@@ -45,7 +53,8 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 	for tierId, tier := range tierListFiltered {
 		tierIdx := tierId + 1
 		nbPhase := len(tier)
-		logger.Infof("👉 Starting Tier %d / %d with %d concurrent phase(s)", tierIdx, nbTier, nbPhase)
+		// logger.Infof("👉 Starting Tier %d of %d with %d concurrent phase(s)", tierIdx, nbTier, nbPhase)
+		logger.Infof("👉 Starting Tier %d:%d:%d concurrent phase(s)", tierIdx, nbTier, nbPhase)
 
 		var wgTier sync.WaitGroup
 
@@ -64,9 +73,9 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 
 				// resolve function parameters
 				// resolveParam(ph.Param, cfg, logger)
-				paramStr := resolveParam(ph.Param, cfg, logger)
-				paramNodes := strings.Split(paramStr, ",") // convert to slice
-				logger.Debugf("   ↪ paramNodes %q ", paramNodes)
+				resolveParam(ph.Param, cfg, logger)
+				// paramNodes := strings.Split(paramStr, ",") // convert to slice
+				// logger.Debugf("   ↪ paramNodes %q ", paramNodes)
 				// if len(paramNodes) > 0 {
 				// 	nodes = paramNodes // override execution nodes with param nodes
 				// }
@@ -137,36 +146,27 @@ func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) s
 			continue
 		}
 
-		// Convert to a readable string
-		str := paramToString(value)
-		resolved = append(resolved, str)
+		// Lightweight conversion
+		var str string
+		switch v := value.(type) {
+		case string:
+			str = v
+		case []interface{}:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = fmt.Sprint(item)
+			}
+			str = strings.Join(parts, ",")
+		case map[string]interface{}:
+			b, _ := json.Marshal(v) // stable JSON
+			str = string(b)
+		default:
+			str = fmt.Sprint(v)
+		}
 
+		resolved = append(resolved, str)
 		logger.Debugf("   ↪ lookup > param > %s > %s", key, str)
 	}
 
-	// Join params with space to pass to CLI-like function
 	return strings.TrimSpace(strings.Join(resolved, " "))
-}
-
-func paramToString(v interface{}) string {
-	switch vv := v.(type) {
-
-	case string:
-		return vv
-
-	case []interface{}:
-		parts := make([]string, len(vv))
-		for i, item := range vv {
-			parts[i] = fmt.Sprintf("%v", item)
-		}
-		return strings.Join(parts, ",")
-
-	case map[string]interface{}:
-		// stable JSON like {"a":1,"b":2}
-		b, _ := json.Marshal(vv)
-		return string(b)
-
-	default:
-		return fmt.Sprintf("%v", vv)
-	}
 }
