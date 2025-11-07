@@ -94,7 +94,7 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 		}
 
 		wgTier.Wait()
-		logger.Infof("✔ Tier %d complete. Waiting for next tier...", tierIdx)
+		logger.Infof("✔ Tier %d complete.", tierIdx)
 	} // tier loop
 
 	// success
