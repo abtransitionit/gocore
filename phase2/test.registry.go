@@ -1,42 +1,56 @@
 package phase2
 
-// var globalRegistry = &FnRegistry{
-// 	functionMap: make(map[string]PhaseFn),
-// }
+import (
+	"fmt"
+	"sort"
+	"strings"
+)
 
-// Description: returns an instance of FnRegistry
-// func GetFnRegistry() *FnRegistry {
-// 	return globalRegistry
-// }
-
-func GetFnRegistry() *FnRegistry {
-	return &FnRegistry{
-		functionMap: make(map[string]PhaseFn),
-	}
+// Description: returns an instance of FnRegistry as a singleton
+var globalRegistry = &FnRegistry{
+	functionMap: make(map[string]PhaseFn),
 }
 
+// Description: returns an instance of FnRegistry
+func GetFnRegistry() *FnRegistry {
+	return globalRegistry
+}
+
+// func GetFnRegistry() *FnRegistry {
+// 	return &FnRegistry{
+// 		functionMap: make(map[string]PhaseFn),
+// 	}
+// }
+
 // Description: adds a function to the registry
-func (registry *FnRegistry) Add(name string, phaseFn PhaseFn) {
-	registry.functionMap[name] = phaseFn
+func (registry *FnRegistry) Add(workflowName string, FnAlias string, phaseFn PhaseFn) {
+	key := fmt.Sprintf("%s:%s", workflowName, FnAlias)
+	registry.functionMap[key] = phaseFn
 }
 
 // Description: returns the function with the given name
-func (registry *FnRegistry) Get(name string) (PhaseFn, bool) {
-	fn, ok := registry.functionMap[name]
+func (registry *FnRegistry) Get(workflowName, fnAlias string) (PhaseFn, bool) {
+	key := fmt.Sprintf("%s:%s", workflowName, fnAlias)
+	fn, ok := registry.functionMap[key]
 	return fn, ok
 }
 
 // Description: returns the names of all registered functions
-func (registry *FnRegistry) List() []string {
-	names := make([]string, 0, len(registry.functionMap))
+func (registry *FnRegistry) List(workflowName string) []string {
+	prefix := workflowName + ":"
+	nameList := make([]string, 0, len(registry.functionMap))
 	for k := range registry.functionMap {
-		names = append(names, k)
+		if strings.HasPrefix(k, prefix) {
+			nameList = append(nameList, strings.TrimPrefix(k, prefix))
+		}
 	}
-	return names
+	sort.Strings(nameList) // optional, keep table neat
+	return nameList
 }
 
-// description: check a PhaseFuncName is in the registry
-func (registry *FnRegistry) Has(key string) bool {
+// description: check a PhaseFnAlias is in the registry
+func (registry *FnRegistry) Has(workflowName, fnAlias string) bool {
+	key := fmt.Sprintf("%s:%s", workflowName, fnAlias)
 	_, ok := registry.functionMap[key]
 	return ok
 }
