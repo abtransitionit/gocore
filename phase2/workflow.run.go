@@ -87,7 +87,7 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 
 				// 1 - for this phase
 				// 11 - resolve the target nodes
-				nodes, err := resolveNode(ph.Node, cfg)
+				targetList, err := resolveNode(ph.Node, cfg)
 				if err != nil {
 					logger.Warnf("skipping phase %s, err: %v, ", ph.Name, err)
 					return
@@ -101,36 +101,31 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 				}
 
 				// 13 - resolve function name
-				function, err := resolveFn(wkf.Name, ph.FnAlias, fnRegistry)
+				goFn, err := resolveFn(wkf.Name, ph.FnAlias, fnRegistry)
 				if err != nil {
 					logger.Warnf("skipping phase %s, err: %v", ph.Name, err)
 					return
 				}
 				// 14 - for this function of this phase: resolve package and name
-				pkg, name := describeFn(function)
+				goFnPkg, goFnName := describeFn(goFn, logger)
 
 				// 15 - log all this info
-				logger.Debugf("   ↪ phase %q > lookup > target > %s > %v", ph.Name, ph.Param, nodes)
-				logger.Debugf("   ↪ phase %q > lookup > fn     > %s > %s.%s", ph.Name, ph.FnAlias, pkg, name)
-				logger.Debugf("   ↪ phase %q > lookup > param  > %s > %v", ph.Name, ph.Param, paramList)
+				logger.Debugf("   ↪ phase %q > lookup > target   > %s > %v", ph.Name, ph.Param, targetList)
+				logger.Debugf("   ↪ phase %q > lookup > function > %s > %s/%s", ph.Name, ph.FnAlias, goFnPkg, goFnName)
+				logger.Debugf("   ↪ phase %q > lookup > param    > %s > %v", ph.Name, ph.Param, paramList)
 				// loggerstrings.Join(nodes, ",")
 				// if param != "" {
 				// 	logger.Debugf("   ↪ phase %q > param: %v (%s)", ph.Name, ph.Param, param)
 				// }
 
 				var wgNodes sync.WaitGroup // Creates a SECOND WaitGroup instance - will wait for all (concurent) goroutines (one per node) to complete
-				for _, node := range nodes {
+				for _, target := range targetList {
 					wgNodes.Add(1) // Increment the SECOND WaitGroup counter
 					go func(n string) {
 						defer wgNodes.Done() // Decrement the SECOND WaitGroup counter - when the goroutine (on the node) completes
-						logger.Debugf("   ↪ phase %q > RUNNINING on node > %s", ph.Name, node)
-						// logger.Debugf("   ↪ running phase %q > node: %s (fn=%s, paramList=%v)", ph.Name, ph.FnAlias, ph.Param)
-						// Here, call your actual execution function
-						// runPhaseOnNode(ph, n)
-						// - As an example the function loop over a list or map of item, and for each item, thethe function does:
-						//    - actions locally
-						//    - connect to ssh on the node and play a CLI
-					}(node)
+						logger.Debugf("   ↪ phase %q > RUNNINING function on target > %s", ph.Name, target)
+						// Todo
+					}(target)
 				}
 
 				wgNodes.Wait() // Wait for all goroutines (launched on node) to complete
@@ -200,25 +195,6 @@ func resolveParam(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) (
 
 }
 
-// Description: resolves and validates the function to run
-// func resolveFn(workflowName, fnAlias string, fnRegistry *FnRegistry, logger logx.Logger) (PhaseFn, error) {
-// 	if fnAlias == "" {
-// 		return nil, fmt.Errorf("looking up > function > function alias is empty")
-// 	}
-// 	if fnRegistry == nil {
-// 		return nil, fmt.Errorf("looking up > function > %q > fnRegistry is nil", fnAlias)
-// 	}
-
-// 	fn, ok := fnRegistry.Get(workflowName, fnAlias)
-// 	if !ok {
-// 		return nil, fmt.Errorf("looking up > function > %s:%s > not registered", workflowName, fnAlias)
-// 	}
-
-// 	// success
-// 	logger.Debugf("   ↪ lookup > fn > %s:%s > resolved", workflowName, fnAlias)
-// 	return fn, nil
-// }
-
 func resolveFn(workflowName, fnAlias string, fnRegistry *FnRegistry) (PhaseFn, error) {
 	if fnAlias == "" {
 		return nil, fmt.Errorf("fn alias is empty")
@@ -233,34 +209,59 @@ func resolveFn(workflowName, fnAlias string, fnRegistry *FnRegistry) (PhaseFn, e
 }
 
 // Description: returns package import path + function name for a PhaseFn
-func describeFn(fn PhaseFn) (pkg string, name string) {
+func describeFn(fn PhaseFn, logger logx.Logger) (pkg string, name string) {
 	if fn == nil {
+		logger.Warnf("describeFn: nil function")
 		return "?", "?"
 	}
 
+	// PC = program counter
 	pc := reflect.ValueOf(fn).Pointer()
 	fnInfo := runtime.FuncForPC(pc)
 	if fnInfo == nil {
+		logger.Warnf("retrieving fnInfo")
 		return "?", "?"
 	}
 
-	full := fnInfo.Name() // e.g.: ".../mock/node.CheckSshConf"
-	// sometimes becomes ".../mock/node.CheckSshConf.CheckSshConf"
+	// Basic info from runtime.Func
+	full := fnInfo.Name() // e.g. "github.com/me/project/mock/node.CheckSshConf"
+	// file, line := fnInfo.FileLine(pc)
 
-	// keep only the final part after last slash
-	// mock/node.CheckSshConf or mock/node.CheckSshConf.CheckSshConf
+	// Log what we know
+	// logger.Infof("Function: name=%s", full)
+	// logger.Infof("Function: file=%s:%d", file, line)
+
+	// Extract module/package (best effort)
+	// Example full: github.com/me/project/mock/node.CheckSshConf
+	// module path = everything before the last slash
+	module := full[:strings.LastIndex(full, "/")]
+	moduleX := strings.TrimPrefix(module, "github.com/abtransitionit/")
+	// logger.Infof("Function: module=%s", moduleX)
+
+	// Extract only last section: mock/node.CheckSshConf
 	last := full[strings.LastIndex(full, "/")+1:]
 
-	// now split on dots
+	// Split on dots
 	parts := strings.Split(last, ".")
-	// e.g.: ["mock/node", "CheckSshConf"]
-	// e.g.: ["mock/node", "CheckSshConf", "CheckSshConf"]
+	// ["mock/node", "CheckSshConf"]
+	// Or ["mock/node", "CheckSshConf", "CheckSshConf"]
 
-	// package is always the first part
+	// Package = first part
 	pkg = parts[0]
 
-	// function name is always the LAST part
+	// Name = last part
 	name = parts[len(parts)-1]
+	fullName := fmt.Sprintf("%s.%s", pkg, name)
 
-	return pkg, name
+	// logger.Infof("Function: package=%s", pkg)
+	// logger.Infof("Function: fn=%s", name)
+
+	return moduleX, fullName
 }
+
+// logger.Debugf("   ↪ running phase %q > node: %s (fn=%s, paramList=%v)", ph.Name, ph.FnAlias, ph.Param)
+// Here, call your actual execution function
+// runPhaseOnNode(ph, n)
+// - As an example the function loop over a list or map of item, and for each item, thethe function does:
+//    - actions locally
+//    - connect to ssh on the node and play a CLI

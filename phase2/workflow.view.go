@@ -2,6 +2,10 @@ package phase2
 
 import (
 	"fmt"
+	"path"
+	"path/filepath"
+	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/abtransitionit/gocore/logx"
@@ -93,6 +97,40 @@ func (wf *Workflow) GetTierView(tierList [][]Phase, logger logx.Logger) (string,
 		}
 
 		// b.WriteString(sep)
+	}
+
+	return b.String(), nil
+}
+
+func (wf *Workflow) GetFunctionView(cmdPathName string, registry *FnRegistry) (string, error) {
+
+	cmdBase := filepath.Base(cmdPathName)
+	keys := registry.List(cmdBase)
+	if len(keys) == 0 {
+		return "", nil
+	}
+
+	var b strings.Builder
+	b.WriteString("Key\tModule\tFunction\n")
+
+	for _, key := range keys {
+		fn, ok := registry.Get(cmdBase, key)
+		if !ok {
+			continue
+		}
+
+		fnVal := reflect.ValueOf(fn)
+		ptr := fnVal.Pointer()
+		rf := runtime.FuncForPC(ptr)
+
+		module, fnName := "<??>", "<??>"
+		if rf != nil {
+			fullName := strings.TrimPrefix(rf.Name(), "github.com/abtransitionit/")
+			module = path.Dir(fullName)
+			fnName = path.Base(fullName)
+		}
+
+		fmt.Fprintf(&b, "%s\t%s\t%s\n", key, module, fnName)
 	}
 
 	return b.String(), nil
