@@ -79,43 +79,43 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 
 		var wgTier sync.WaitGroup // Creates a WaitGroup instance - will wait for all (concurent) goroutines (one per phase) to complete
 		// loop over each phase
-		for _, p := range tier {
+		for _, phase := range tier {
 			wgTier.Add(1) // Increment the WaitGroup counter
-			// define/start a goroutine for each phase
-			go func(ph Phase) {
+			// define a goroutine for each phase AND pass it the phase as an argument
+			go func(onePhase Phase) {
 				defer wgTier.Done() // Decrement the WaitGroup counter - when the goroutine (the phase) completes
 
 				// 1 - for this phase
 				// 11 - resolve the target nodes
-				targetList, err := resolveNode(ph.Node, cfg)
+				targetList, err := resolveNode(onePhase.Node, cfg)
 				if err != nil {
-					logger.Warnf("skipping phase %s, err: %v, ", ph.Name, err)
+					logger.Warnf("skipping phase %s, err: %v, ", onePhase.Name, err)
 					return
 				}
 
 				// 12 - resolve function parameters
-				paramList, err := resolveParam(ph.Param, cfg, logger)
+				paramList, err := resolveParam(onePhase.Param, cfg, logger)
 				if err != nil {
-					logger.Warnf("skipping phase %s, err: %v", ph.Name, err)
+					logger.Warnf("skipping phase %s, err: %v", onePhase.Name, err)
 					return
 				}
 
 				// 13 - resolve function name
-				goFn, err := resolveFn(wkf.Name, ph.FnAlias, fnRegistry)
+				goFn, err := resolveFn(wkf.Name, onePhase.FnAlias, fnRegistry)
 				if err != nil {
-					logger.Warnf("skipping phase %s, err: %v", ph.Name, err)
+					logger.Warnf("skipping phase %s, err: %v", onePhase.Name, err)
 					return
 				}
 				// 14 - for this function of this phase: resolve package and name
 				goFnPkg, goFnName := describeFn(goFn, logger)
 
 				// 15 - log all this info
-				logger.Debugf("   ↪ phase %q > lookup > target   > %s > %v", ph.Name, ph.Param, targetList)
-				logger.Debugf("   ↪ phase %q > lookup > function > %s > %s/%s", ph.Name, ph.FnAlias, goFnPkg, goFnName)
-				logger.Debugf("   ↪ phase %q > lookup > param    > %s > %v", ph.Name, ph.Param, paramList)
+				logger.Debugf("   ↪ phase %q > lookup > target   > %s > %v", onePhase.Name, onePhase.Param, targetList)
+				logger.Debugf("   ↪ phase %q > lookup > function > %s > %s/%s", onePhase.Name, onePhase.FnAlias, goFnPkg, goFnName)
+				logger.Debugf("   ↪ phase %q > lookup > param    > %s > %v", onePhase.Name, onePhase.Param, paramList)
 				// loggerstrings.Join(nodes, ",")
 				// if param != "" {
-				// 	logger.Debugf("   ↪ phase %q > param: %v (%s)", ph.Name, ph.Param, param)
+				// 	logger.Debugf("   ↪ phase %q > param: %v (%s)", onePhase.Name, onePhase.Param, param)
 				// }
 
 				var wgNodes sync.WaitGroup // Creates a SECOND WaitGroup instance - will wait for all (concurent) goroutines (one per node) to complete
@@ -123,13 +123,13 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 					wgNodes.Add(1) // Increment the SECOND WaitGroup counter
 					go func(n string) {
 						defer wgNodes.Done() // Decrement the SECOND WaitGroup counter - when the goroutine (on the node) completes
-						logger.Debugf("   ↪ phase %q > RUNNINING function on target > %s", ph.Name, target)
+						logger.Debugf("   ↪ phase %q > RUNNINING function on target > %s", onePhase.Name, target)
 						// Todo
 					}(target)
 				}
 
 				wgNodes.Wait() // Wait for all goroutines (launched on node) to complete
-			}(p)
+			}(phase) // pass the phase to the goroutine
 		}
 
 		wgTier.Wait() // Wait for all goroutines (launched by phase) to complete
@@ -259,7 +259,7 @@ func describeFn(fn PhaseFn, logger logx.Logger) (pkg string, name string) {
 	return moduleX, fullName
 }
 
-// logger.Debugf("   ↪ running phase %q > node: %s (fn=%s, paramList=%v)", ph.Name, ph.FnAlias, ph.Param)
+// logger.Debugf("   ↪ running phase %q > node: %s (fn=%s, paramList=%v)", onePhase.Name, onePhase.FnAlias, onePhase.Param)
 // Here, call your actual execution function
 // runPhaseOnNode(ph, n)
 // - As an example the function loop over a list or map of item, and for each item, thethe function does:
