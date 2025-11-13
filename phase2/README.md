@@ -75,3 +75,16 @@ Todo
   * check dependencies
   * perform SSH
   * handle concurrency
+
+
+# Terminology
+|concept/name |definition|comment|
+|-|-|-|
+|**worklow**|(is) a set of phases|described by a yaml file
+|**tier**|(is) a ordered set of phases|
+|**phase**|(represents) a `GO` function to be executed on **1..N** targets|accepts parameters|
+|**target**|(is) the localhost, a remote VM or a container
+
+## workflow
+- at **compile** time: a set of `phases` described in a `YAML` file
+- at **runtime**: a sequence of `tier`

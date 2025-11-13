@@ -9,7 +9,14 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// Description: topological sort by phase
+// Description: topo sort a workflow by phase
+//
+// Return:
+// - a slice (ordered list) of phase
+//
+// Notes:
+// - a phase represents a GO function to be executed on 1..N targets
+// - a target can be a VM, a container or the localhost
 func (wf *Workflow) topoSortByPhase() ([]Phase, error) {
 	inDegree, graph, err := wf.buildDependencyGraph()
 	if err != nil {
@@ -49,14 +56,13 @@ func (wf *Workflow) topoSortByPhase() ([]Phase, error) {
 	return sorted, nil
 }
 
-// Description: topological sort by tier
+// Description: topo sort a workflow by tier
+//
+// Return:
+// - a slice (ordered list) of tiers
 //
 // Notes:
-//
-// - skipRetainRange is optional.
-// - If nothing is passed, all tiers are returned.
-// - Strings must have a prefix: "r" for retain, "s" for skip (like "r1-3", "s2-4").
-// - Internally, parse it and separate retain and skip lists.
+// - a tier is a set of phases ordered by their dependency
 func (wf *Workflow) TopoSortByTier(logger logx.Logger) ([][]Phase, error) {
 	inDegree, graph, err := wf.buildDependencyGraph()
 	if err != nil {
@@ -132,15 +138,30 @@ func (wf *Workflow) buildDependencyGraph() (map[string]int, map[string][]string,
 	return inDegree, graph, nil
 }
 
-func (wf *Workflow) filterPhase(logger logx.Logger, tierList [][]Phase, skipRetainRange string) ([][]Phase, error) {
+// description: helper function to filter phases in a workflow
+//
+// Parameters:
+// - tierList:[][]Phase:     the slice of tier
+// - skipRetainRange:string: the phase to skip or retain in the slice of tier
+//
+// Notes:
+// - if skipRetainRange is empty the original workflow is returned
+// - skipRetainRange string, must have a prefix: "r" for retain, "s" for skip (eg. "r1-3", "s2-4").
 
+func (wf *Workflow) filterPhase(tierList [][]Phase, skipRetainRange string, logger logx.Logger) ([][]Phase, error) {
+	// check param
 	if skipRetainRange == "" {
 		return tierList, nil
 	}
+
+	// log
 	logger.Infof("• workflow phases fltering activated with : %s", skipRetainRange)
+
+	// define var
 	mode := ""
 	ranges := ""
 
+	// logic
 	if strings.HasPrefix(skipRetainRange, "-r") {
 		mode = "retain"
 		ranges = skipRetainRange[2:]
@@ -174,7 +195,7 @@ func (wf *Workflow) filterPhase(logger logx.Logger, tierList [][]Phase, skipReta
 		}
 	}
 
-	// Filter
+	// Filter tierList
 	var filtered [][]Phase
 	globalIndex := 1
 
@@ -206,5 +227,9 @@ func (wf *Workflow) filterPhase(logger logx.Logger, tierList [][]Phase, skipReta
 		}
 	}
 
+	// handle success
 	return filtered, nil
 }
+
+// - If nothing is passed, all tiers are returned.
+// - Internally, parse it and separate retain and skip lists.

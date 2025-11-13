@@ -3,7 +3,6 @@ package phase2
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -44,9 +43,9 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	goFnPkg, goFnName := describeFn(phaseFn, logger)
 
 	// log
-	logger.Debugf("↪ phase > %s > target   > %s > %v", phase.Name, phase.Node, targetList)
-	logger.Debugf("↪ phase > %s > fnAlias  > %s > %s/%s", phase.Name, phase.FnAlias, goFnPkg, goFnName)
-	logger.Debugf("↪ phase > %s > param    > %s > %v", phase.Name, phase.Param, paramList)
+	logger.Debugf("↪ phase: %s > target:  %s > %v", phase.Name, phase.Node, targetList)
+	logger.Debugf("↪ phase: %s > fnAlias: %s > %s/%s", phase.Name, phase.FnAlias, goFnPkg, goFnName)
+	logger.Debugf("↪ phase: %s > param:   %s > %v", phase.Name, phase.Param, paramList)
 
 	// 5 - create a GoFunc instance
 	goFunction := &GoFunction{
@@ -57,39 +56,23 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	}
 
 	// 6 - manage goroutines concurrency
-	nbTarget := len(targetList)
-	var wgPhase sync.WaitGroup                // define a WaitGroup instance for each tier : wait for all (concurent) goroutines (one per target) to complete
-	errChTarget := make(chan error, nbTarget) // define a channel to collect errors from goroutines
+	// nbTarget := len(targetList)
+	var wgPhase sync.WaitGroup // (define) a WaitGroup instance for each tier : wait for all (concurent) goroutines (one per target) to complete
 
 	// 61 - loop over each target of the phase
 	for _, target := range targetList {
 		wgPhase.Add(1)              // Increment the WaitGroup:counter for each target
-		go func(TheTarget string) { // create as goroutine (that will run concurrently) as target in the phase AND pass it the target as an argument
+		go func(oneTarget string) { // create as goroutine (that will run concurrently) as target in the phase AND pass it the target as an argument
 			defer wgPhase.Done()                          // Increment the WaitGroup:counter - when the goroutine (on the target) completes
-			err := goFunction.run(ctx, TheTarget, logger) // delegate the execution of the function to this method
+			err := goFunction.run(ctx, oneTarget, logger) // delegate the execution of the function to this method
 			if err != nil {                               // send goroutines error if any into the chanel
-				errChTarget <- fmt.Errorf("phase: %s > target: %s >  function: %s > %w", phase.Name, TheTarget, goFunction.Name, err)
+				logger.Errorf("Hello > phase: %s > target: %s >  function: %s > %v", phase.Name, oneTarget, goFunction.Name, err)
 			}
 
 		}(target) // pass the target to the goroutine
 	} // target loop
 
-	wgPhase.Wait()     // Wait for all goroutines (one per target) to complete - done with the help of the WaitGroup:counter
-	close(errChTarget) // close the channel - signal that no more error will be sent
-
-	// 7 - manage goroutines error
-	// 71 - collect goroutines errors
-	var ErrList []error
-	for e := range errChTarget {
-		logger.Errorf("hello %v", e)
-		ErrList = append(ErrList, e)
-	}
-
-	// 72 - handle errors
-	if len(ErrList) > 0 {
-		combinedErr := errors.Join(ErrList...)
-		return fmt.Errorf("%w", combinedErr)
-	}
+	wgPhase.Wait() // Wait for all goroutines (one per target) to finish/complete - done with the help of the WaitGroup:counter
 
 	// 8 - handle success
 	logger.Infof("phase: %s (function: %s) > completes succesfully", phase.Name, goFunction.Name)
@@ -229,4 +212,36 @@ func describeFn(phaseFn PhaseFn, logger logx.Logger) (pkg string, name string) {
 // 	// }
 
 // 	return nil
+// }
+
+// errChReader := make(chan struct{}) // (define) a channel to read errors from the error chanel
+// go func() {                        // (create) a goroutine to collect errors
+// 	for e := range errChTarget {
+// 		logger.Errorf("reader %v", e)
+// 		ErrList = append(ErrList, e)
+// 	}
+// 	close(errChReader) // signal that no more errors will be sent
+// }() // no parameter passed
+
+// 5 - collect goroutines errors
+// var ErrList []error // collect goroutines errors
+
+// errChTarget := make(chan error, nbTarget) // (define) a channel to collect errors from goroutines
+// close(errChTarget) // close the channel that collect error - signal that no more errors will be sent
+// <-errChReader      // mean wait to receive a value from the channel named "done” -  wait until the error collector finishes processing
+// errChTarget <- fmt.Errorf("phase: %s > target: %s >  function: %s > %w", phase.Name, oneTarget, goFunction.Name, err)
+// logger.Errorf("hello %v", err)
+
+// 7 - manage goroutines error
+// 71 - collect goroutines errors
+
+// for e := range errChTarget {
+// 	logger.Errorf("hello %v", e)
+// 	ErrList = append(ErrList, e)
+// }
+
+// // 72 - handle errors
+// if len(ErrList) > 0 {
+// 	combinedErr := errors.Join(ErrList...)
+// 	return fmt.Errorf("%w", combinedErr)
 // }
