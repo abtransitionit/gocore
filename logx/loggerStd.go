@@ -68,13 +68,13 @@ func pathFormatter(fullPath string) string {
 // Info logs a simple info message
 func (l *stdLogger) Info(msg string) {
 	// l.logger.Println("INFO:", msg)
-	l.logger.Output(2, colorCyan+"INFO:   "+colorReset+msg)
+	l.logger.Output(2, colorCyan+"INFO : "+colorReset+msg)
 
 }
 
 // Infof logs a formatted info message
 func (l *stdLogger) Infof(format string, v ...any) {
-	l.logger.Output(2, colorCyan+"INFO:   "+fmt.Sprintf(format, v...)+colorReset)
+	l.logger.Output(2, colorCyan+"INFO : "+fmt.Sprintf(format, v...)+colorReset)
 }
 
 func (l *stdLogger) Infow(msg string, keysAndValues ...any) {
@@ -171,12 +171,12 @@ func (l *stdLogger) Warnw(msg string, keysAndValues ...any) {
 
 // Debug logs a simple debug message
 func (l *stdLogger) Debug(msg string) {
-	l.logger.Output(2, colorBrightBlue+"DEBUG:   "+colorReset+msg)
+	l.logger.Output(2, colorBrightBlue+"DEBUG:"+colorReset+msg)
 }
 
 // Debugf logs a formatted debug message
 func (l *stdLogger) Debugf(format string, v ...any) {
-	l.logger.Output(2, colorBrightBlue+"DEBUG:   "+colorReset+fmt.Sprintf(format, v...))
+	l.logger.Output(2, colorBrightBlue+"DEBUG: "+colorReset+fmt.Sprintf(format, v...))
 }
 
 func (l *stdLogger) Debugw(msg string, keysAndValues ...any) {
@@ -191,5 +191,5 @@ func (l *stdLogger) Debugw(msg string, keysAndValues ...any) {
 			msg += fmt.Sprintf("%v=%v ", k, v)
 		}
 	}
-	l.logger.Output(2, colorBrightBlue+"DEBUG:   "+colorReset+msg)
+	l.logger.Output(2, colorBrightBlue+"DEBUG: "+colorReset+msg)
 }

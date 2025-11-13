@@ -81,6 +81,7 @@ func (wf *Workflow) TopoSortByTier(logger logx.Logger) ([][]Phase, error) {
 			name := queue[i]
 			phase := wf.Phases[name]
 			phase.Name = name
+			phase.WkfName = wf.Name
 			currentTier = append(currentTier, phase)
 
 			for _, neighbor := range graph[name] {

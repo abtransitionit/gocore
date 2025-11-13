@@ -19,6 +19,7 @@ type Workflow struct {
 
 // Description: represents a phase
 type Phase struct {
+	WkfName     string   `yaml:"wkfName,omitempty"`
 	Name        string   `yaml:"name"`
 	Description string   `yaml:"description"`
 	FnAlias     string   `yaml:"fn"`
@@ -54,4 +55,10 @@ func GetWorkflow(fileName, cmdPathName string, logger logx.Logger) (*Workflow, e
 
 	return workflow, nil
 
+}
+
+func GetPhase(workflowName string) *Phase {
+	return &Phase{
+		WkfName: workflowName,
+	}
 }
