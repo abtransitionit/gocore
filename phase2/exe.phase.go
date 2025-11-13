@@ -68,13 +68,12 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 			if err != nil {                               // send goroutines error if any into the chanel
 				logger.Errorf("Hello > phase: %s > target: %s >  function: %s > %v", phase.Name, oneTarget, goFunction.Name, err)
 			}
-
 		}(target) // pass the target to the goroutine
 	} // target loop
 
 	wgPhase.Wait() // Wait for all goroutines (one per target) to finish/complete - done with the help of the WaitGroup:counter
 
-	// 8 - handle success
+	// 7 - handle success
 	logger.Infof("phase: %s (function: %s) > completes succesfully", phase.Name, goFunction.Name)
 	return nil
 }
