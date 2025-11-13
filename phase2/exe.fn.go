@@ -13,12 +13,16 @@ func (goFunction *GoFunction) run(ctx context.Context, target string, logger log
 	var oko bool  // the return value of the function
 	var err error // the return value of the function
 
-	if target == "local" {
+	// HERE code is executed on localhost
+	if target == "local" { // run code locally
 		logger.Infof("↪ target:%s > function: %s > running", target, goFunction.Name)
 		oko, err = goFunction.Func(goFunction.ParamList, logger) // returns a bool
-	} else {
-		logger.Infof("↪ target:%s > nothing yet configured", target)
+		if err != nil {
+			return err
+		}
 	}
+	// HERE code is executed on a remote target
+	logger.Infof("↪ target:%s > nothing yet configured", target)
 
 	// handle error
 	if err != nil {
