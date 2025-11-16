@@ -7,29 +7,29 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// Description: execute a function on 1 target
-func (goFunction *GoFunction) run(ctx context.Context, target string, logger logx.Logger) error {
-	// define var
-	var oko bool  // the return value of the function
-	var err error // the return value of the function
+// Description: executes code for 1 target
+//
+// Notes:
+// - this function is executed inside a goroutine
+func (goFunction *GoFunction) run(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
+	// define the return value of the function to be executed on the target
+	var oko bool
+	var err error
 
-	// HERE code is executed on localhost
-	if target == "local" { // run code locally
-		logger.Infof("↪ target:%s > function: %s > running", target, goFunction.Name)
-		oko, err = goFunction.Func(goFunction.ParamList, logger) // returns a bool
-		if err != nil {
-			return err
-		}
-	}
-	// HERE code is executed on a remote target
-	logger.Infof("↪ target:%s > nothing yet configured", target)
+	// Execute the function
+	logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
+	oko, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
-	// handle error
+	// handle system eroor
 	if err != nil {
 		return err
-	} else if !oko { // if !ok
-		return fmt.Errorf("↪ target:%s > phase:%s > go:%s > param: %s", target, goFunction.PhaseName, goFunction.Name, goFunction.ParamList)
 	}
+
+	// handle logic eroor
+	if !oko {
+		return fmt.Errorf("↪ (gofunc) phase: %s > target:%s > phase:%s > go:%s > param: %s", phaseName, targetName, goFunction.PhaseName, goFunction.Name, goFunction.ParamList)
+	}
+
 	// handle success
 	return nil
 }

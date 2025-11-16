@@ -85,7 +85,7 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 		var wgTier sync.WaitGroup               // define a WaitGroup instance for each tier : wait for all (concurent) goroutines (one per phase in a tier) to complete
 		errChPhase := make(chan error, nbPhase) // define a channel to collect errors from goroutines
 
-		// 61 - loop over each phase in the tier
+		// 61 - loop over each phases in the tier AND create as many goroutines as phases
 		for _, phase := range phaseList {
 			wgTier.Add(1)             // Increment the WaitGroup:counter for each phase
 			go func(onePhase Phase) { // create as goroutine (that will run concurrently) as phase in the tier AND pass it the phase as an argument

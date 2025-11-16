@@ -76,6 +76,11 @@ Todo
   * perform SSH
   * handle concurrency
 
+# Howto
+## Collecting errors from goroutine
+1. each goroutine sends error (nil or not nil) into a channel
+1. aggegate erros using a goroutine to avoid race condition
+1. return the aggregate error
 
 # Terminology
 |concept/name |definition|comment|
