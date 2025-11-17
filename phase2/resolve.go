@@ -29,10 +29,15 @@ func getTargetList(phaseNode string, cfg *viperx.Viperx) ([]string, error) {
 // Description: resolves phase parameters
 
 func getParamList(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) ([][]any, error) {
-	if cfg == nil || len(phaseParam) == 0 {
-		return nil, fmt.Errorf("cfg or phaseParam is empty: %v", phaseParam)
+	// check parameters
+	if cfg == nil {
+		return nil, fmt.Errorf("cfg is nil")
+	}
+	if len(phaseParam) == 0 {
+		return [][]any{}, nil // return empty slice instead of error
 	}
 
+	// resolve
 	resolved := make([][]any, len(phaseParam))
 	for i, key := range phaseParam {
 		val := cfg.Get(key)
