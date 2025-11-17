@@ -48,9 +48,11 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	// log
 	logger.Debugf("↪ phase: %s > target:  %s > %v", phase.Name, phase.Node, targetList)
 	logger.Debugf("↪ phase: %s > fnAlias: %s > %s/%s", phase.Name, phase.FnAlias, goFnPkg, goFnName)
-	for i, key := range phase.Param {
-		if i < len(paramList) {
-			logger.Debugf("↪ phase: %s > param: %s > %v", phase.Name, key, paramList[i])
+	if len(phase.Param) > 0 {
+		for i, key := range phase.Param {
+			if i < len(paramList) {
+				logger.Debugf("↪ phase: %s > param: %s > %v", phase.Name, key, paramList[i])
+			}
 		}
 	}
 
