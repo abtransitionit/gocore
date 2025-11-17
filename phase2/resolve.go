@@ -47,9 +47,7 @@ func getParamList(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) (
 			resolved[i] = []any{v}
 		case []any:
 			anySlice := make([]any, len(v))
-			for j, item := range v {
-				anySlice[j] = item
-			}
+			copy(anySlice, v)
 			resolved[i] = anySlice
 		case map[string]any:
 			b, _ := json.Marshal(v)
