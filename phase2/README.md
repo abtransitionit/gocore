@@ -1,86 +1,3 @@
-# Purpose
-- A framework to provision (ie. execute actions on) `VMs` (**V**irtual **M**acchine**s**) or locally
-- Actions are `GO` functions that may 
-  - have dependencies
-  - run concurently or locally
-  - are described/defined in a YAML configuration file
-- The whole action is named a c and is described/defined in a YAML configuration file
-
-# How it works
-- a `GO` `cobra` `CLI` allows to list, print, run a part or the whole of any registred workflows
-- the workflows are hard coded in the CLI
-- the workflow's default configuration is hard coded in the CLI **and** can be overriden
-
-# Todo
-- Extend the concept of **workflow** to containers that may be local or remote.
-- use the CLI as a CI/CD pipeline
-
-
-
-# Process
-
-```go
-	var err error
-	wkf, err = corephase.NewWorkflowFromPhases(
-		corephase.NewPhase("checkVmAccess", "Check if VMs are SSH reachable", vm.CheckVmSshAccess, nil),
-		corephase.NewPhase("copyAgent", "copy LUC CLI agent to all VMs", luc.DeployLuc, []string{"checkVmAccess"}),
-		corephase.NewPhase("upgradeOs", "provision OS nodes with latest dnfapt packages and repositories.", dnfapt.UpgradeVmOs, []string{"copyAgent"}),
-		corephase.NewPhase("updateApp", "provision required/missing standard dnfapt packages.", dnfapt.UpdateVmOsApp(listRequiredDaPackage), []string{"upgradeOs"}),
-		corephase.NewPhase("installDaRepository", "provision Dnfapt package repositor(y)(ies).", dnfapt.InstallDaRepository(cfg.Da.Repo.Node), []string{"updateApp"}),
-		corephase.NewPhase("installDaPackage", "provision Dnfapt package(s) on all nodes.", dnfapt.InstallDaPackage(cfg.Da.Pkg.Node), []string{"installDaRepository"}),
-		corephase.NewPhase("installDaPackageCplane", "provision Dnfapt package(s) on CPlane only.", dnfapt.InstallDaPackage(cfg.Da.Pkg.ControlPlane, targetsCP), []string{"installDaPackage"}),
-		corephase.NewPhase("loadOsKernelModule", "load OS kernel module(s).", taskoskernel.LoadOsKModule(sliceOsKModule, kernelFilename), []string{"installDaPackage"}),
-		corephase.NewPhase("loadOsKernelParam", "set OS kernel paramleter(s).", taskoskernel.LoadOsKParam(sliceOsKParam, kernelFilename), []string{"loadOsKernelModule"}),
-		corephase.NewPhase("confSelinux", "Configure Selinux.", selinux.ConfigureSelinux(), []string{"loadOsKernelParam"}),
-		corephase.NewPhase("enableOsService", "enable OS services to start after a reboot", oservice.EnableOsService(sliceOsServiceEnable), []string{"confSelinux"}),
-		corephase.NewPhase("startOsService", "start OS services for current session", oservice.StartOsService(sliceOsServiceStart), []string{"confSelinux"}),
-		corephase.NewPhase("resetCPlane", "reset the control plane(s).", taskk8s.ResetNode(targetsCP), []string{"startOsService"}),
-		corephase.NewPhase("initCPlane", "initialize the control plane(s) (aka. boostrap the cluster).", taskk8s.InitCPlane(targetsCP, cfg.Cluster), []string{"resetCPlane"}),
-		corephase.NewPhase("resetWorker", "reset the workers(s).", taskk8s.ResetNode(targetsWorker), []string{"initCPlane"}),
-		corephase.NewPhase("addWorker", "Add the K8s worker(s) to the K8s cluster.", taskk8s.AddWorker(targetsCP[0], targetsWorker), []string{"resetWorker"}),
-		corephase.NewPhase("confKubectlOnCPlane", "Configure kubectl on the control plane(s).", taskk8s.ConfigureKubectlOnCplane(targetsCP[0]), []string{"resetWorker"}),
-		corephase.NewPhase("installGoCliCplane", "provision Go CLI(s).", gocli.InstallGoCliOnVm(listGoCli, targetsCP), []string{"confKubectlOnCPlane"}),
-		corephase.NewPhase("createRcFile", "create a custom RC file in user's home.", util.CreateCustomRcFile(customRcFileName), []string{"installGoCliCplane"}),
-		corephase.NewPhase("setPathEnvar", "configure PATH envvar into current user's custom RC file.", util.SetPath(binFolderPath, customRcFileName), []string{"createRcFile"}),
-		corephase.NewPhase("installHelmRepo", "install Helm chart repositories.", helm.InstallHelmRepo(sliceHelmRepo), []string{"setPathEnvar"}),
-		corephase.NewPhase("createCiliumRelease", "install and configure the CNI: Cilium on all nodes.", task_cilium.InstallCniCilium, []string{"installHelmRepo"}),
-	)
-```
-
-
-
-# `Execute()` is the orchestrator engine
-
-Even though it only logs today, its *intended role* is clearly to:
-
-* Build the dependency graph
-* Compute tiers
-* Run phases concurrently within tiers
-* Inject config variables as function arguments
-* Dispatch functions onto nodes
-* Handle errors, retries, and maybe rollback
-
-Todo
-
-* Logs workflow name + description
-* Logs the rule that phases in the same tier run concurrently
-* Returns `nil` (success)
-* Does *not*:
-
-  * resolve nodes
-  * resolve parameters
-  * compute tiers
-  * run phases
-  * run functions
-  * check dependencies
-  * perform SSH
-  * handle concurrency
-
-# Howto
-## Collecting errors from goroutine
-1. each goroutine sends error (nil or not nil) into a channel
-1. aggegate erros using a goroutine to avoid race condition
-1. return the aggregate error
 
 # Terminology
 |concept/name |definition|comment|
@@ -88,8 +5,157 @@ Todo
 |**worklow**|(is) a set of phases|described by a yaml file
 |**tier**|(is) a ordered set of phases|
 |**phase**|(represents) a `GO` function to be executed on **1..N** targets|accepts parameters|
-|**target**|(is) the localhost, a remote VM or a container
+|**target**|(is) the localhost, a remote VM or a container (local or remote)
 
-## workflow
+# Purpose
+A framework/engine that executes logic through the following hierarchy:
+```mermaid
+flowchart LR
+A[Workflow] --> B[Tier] --> C[Phase] --> D[GoFunction] --> E[PhaseFn]
+```
+Each layer has a specific responsibility:
+
+**workflow**
 - at **compile** time: a set of `phases` described in a `YAML` file
 - at **runtime**: a sequence of `tier`
+- formal definition
+	```go
+	type Workflow struct {
+		Name        string           `yaml:"name"`
+		Description string           `yaml:"description"`
+		Phases      map[string]Phase `yaml:"phases"`
+	}
+	```
+
+**phase**
+- Runs a function on one or many **targets** **concurrently**.
+- formal definition
+	```go
+	type Phase struct {
+	WkfName     string   `yaml:"wkfName,omitempty"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	FnAlias     string   `yaml:"fn"`
+	Dependency  []string `yaml:"dependency,omitempty"`
+	Param       []string `yaml:"param,omitempty"`
+	Node        string   `yaml:"node,omitempty"`
+	}
+	```
+
+
+
+# Execution Model
+The field `dependency` of a `phase` **implies** the concept of **Tier**. 
+- A **workflow** is made of several **phases**.
+- Each phase may **depend** on zero or more other phases.
+- From these dependencies, the engine automatically computes **tiers**:
+- A **tier** contains multiple phases.
+
+
+## Example without dependencies
+
+```yaml
+APhase: no dependencies  
+BPhase: no dependencies  
+CPhase: no dependencies  
+DPhase: no dependencies
+```
+
+In that case, all phases are independent → they belong to the **same tier**. The tier layout is
+
+```less
+Tier 1:
+   APhase ──┐
+   BPhase ──┼── run in parallel
+   CPhase ──┤
+   DPhase ──┘
+```
+
+➡️ All 4 phases run **at the same time/concurently**, each of them **concurently on all target**.
+
+---
+
+## Example with dependencies
+
+```yaml
+APhase: []
+BPhase: [APhase]
+CPhase: [APhase]
+DPhase: [BPhase, CPhase]
+```
+
+Now the engine creates **three tiers**.
+
+### ✔ Tier 1
+
+Only `APhase` has no dependencies.
+
+```less
+Tier 1:
+   APhase   (run on all nodes)
+```
+
+### ✔ Tier 2
+
+`BPhase` and `CPhase` both depend on `APhase` → they become parallel.
+
+```less
+Tier 2:
+   BPhase ──┐
+   CPhase ──┘   run in parallel after APhase
+```
+
+### ✔ Tier 3
+
+`DPhase` depends on **both** B and C → it must wait for both.
+
+```less
+Tier 3:
+   DPhase   (starts only when B and C are both done)
+```
+
+### Full tier layout
+
+```less
+Tier 1:
+   APhase
+
+(wait for A)
+
+Tier 2:
+   BPhase ──┐
+   CPhase ──┘   run in parallel
+
+(wait for B and C)
+
+Tier 3:
+   DPhase
+```
+
+## Conclusion
+Operationally
+* Tiers provide a natural *pipeline structure* for the workflow.
+* The engine builds tiers automatically using dependencies.
+* A phase consist of a uniq **GO** functions that run **concurrently** on all **targets**.
+
+The following rules apply
+* All phases in the same tier run in parallel.
+* A phase:runs concurrently on all target nodes
+* Tiers 
+  - run **sequentially** (Tier 1 → Tier 2 → Tier 3).
+  - A tier starts only when all phases in the previous tier have completed.
+
+
+
+
+
+# Howto
+## Collect errors from goroutine
+1. each `goroutine` sends error (nil or not nil) into a `channel`
+1. aggegate erros using a goroutine to avoid race condition
+1. return the aggregate error
+
+
+# Todo
+- Use the CLI as a CI/CD pipeline tool
+- Allow the CLI to use like the configuration file a custom worflow YAML file

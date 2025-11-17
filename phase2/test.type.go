@@ -5,8 +5,9 @@ import (
 )
 
 // Description: represents the signature of a GO function to be executed on a target.
-type PhaseFn func(target string, params []string, logger logx.Logger) (bool, error)
+type PhaseFn func(target string, params [][]any, logger logx.Logger) (bool, error)
 
+// type PhaseFn func(target string, params []string, logger logx.Logger) (bool, error)
 // type PhaseFn func(ctx context.Context, params any, logger logx.Logger) error
 
 // Description: represents a GO function to be executed on a Target.
@@ -14,7 +15,7 @@ type GoFunction struct {
 	PhaseName string
 	Name      string
 	Func      PhaseFn
-	ParamList []string
+	ParamList [][]any
 }
 
 // Description: represents a map of function (that are registered and can be executed).

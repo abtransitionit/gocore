@@ -1,72 +1,28 @@
-# Purpose
-- A framework to execute complex actions on different set of `VM` (**V**irtual **M**acchines)
-- Actions and confifugration are define in a `YAML` txt file
-
-# Terminology
-## Workflow
-### Formal definition
-```go
-type Workflow struct {
-	Name        string           `yaml:"name"`
-	Description string           `yaml:"description"`
-	Phases      map[string]Phase `yaml:"phases"`
-}
-```
-### definition
-a named set of `phases`
-
-## Phase
-### Formal definition
-```go
-type Phase struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	Fn          string   `yaml:"fn"`
-	Dependency  []string `yaml:"dependency,omitempty"`
-	Param       []string `yaml:"param,omitempty"`
-	Node        string   `yaml:"node,omitempty"`
-}
-```
-
-### Definition 
-A function that is:
-  - executed on a named set of **nodes**,
-  - passed **parameters**
-  - triggered once all **dependent** phases have completed
-
-
-## Tier
-the field `dependency` of a `phase` **implies** the concept of **Tier**
-
-### Definition by example
-suppose the following workflow of 4 phases:
+**Tier**
+the field `dependency` of a `phase` **implies** the concept of **Tier**. suppose the following workflow of 4 phases:
 ```yaml
-name: tiern
-description: create a KBE (Kubernetes Easy) cluster
+name: kbe
+description: create aKubernetes cluster
 phases:
   APhase:
     description: run alone
     node: all
     fn: vm.CheckVmSshAccess
-    Dependency: []
 
   BPhase:
     description: run concurently with C
     node: all
     fn: luc.DeployLuc
-    Dependency: []
 
   CPhase:
     description: run concurently with B
     node: all
     fn: luc.DeployLuc
-    Dependency: []
 
   DPhase:
     description: run after B and C finish
     node: all
     fn: luc.DeployLuc
-    Dependency: []
 
 ```
 
@@ -92,10 +48,10 @@ that also can be sumarized when we introduced the concept of **tier** as:
 │  4 │ 1    │ 4   │ DPhase │ all  │ run after B and C finish │ none         │
 └────┴──────┴─────┴────────┴──────┴──────────────────────────┴──────────────┘
 ```
-- Phases of the same tier run in **parallel** (ie. **concurently**). 
+- Phases of the same tier run at the same time (ie. **concurently/in parallel**). 
 - Next **tier** starts when the previous one complete.
 - One Phase run **concurently** on all **node**
-- in this case, the 4 independent phases will run **concurently**.
+- in this case, the 4 independent phases (of the same tier) will run **concurently**.
 
 suppose now the same phases with **dependencies** between them:
 ```go
@@ -106,7 +62,6 @@ phases:
     description: run alone
     node: all
     fn: vm.CheckVmSshAccess
-    dependency: []
 
   BPhase:
     description: run concurently with C
@@ -155,14 +110,54 @@ that also can be sumarized when we introduced the concept of **tier** as:
 │  4 │ 3    │ 1   │ DPhase │ all  │ run after B and C finish │ BPhase, CPhase │
 └────┴──────┴─────┴────────┴──────┴──────────────────────────┴────────────────┘
 ```
-- Phases of the same tier run in **parallel** (ie. **concurently**). 
+- Phases of the same tier run at the same time (ie. **concurently/in parallel**). 
 - Next **tier** starts when the previous one complete.
 - One Phase run **concurently** on all **node**
-- in this case
-  - there are 3 **tiers**.
+- in this case there are 3 **tiers**:
   - tier 1 consist of the only phase `APhase` that will be executed first (it will be executed concurently on all node).
-  - tier 2 consist of the 2 phases `BPhase` and `CPhase` that will be executed concurently after `APhase` complete (on all node).
+  - tier 2 consist of the 2 phases `BPhase` and `CPhase` that will be executed concurently (on all nodes) after `APhase` complete.
   - tier 3 consist of the only phase `DPhase` that will be executed after all phase of **tier 2**` complete.
+
+
+
+
+# Purpose
+- A framework to execute complex actions on different set of `VM` (**V**irtual **M**acchines)
+- Actions and confifugration are define in a `YAML` txt file
+
+# Terminology
+## Workflow
+### Formal definition
+```go
+type Workflow struct {
+	Name        string           `yaml:"name"`
+	Description string           `yaml:"description"`
+	Phases      map[string]Phase `yaml:"phases"`
+}
+```
+### definition
+a named set of `phases`
+
+## Phase
+### Formal definition
+```go
+type Phase struct {
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	Fn          string   `yaml:"fn"`
+	Dependency  []string `yaml:"dependency,omitempty"`
+	Param       []string `yaml:"param,omitempty"`
+	Node        string   `yaml:"node,omitempty"`
+}
+```
+
+### Definition 
+A function that is:
+  - executed on a named set of **nodes**,
+  - passed **parameters**
+  - triggered once all **dependent** phases have completed
+
+
 
 
 ## GoFunc

@@ -11,7 +11,7 @@ import (
 //
 // Notes:
 // - this function is executed inside a goroutine
-func (goFunction *GoFunction) run(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
+func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
 	// define the return value of the function to be executed on the target
 	var oko bool
 	var err error
