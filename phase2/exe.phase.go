@@ -25,16 +25,6 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 		logger.Warnf("skipping phase %s, err: %v", phase.Name, err)
 		return nil
 	}
-	// // 21 - convert [][]string → [][]any for PhaseFn
-	// paramListAny := make([][]any, len(paramList))
-	// for i, slice := range paramList {
-	// 	anySlice := make([]any, len(slice))
-	// 	for j, v := range slice {
-	// 		anySlice[j] = v
-	// 	}
-	// 	paramListAny[i] = anySlice
-	// }
-
 	// 3 - get PhaseFn
 	phaseFn, err := getPhaseFn(phase.WkfName, phase.FnAlias, fnRegistry)
 	if err != nil {

@@ -14,14 +14,14 @@ import (
 func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
 
 	// define the return value of the function to be executed on the target
-	var oko bool
+	var ok bool
 	var err error
 
 	// log
 	logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
 
 	// Execute the function
-	oko, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
+	ok, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
 	// handle system eroor
 	if err != nil {
@@ -29,7 +29,7 @@ func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, target
 	}
 
 	// handle logic eroor
-	if !oko {
+	if !ok {
 		return fmt.Errorf("↪ (gofunc) phase: %s > target:%s > phase:%s > go:%s > param: %s", phaseName, targetName, goFunction.PhaseName, goFunction.Name, goFunction.ParamList)
 	}
 
