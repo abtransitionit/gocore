@@ -21,7 +21,7 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 	var b strings.Builder
 
 	// Header
-	b.WriteString("Phase\tDescription\tTarget\tFn\tParam\n")
+	b.WriteString("Phase\tDescription\tHost\tFn\tParam\n")
 
 	// Topologically sort phases
 	sorted, err := wf.topoSortByPhase()
