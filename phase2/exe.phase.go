@@ -25,15 +25,15 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 		logger.Warnf("skipping phase %s, err: %v", phase.Name, err)
 		return nil
 	}
-	// 21 - convert [][]string → [][]any for PhaseFn
-	paramListAny := make([][]any, len(paramList))
-	for i, slice := range paramList {
-		anySlice := make([]any, len(slice))
-		for j, v := range slice {
-			anySlice[j] = v
-		}
-		paramListAny[i] = anySlice
-	}
+	// // 21 - convert [][]string → [][]any for PhaseFn
+	// paramListAny := make([][]any, len(paramList))
+	// for i, slice := range paramList {
+	// 	anySlice := make([]any, len(slice))
+	// 	for j, v := range slice {
+	// 		anySlice[j] = v
+	// 	}
+	// 	paramListAny[i] = anySlice
+	// }
 
 	// 3 - get PhaseFn
 	phaseFn, err := getPhaseFn(phase.WkfName, phase.FnAlias, fnRegistry)
@@ -53,13 +53,12 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 			logger.Debugf("↪ phase: %s > param: %s > %v", phase.Name, key, paramList[i])
 		}
 	}
-	// os.Exit(2)
 
 	// 5 - create a GoFunc instance
 	goFunction := &GoFunction{
 		PhaseName: phase.Name,
 		Name:      goFnName,
-		ParamList: paramListAny,
+		ParamList: paramList,
 		Func:      phaseFn,
 	}
 	// 6 - manage goroutines concurrency

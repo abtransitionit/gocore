@@ -27,7 +27,41 @@ func getTargetList(phaseNode string, cfg *viperx.Viperx) ([]string, error) {
 }
 
 // Description: resolves phase parameters
-func getParamList(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) ([][]string, error) {
+func getParamList(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) ([][]any, error) {
+	if cfg == nil || len(phaseParam) == 0 {
+		return nil, fmt.Errorf("cfg or phaseParam is empty: %v", phaseParam)
+	}
+
+	resolved := make([][]any, len(phaseParam))
+	for i, key := range phaseParam {
+		val := cfg.Get(key)
+		if val == nil {
+			logger.Warnf("param %q not found", key)
+			resolved[i] = []any{""}
+			continue
+		}
+
+		switch v := val.(type) {
+		case string:
+			resolved[i] = []any{v}
+		case []interface{}:
+			anySlice := make([]any, len(v))
+			for j, item := range v {
+				anySlice[j] = item
+			}
+			resolved[i] = anySlice
+		case map[string]interface{}:
+			b, _ := json.Marshal(v)
+			resolved[i] = []any{string(b)}
+		default:
+			resolved[i] = []any{fmt.Sprint(v)}
+		}
+	}
+
+	return resolved, nil
+}
+
+func getParamList3(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) ([][]string, error) {
 	if cfg == nil || len(phaseParam) == 0 {
 		return nil, fmt.Errorf("cfg or phaseParam is empty: %v", phaseParam)
 	}

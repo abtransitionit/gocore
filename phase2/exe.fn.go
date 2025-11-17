@@ -12,12 +12,15 @@ import (
 // Notes:
 // - this function is executed inside a goroutine
 func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
+
 	// define the return value of the function to be executed on the target
 	var oko bool
 	var err error
 
-	// Execute the function
+	// log
 	logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
+
+	// Execute the function
 	oko, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
 	// handle system eroor
