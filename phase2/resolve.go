@@ -45,13 +45,13 @@ func getParamList(phaseParam []string, cfg *viperx.Viperx, logger logx.Logger) (
 		switch v := val.(type) {
 		case string:
 			resolved[i] = []any{v}
-		case []interface{}:
+		case []any:
 			anySlice := make([]any, len(v))
 			for j, item := range v {
 				anySlice[j] = item
 			}
 			resolved[i] = anySlice
-		case map[string]interface{}:
+		case map[string]any:
 			b, _ := json.Marshal(v)
 			resolved[i] = []any{string(b)}
 		default:
