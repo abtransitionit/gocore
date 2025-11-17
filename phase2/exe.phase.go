@@ -16,7 +16,6 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	targetList, err := getTargetList(phase.Node, cfg)
 	if err != nil {
 		logger.Warnf("skipping phase %s, err: %v, ", phase.Name, err)
-		// return fmt.Errorf("skipping phase %s, err: %v, ", phase.Name, err)
 		return nil
 	}
 
@@ -25,7 +24,6 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	if err != nil {
 		logger.Warnf("skipping phase %s, err: %v", phase.Name, err)
 		return nil
-		// return fmt.Errorf("skipping phase %s, err: %v", phase.Name, err)
 	}
 	// 21 - convert [][]string → [][]any for PhaseFn
 	paramListAny := make([][]any, len(paramList))
@@ -106,12 +104,3 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	logger.Infof("✅ phase: %s (function: %s) > completes succesfully", phase.Name, goFunction.Name)
 	return nil
 }
-
-// // description: returns a PhaseFn with injected additional parameters
-// func injectParams(extraParams []string, fn PhaseFn) PhaseFn {
-// 	return func(target string, params []string, logger logx.Logger) (bool, error) {
-// 		// prepend extraParams to the original params
-// 		injectedParams := append(extraParams, params...)
-// 		return fn(target, injectedParams, logger)
-// 	}
-// }
