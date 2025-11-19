@@ -48,7 +48,7 @@ func GetWorkflow(fileName, cmdPathName string, logger logx.Logger) (*Workflow, e
 	logger.Debugf("found workflow file: %s", workflowFilePath)
 
 	// 2. Load the yaml file into a struct
-	workflow, err := yamlx.LoadFile[Workflow](workflowFilePath)
+	workflow, err := yamlx.LoadYamlFile[Workflow](workflowFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("loading workflow yaml file from %s: %w", workflowFilePath, err)
 	}

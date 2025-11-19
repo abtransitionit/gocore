@@ -13,14 +13,16 @@ import (
 // - this function is executed inside a goroutine
 func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
 
-	// define the return value of the function to be executed on the target
+	// 1 - define the return value of the function to be executed on the target
 	var ok bool
 	var err error
 
 	// log
-	logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
+	// logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
 
-	// Execute the function
+	// 2 - execute the function
+	// 21 - tell this function to MANAGE this: goFunction.ParamList can be nil, not defined, empty st can be nil, not defined, empty
+	logger.Infof("↪ (gofunc) phase: %s > target:%s > running > ParamList: %v", phaseName, targetName, goFunction.ParamList)
 	ok, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
 	// handle system eroor
