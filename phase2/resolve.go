@@ -11,16 +11,16 @@ import (
 	"github.com/abtransitionit/gocore/viperx"
 )
 
-// Description: resolves target node (ie. on which to run the function)
-func getTargetList(phaseNode string, cfg *viperx.Viperx) ([]string, error) {
+// Description: resolves host node (ie. on which to run the function)
+func getHostList(phaseNode string, cfg *viperx.Viperx) ([]string, error) {
 	if cfg == nil || phaseNode == "" {
-		return nil, fmt.Errorf("looking up > target > %q > cfg or phaseNode is empty", phaseNode)
+		return nil, fmt.Errorf("looking up > host > %q > cfg or phaseNode is empty", phaseNode)
 	}
 
 	nodes := cfg.GetStringSlice(phaseNode)
 	if len(nodes) == 0 {
-		// logger.Warnf("   ↪ looking up> target > %q > not found or empty in config", phaseNode)
-		return nil, fmt.Errorf("looking up > target > %q > not found or empty in config", phaseNode)
+		// logger.Warnf("   ↪ looking up> host > %q > not found or empty in config", phaseNode)
+		return nil, fmt.Errorf("looking up > host > %q > not found or empty in config", phaseNode)
 	}
 	// success
 	return nodes, nil

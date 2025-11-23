@@ -7,23 +7,24 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// Description: executes code for 1 target
+// Description: executes code for 1 host
 //
 // Notes:
 // - this function is executed inside a goroutine
-func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, targetName string, logger logx.Logger) error {
+func (goFunction *GoFunction) runOnHOst(ctx context.Context, phaseName, hostName string, logger logx.Logger) error {
 
-	// 1 - define the return value of the function to be executed on the target
+	// 1 - define the return value of the function to be executed on the host
 	var ok bool
 	var err error
 
 	// log
-	// logger.Infof("↪ (gofunc) phase: %s > target:%s > running", phaseName, targetName)
+	// logger.Infof("↪ (gofunc) phase: %s > host:%s > running", phaseName, hostName)
 
 	// 2 - execute the function
 	// 21 - tell this function to MANAGE this: goFunction.ParamList can be nil, not defined, empty st can be nil, not defined, empty
-	logger.Infof("↪ (gofunc) phase: %s > target:%s > running > ParamList: %v", phaseName, targetName, goFunction.ParamList)
-	ok, err = goFunction.Func(targetName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
+	logger.Infof("↪ %s/%s > running", phaseName, hostName)
+	// logger.Infof("↪ (goroutine) %s/%s > running > ParamList: %v", phaseName, hostName, goFunction.ParamList)
+	ok, err = goFunction.Func(hostName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
 	// handle system eroor
 	if err != nil {
@@ -32,7 +33,7 @@ func (goFunction *GoFunction) runOnTarget(ctx context.Context, phaseName, target
 
 	// handle logic eroor
 	if !ok {
-		return fmt.Errorf("↪ (gofunc) phase: %s > target:%s > phase:%s > go:%s > param: %s", phaseName, targetName, goFunction.PhaseName, goFunction.Name, goFunction.ParamList)
+		return fmt.Errorf("↪ (gofunc) phase: %s > host:%s > phase:%s > go:%s > param: %s", phaseName, hostName, goFunction.PhaseName, goFunction.Name, goFunction.ParamList)
 	}
 
 	// handle success

@@ -48,10 +48,11 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 
 	// log
 	logger.Infof("🅦 Runing workflow %q to %s", wkf.Name, wkf.Description)
-	logger.Info("• Tier concurrency:    next tier starts when the previous one completes")
-	logger.Info("• Phase concurrency:     all phase of a tier runs at the same time")
-	logger.Info("• Target concurrency:    each phase runs at the same time on all target")
-	logger.Info("• TDOD Node concurrency: each phase runs concurently (when possible) on all couple (target/node)")
+	logger.Info("• Tier sequencing:    next tier starts after the previous one completes")
+	logger.Info("• Tier completion:    a tier completes when all its phases completes")
+	logger.Info("• Host concurrency:   each phase rus concurently on all hosts")
+	logger.Info("• Node concurrency:   each phase runs (also) concurently on all nodes (when defined)")
+	logger.Info("• Phase completion:   a phase completes (for a host) when all its subsequent node tasks complete")
 
 	// 1 - get the tiers
 	tierList, err := wkf.TopoSortByTier(logger)
