@@ -24,7 +24,7 @@ func (goFunction *GoFunction) runOnHOst(ctx context.Context, phaseName, hostName
 	// 21 - tell this function to MANAGE this: goFunction.ParamList can be nil, not defined, empty st can be nil, not defined, empty
 	logger.Infof("↪ %s/%s > running", phaseName, hostName)
 	// logger.Infof("↪ (goroutine) %s/%s > running > ParamList: %v", phaseName, hostName, goFunction.ParamList)
-	ok, err = goFunction.Func(hostName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
+	ok, err = goFunction.Func(goFunction.PhaseName, hostName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 
 	// handle system eroor
 	if err != nil {
