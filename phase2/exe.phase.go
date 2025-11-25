@@ -63,8 +63,11 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	for _, host := range hostList {
 		wgPhase.Add(1)            // Increment the WaitGroup:counter for each host
 		go func(onehost string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
-			defer wgPhase.Done() // Increment the WaitGroup:counter - when the goroutine (on the host) completes
-			logger.Debugf("↪ %s/%s > running goroutine", phase.Name, onehost)
+			defer func() {
+				logger.Infof("↩ (%s) %s > finished", phase.Name, onehost)
+				wgPhase.Done() // Decrement the WaitGroup counter - when the goroutine complete
+			}()
+			logger.Infof("↪ (%s) %s > ongoing", phase.Name, onehost)
 			grErr := goFunction.runOnHOst(ctx, phase.Name, onehost, logger) // delegate the execution of the function to this method
 			if grErr != nil {                                               // send goroutines error if any into the chanel
 				// log
