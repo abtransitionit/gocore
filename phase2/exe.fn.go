@@ -17,9 +17,6 @@ func (goFunction *GoFunction) runOnHOst(ctx context.Context, phaseName, hostName
 	var ok bool
 	var err error
 
-	// log
-	// logger.Infof("↪ %s > %s > running", phaseName, hostName)
-
 	// 2 - execute the function
 	ok, err = goFunction.Func(goFunction.PhaseName, hostName, goFunction.ParamList, logger) // execute the task:PhaseFn (signature is important here)
 

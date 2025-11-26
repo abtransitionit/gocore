@@ -80,15 +80,15 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 		tierIdx := tierId + 1
 
 		// 6 - manage goroutines concurrency
-		nbPhase := len(phaseList)
-		var wgTier sync.WaitGroup               // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
-		errChPhase := make(chan error, nbPhase) // define a channel to collect errors from each goroutine
+		nbItem := len(phaseList)
+		var wgTier sync.WaitGroup              // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
+		errChPhase := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 		// log
-		logger.Infof("👉 Starting Tier %d:%d:%d concurrent phase(s)", tierIdx, nbTier, nbPhase)
+		logger.Infof("👉 Starting Tier %d:%d:%d concurrent phase(s)", tierIdx, nbTier, nbItem)
 		// 61 - loop over each phases in the tier AND create as many goroutines as phases
 		for _, phase := range phaseList {
-			wgTier.Add(1)             // Increment the WaitGroup:counter for each phase
-			go func(onePhase Phase) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+			wgTier.Add(1)            // Increment the WaitGroup:counter for each phase
+			go func(oneItem Phase) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 				defer wgTier.Done()                            // Decrement the WaitGroup counter - when the goroutine (the phase) completes
 				err := phase.run(ctx, cfg, fnRegistry, logger) // delegate the execution of the phase to this method
 				if err != nil {                                // send goroutines error if any into the chanel

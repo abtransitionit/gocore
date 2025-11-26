@@ -54,21 +54,21 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 		Func:      phaseFn,
 	}
 	// 6 - manage goroutines concurrency
-	nbHost := len(hostList)
+	nbItem := len(hostList)
 	var wgPhase sync.WaitGroup             // define a WaitGroup instance for each item in the list : wait for all (concurent) goroutines to complete
-	errChPhase := make(chan error, nbHost) // define a channel to collect errors from each goroutine
+	errChPhase := make(chan error, nbItem) // define a channel to collect errors from each goroutine
 	// log
 	// 61 - loop over each host of the phase AND create as many goroutines as hosts
 	// 61 - some goroutines will do SSH to play CLI remotely, other don't SSH and just play CLI locally
 	for _, host := range hostList {
 		wgPhase.Add(1)            // Increment the WaitGroup:counter for each host
-		go func(onehost string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
+		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
-				logger.Infof("↩ (%s) %s > finished", phase.Name, onehost)
+				logger.Debugf("↩ (%s) > %s > complete", phase.Name, oneItem)
 				wgPhase.Done() // Decrement the WaitGroup counter - when the goroutine complete
 			}()
-			logger.Infof("↪ (%s) %s > ongoing", phase.Name, onehost)
-			grErr := goFunction.runOnHOst(ctx, phase.Name, onehost, logger) // delegate the execution of the function to this method
+			logger.Debugf("↪ (%s) > %s > ongoing", phase.Name, oneItem)
+			grErr := goFunction.runOnHOst(ctx, phase.Name, oneItem, logger) // delegate the execution of the function to this method
 			if grErr != nil {                                               // send goroutines error if any into the chanel
 				// log
 				logger.Errorf("phase : %s >  %v", phase.Name, grErr)
