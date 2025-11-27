@@ -7,7 +7,7 @@ import (
 	"runtime"
 
 	"github.com/abtransitionit/gocore/logx"
-	"github.com/abtransitionit/gocore/yamlx"
+	"github.com/abtransitionit/gocore/mock/yamlx"
 )
 
 // Description: represents a set of phases.

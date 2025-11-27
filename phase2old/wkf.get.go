@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/abtransitionit/gocore/yamlx"
+	"github.com/abtransitionit/gocore/mock/yamlx"
 )
 
 func GetWorkflow(cmdPathName string) (*Workflow, error) {
