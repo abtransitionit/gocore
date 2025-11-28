@@ -52,14 +52,17 @@ func LoadTplYamlFile[T any](filePath string, ctx any) (*T, error) {
 }
 
 // Description: renders embedded YAML (as []byte) with ctx and unmarshals into T.
-func LoadTplYamlFileEmbed[T any](data []byte, ctx any) (*T, error) {
+//
+// Notes:
+// - The placeholders {{ .XXX }} in the YAML are reolved or stay the same if missing
+func LoadTplYamlFileEmbed[T any](data []byte, varplaceHolder any) (*T, error) {
 	tmpl, err := template.New("yaml").Parse(string(data))
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %w", err)
 	}
 
 	var rendered bytes.Buffer
-	if err := tmpl.Execute(&rendered, ctx); err != nil {
+	if err := tmpl.Execute(&rendered, varplaceHolder); err != nil {
 		return nil, fmt.Errorf("executing template: %w", err)
 	}
 
