@@ -61,7 +61,7 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 	// 61 - loop over each host of the phase AND create as many goroutines as hosts
 	// 61 - some goroutines will do SSH to play CLI remotely, other don't SSH and just play CLI locally
 	for _, host := range hostList {
-		wgPhase.Add(1)            // Increment the WaitGroup:counter for each host
+		wgPhase.Add(1)            // Increment the WaitGroup:counter for each item
 		go func(oneItem string) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 			defer func() {
 				logger.Debugf("↩ (%s) > %s > complete", phase.Name, oneItem)

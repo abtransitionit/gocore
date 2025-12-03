@@ -2,15 +2,11 @@ package ovh
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
-	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/jsonx"
 	"github.com/abtransitionit/gocore/logx"
 )
@@ -100,7 +96,6 @@ func VpsGetOs(ctx context.Context, logger logx.Logger, id string) (jsonx.Json, e
 	}
 	return resp, nil
 }
-
 func VpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstallParam VpsReinstallParam) (jsonx.Json, error) {
 	// define response type
 	var resp jsonx.Json
@@ -130,134 +125,9 @@ func VpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 	return resp, nil
 }
 
-func GetListOsImageFromStruct() MapVpsOsImage {
-	return vpsOsImageReference
-}
-
-func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
-	// 1 - get VPS:list (static file)
-	listVps, err := GetListVpsFromFileCached()
-	if err != nil {
-		return "", fmt.Errorf("failed to load VPS list: %w", err)
-	}
-	// 2 - get OsIage:list (static map)
-	listImage := GetListOsImageFromStruct()
-
-	// 3 - lookup the vps which has the vpsNameId
-	var vps Vps
-	var vpsKey string
-
-	found := false
-	// loop over all vps object
-	for key, candidate := range *listVps {
-		if candidate.NameId == vpsNameId {
-			vps = candidate
-			vpsKey = key
-			found = true
-			break
-		}
-	}
-	if !found {
-		return "", fmt.Errorf("VPS not found with NameId: %s", vpsNameId)
-	}
-	// here we have the vps
-	logger.Infof("vpsNameId: %s, distro: %s, VpsShortName: %s", vpsNameId, vps.Distro, vpsKey)
-
-	// 4 - get the distro
-	if strings.TrimSpace(vps.Distro) == "" {
-		return "", fmt.Errorf("VPS %s has no distro defined", vpsNameId)
-	}
-
-	// 5 - lookup the image ID for this distro
-	image, ok := listImage[vps.Distro]
-	if !ok {
-		return "", fmt.Errorf("no image found for distro: %s", vps.Distro)
-	}
-
-	return image.Id, nil
-
-}
-
-func GetListVpsFromFile() (*ListVpsStruct, error) {
-	// get List as a GO struct
-	listVps, err := getlistVpsStruct()
-	if err != nil {
-		return nil, err
-	}
-	// inject a dynamic field into the struct
-	for key, vps := range *listVps {
-		if len(vps.Distro) > 0 {
-			vps.NameDynamic = key + strings.ToLower(string(vps.Distro[0]))
-			(*listVps)[key] = vps // reassign updated struct
-		}
-	}
-	// success
-	return listVps, nil
-}
-
-var (
-	listVpsOnce sync.Once
-	listVpsVal  *ListVpsStruct
-	listVpsErr  error
-)
-
-func GetListVpsFromFileCached() (*ListVpsStruct, error) {
-	listVpsOnce.Do(func() {
-		listVpsVal, listVpsErr = GetListVpsFromFile()
-	})
-	return listVpsVal, listVpsErr
-}
-
-// Name: getCredentialStrut
-//
-// Description: get file:data into  Go:structure
-func getlistVpsStruct() (*ListVpsStruct, error) {
-	// define dest structure
-	var listVpsStruct ListVpsStruct
-
-	// get file path
-	filePath, err := getListVpsFilePath()
-	if err != nil {
-		return nil, err
-	}
-
-	// Read the entire file content.
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
-	}
-
-	// Map filecontent into the GO:struct (aka. Unmarshal the JSON)
-	if err := json.Unmarshal(fileContent, &listVpsStruct); err != nil {
-		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
-	}
-
-	// success - return credential as a pointer to a GO struct
-	return &listVpsStruct, nil
-}
-
-func getListVpsFilePath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve home directory %w", err)
-	}
-
-	listVpsPath := filepath.Join(home, listVpsRelPath)
-
-	ok, err := filex.ExistsFile(listVpsPath)
-	if err != nil {
-		return "", err
-	}
-	if !ok {
-		return "", fmt.Errorf("credential file not found: %s", listVpsPath)
-	}
-
-	return listVpsPath, nil
-}
-
 // Name: VpsReinstallHelper
 //
-// Description: api rebuild a VPS
+// Description: api reinstall the same OS image on a VPS
 //
 // Parameters:
 //   - ctx: context.Context
@@ -265,13 +135,19 @@ func getListVpsFilePath() (string, error) {
 //   - vpsNameId: string
 //
 // Returns:
-//   - jsonx.Json: info concerning the rebuilded VPS
+//   - jsonx.Json: info concerning the reinstalled VPS
 //   - error
 //
 // Notes:
+//   - vpsNameOrId can be vps-XXX or o1u, o2a, ...
 //   - the returned Json is sended immediately after the API call is received and does not wait the VPS to be ready
-func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId string) (jsonx.Json, error) {
-	// 1 - get the Vps:SshKey:id
+func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameOrId string) (jsonx.Json, error) {
+	// 1 - normalize input (can be o1u or nameId)
+	vpsNameId, err := resolveVpsNameId(vpsNameOrId, logger)
+	if err != nil {
+		return nil, err
+	}
+	// 2 - get the Vps:SshKey:id
 	keyId, err := GetSshKeyIdFromFileCached()
 	if err != nil {
 		logger.Errorf("failed to get ssh key id %v", err)
@@ -281,14 +157,14 @@ func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId strin
 	// 1 - get the Vps:SshKey:publicKey
 	sshPubKey, err := SshKeyGetPublicKeyCached(context.Background(), logger, keyId)
 	if err != nil {
-		logger.Errorf("failed to get ssh public key %v", err)
+		logger.Errorf("getting ssh public key %v", err)
 		os.Exit(1)
 	}
 
 	// 3 - get the Vps:OS:ImageId
 	imageId, err := GetVpsImageId(vpsNameId, logger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve image id for VPS %s: %w", vpsNameId, err)
+		return nil, fmt.Errorf("resolving image id for VPS %s: %w", vpsNameId, err)
 	}
 
 	// define the reinstall parameter
@@ -298,12 +174,12 @@ func VpsReinstallHelper(ctx context.Context, logger logx.Logger, vpsNameId strin
 		PublicSshKey:      sshPubKey, // example
 	}
 
-	// jsonx.PrettyPrintColor(reinstallParam)
+	jsonx.PrettyPrintColor(reinstallParam)
 
 	// reinstall the vps via api
 	vpsInfo, err := VpsReinstall(ctx, logger, vpsNameId, reinstallParam)
 	if err != nil {
-		return nil, fmt.Errorf("failed to reinstall VPS %s: %w", vpsNameId, err)
+		return nil, fmt.Errorf("reinstalling VPS %s: %w", vpsNameId, err)
 	}
 	return vpsInfo, nil
 }
@@ -321,6 +197,40 @@ func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsNameId string) 
 	}
 
 	return state == "running", nil
+}
+
+func getVpsNameId(vpsName string, logger logx.Logger) (string, error) {
+
+	// 1 - get VPS:list (static file, cloned + decorated)
+	vpsList, err := GetListVps()
+	if err != nil {
+		return "", fmt.Errorf("getting list vps: %w", err)
+	}
+
+	// 2 - iterate through all VPS entries
+	for _, vps := range *vpsList {
+		if vps.NameDynamic == vpsName {
+			return vps.NameId, nil
+		}
+	}
+
+	return "", fmt.Errorf("getting vps name %q : not found", vpsName)
+}
+
+// Input can be o1u, o1, nameId, etc.
+func resolveVpsNameId(input string, logger logx.Logger) (string, error) {
+	// If input is already a nameId (e.g., vps-xxxxxxx.vps.ovh.net)
+	if strings.HasPrefix(input, "vps-") {
+		return input, nil
+	}
+
+	// Else, treat input as nameDynamic (o1u)
+	nameId, err := getVpsNameId(input, logger)
+	if err != nil {
+		return "", err
+	}
+
+	return nameId, nil
 }
 
 // Name: DisplayVpsDetail

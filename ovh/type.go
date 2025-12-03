@@ -31,12 +31,12 @@ type CredentialStruct struct {
 	} `json:"serviceAccount"`
 }
 
+// Description: represents a VPS
 type Vps struct {
 	DisplayName string `json:"displayName"`
 	NameId      string `json:"nameId"`
 	Distro      string `json:"distro"`
 	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
-
 }
 
 type ListVpsStruct map[string]Vps
@@ -45,4 +45,9 @@ type VpsReinstallParam struct {
 	DoNotSendPassword bool   `json:"doNotSendPassword"`
 	ImageId           string `json:"imageId"`
 	PublicSshKey      string `json:"publicSshKey"`
+}
+
+type ImageDetail struct {
+	Name string
+	Id   string
 }

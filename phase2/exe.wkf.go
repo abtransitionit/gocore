@@ -87,7 +87,7 @@ func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry
 		logger.Infof("👉 Starting Tier %d:%d:%d concurrent phase(s)", tierIdx, nbTier, nbItem)
 		// 61 - loop over each phases in the tier AND create as many goroutines as phases
 		for _, phase := range phaseList {
-			wgTier.Add(1)            // Increment the WaitGroup:counter for each phase
+			wgTier.Add(1)            // Increment the WaitGroup:counter for each item
 			go func(oneItem Phase) { // create as many goroutine (that will run concurrently) as item AND pass the item as an argument
 				defer wgTier.Done()                            // Decrement the WaitGroup counter - when the goroutine (the phase) completes
 				err := phase.run(ctx, cfg, fnRegistry, logger) // delegate the execution of the phase to this method

@@ -16,6 +16,7 @@ var (
 	OvhClientTokenCached *apicli.Client
 )
 
+// Description: create a client
 func GetOvhClientCached(logger logx.Logger) *apicli.Client {
 	onceOvhClient.Do(func() {
 		OvhClientCached = apicli.NewClient(DOMAIN_EU, logger).
@@ -24,6 +25,7 @@ func GetOvhClientCached(logger logx.Logger) *apicli.Client {
 	return OvhClientCached
 }
 
+// Description: create a client
 func GetOvhClientTokenCached(logger logx.Logger) *apicli.Client {
 	onceOvhClientToken.Do(func() {
 		OvhClientTokenCached = apicli.NewClient(DOMAIN_STD, logger)
