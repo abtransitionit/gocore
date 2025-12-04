@@ -20,27 +20,27 @@ var vpsOsImageReference = MapVpsOsImage{
 		Name: "AlmaLinux 9",
 		Id:   "4160a29f-bee5-41d9-865b-86acb6b03fe9",
 	},
+	"debian13": {
+		Name: "Debian 13",
+		Id:   "24195a3e-7b12-44ef-ade3-22bcf245e7a7",
+	},
 	"Fedora42": {Name: "Fedora 42",
 		Id: "e3db5837-26ae-4a9e-bfab-344d5ad06388",
+	},
+	"rocky9": {
+		Name: "Rocky Linux 10",
+		Id:   "ccb9c787-3f0e-4590-a507-7a50b7261c8c",
 	},
 	"ubuntu2504": {
 		Name: "Ubuntu 25.04",
 		Id:   "89581538-39cd-4855-9e37-f6b11d954d18",
-	},
-	"debian12": {
-		Name: "Debian 12",
-		Id:   "51fa6918-b1be-4922-a783-a989e1ff4925",
-	},
-	"rocky10": {
-		Name: "Rocky Linux 10",
-		Id:   "9449995a-1525-4bda-838e-d8c9d3f974d5",
 	},
 }
 
 var endpointReference = apicli.MapEndpoint{
 	"CreateToken":     {Verb: "POST", Desc: "ceate SA:token", Path: "/auth/oauth2/token"},
 	"MeGetInfo":       {Verb: "GET", Desc: "get Me:Info", Path: fmt.Sprintf("/%s/me", NS_V1)},
-	"ImageGetList":    {Verb: "GET", Desc: "get Image:List", Path: fmt.Sprintf("/%s/vps/{id}/images/available", NS_V1)},
+	"VpsImageGetList": {Verb: "GET", Desc: "get Image:List", Path: fmt.Sprintf("/%s/vps/{id}/images/available", NS_V1)},
 	"ImageGetDetail":  {Verb: "GET", Desc: "get Image:List", Path: fmt.Sprintf("/%s/vps/{idv}/images/available/{idi}", NS_V1)},
 	"VpsGetList":      {Verb: "GET", Desc: "get Vps:List", Path: fmt.Sprintf("/%s/vps", NS_V1)},
 	"VpsGetDetail":    {Verb: "GET", Desc: "get Vps:Detail", Path: fmt.Sprintf("/%s/vps/{id}", NS_V1)},

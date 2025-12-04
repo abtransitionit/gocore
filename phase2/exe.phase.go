@@ -71,7 +71,7 @@ func (phase *Phase) run(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnR
 			grErr := goFunction.runOnHOst(ctx, phase.Name, oneItem, logger) // delegate the execution of the function to this method
 			if grErr != nil {                                               // send goroutines error if any into the chanel
 				// log
-				logger.Errorf("phase : %s >  %v", phase.Name, grErr)
+				logger.Errorf("❌ (%s) >  %v", phase.Name, grErr)
 				// send goroutines error if any into the chanel
 				errChPhase <- grErr
 			}

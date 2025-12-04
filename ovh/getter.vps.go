@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -152,6 +153,32 @@ func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
 		return "", fmt.Errorf("no image found for distro: %s", vps.Distro)
 	}
 
+	return image.Id, nil
+
+}
+
+// Description: get the os image id of a VPS
+func GetVpsImageId2(ctx context.Context, vpsId string, logger logx.Logger) (string, error) {
+	var image VpsOsImage
+	// var vpsDetail map[string]any
+	// 1 - get VPS:Image:list:Available
+	vpsImageList, err := VpsImageGetList(ctx, vpsId, logger)
+	if err != nil {
+		return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
+	}
+	// jsonx.PrettyPrintColor(vpsImageList)
+
+	// loop over all images
+	for _, vpsImage := range vpsImageList {
+		logger.Infof("vpsImageName: %s", vpsImage.Name)
+	}
+
+	// distro, ok := vpsDetail["state"].(string)
+	// if !ok {
+	// 	return false, fmt.Errorf("unexpected state format in VPS detail")
+	// }
+
+	// handle success
 	return image.Id, nil
 
 }

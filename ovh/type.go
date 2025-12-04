@@ -51,3 +51,16 @@ type ImageDetail struct {
 	Name string
 	Id   string
 }
+
+// ------------------------------------------
+// -- struct for VPS Image YAML List --------
+// ------------------------------------------
+
+type VpsImgYamlList struct {
+	Image []VpsImage `yaml:"vpsImage"`
+}
+
+type VpsImage struct {
+	Id   string `yaml:"id"`
+	Name string `yaml:"name"`
+}

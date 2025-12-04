@@ -13,13 +13,24 @@ func GetListImageAvailable() string {
 	return ""
 }
 
-func ImageGetList(ctx context.Context, logger logx.Logger) ([]ImageDetail, error) {
+func VpsImageGetList(ctx context.Context, vpsNameOrId string, logger logx.Logger) ([]ImageDetail, error) {
 	// define response type
 	var resp []string
 
-	// define the api action
-	ep := endpointReference["ImageGetList"]
-	endpoint, err := ep.BuildPath(map[string]string{"id": "vps-9c33782a.vps.ovh.net"})
+	// 1 - normalize input (can be o1u or nameId)
+	vpsId, err := GetVpsId(vpsNameOrId, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2 - define the api action
+	action := "VpsImageGetList"
+	ep, ok := endpointReference[action]
+	if !ok {
+		return nil, fmt.Errorf("looking up. Action %q not found", action)
+	}
+	// 3 - define the endpoint
+	endpoint, err := ep.BuildPath(map[string]string{"id": vpsId})
 	if err != nil {
 		return nil, fmt.Errorf("building path for %s: %w", ep.Desc, err)
 	}
@@ -72,7 +83,7 @@ func imageGetDetail(ctx context.Context, idImage string, logger logx.Logger) (*I
 
 	// define the api action
 	ep := endpointReference["ImageGetDetail"]
-	endpoint, err := ep.BuildPath(map[string]string{"idv": "vps-9c33782a.vps.ovh.net", "idi": idImage})
+	endpoint, err := ep.BuildPath(map[string]string{"idv": "vps-a7a8f7f6.vps.ovh.net", "idi": idImage})
 	if err != nil {
 		return nil, fmt.Errorf("building path for %s: %w", ep.Desc, err)
 	}

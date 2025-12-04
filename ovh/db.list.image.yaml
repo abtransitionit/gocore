@@ -1,0 +1,11 @@
+image:
+  - id: alma9
+    name: AlmaLinux 9
+  - id: debian13
+    name: Debian 13
+  - id: Fedora42
+    name: Fedora 42
+  - id: rocky9
+    name: Rocky Linux 9
+  - id: ubuntu2504
+    name: Ubuntu 25.04	
