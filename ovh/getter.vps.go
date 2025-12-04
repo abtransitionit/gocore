@@ -162,16 +162,22 @@ func GetVpsImageId2(ctx context.Context, vpsId string, logger logx.Logger) (stri
 	var image VpsOsImage
 	// var vpsDetail map[string]any
 	// 1 - get VPS:Image:list:Available
-	vpsImageList, err := VpsImageGetList(ctx, vpsId, logger)
+	// vpsImageList, err := VpsImageGetList(ctx, vpsId, logger)
+	// if err != nil {
+	// 	return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
+	// }
+	// // jsonx.PrettyPrintColor(vpsImageList)
+
+	vpsImageListDb, err := getVpsImageList()
 	if err != nil {
 		return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
 	}
-	// jsonx.PrettyPrintColor(vpsImageList)
+	logger.Infof("vpsImageName: %s", vpsImageListDb)
 
-	// loop over all images
-	for _, vpsImage := range vpsImageList {
-		logger.Infof("vpsImageName: %s", vpsImage.Name)
-	}
+	// // loop over all images
+	// for _, vpsImage := range vpsImageList {
+	// 	logger.Infof("vpsImageName: %s", vpsImage.Name)
+	// }
 
 	// distro, ok := vpsDetail["state"].(string)
 	// if !ok {
