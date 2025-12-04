@@ -126,11 +126,6 @@ func vpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 
 // Description: api reinstall the same OS image on a VPS
 //
-// Parameters:
-//   - ctx: context.Context
-//   - logger: logx.Logger
-//   - vpsNameOrId: string
-//
 // Returns:
 //   - jsonx.Json: info concerning the reinstalled VPS
 //   - error
@@ -138,7 +133,12 @@ func vpsReinstall(ctx context.Context, logger logx.Logger, id string, vpsInstall
 // Notes:
 //   - vpsNameOrId can be vps-XXX or o1u, o2a, ...
 //   - the returned Json is sended immediately after the API call is received and does not wait the VPS to be ready
-func VpsReinstall(ctx context.Context, logger logx.Logger, vpsNameOrId string) (jsonx.Json, error) {
+func VpsReinstall(ctx context.Context, vpsNameOrId string, logger logx.Logger) (jsonx.Json, error) {
+
+	// check parameters
+	if strings.TrimSpace(vpsNameOrId) == "" {
+		return nil, fmt.Errorf("vpsNameOrId is empty in VpsReinstall")
+	}
 	// 1 - normalize input (can be o1u or vps-xxx)
 	vpsId, err := GetVpsId(vpsNameOrId, logger)
 	if err != nil {
@@ -159,6 +159,7 @@ func VpsReinstall(ctx context.Context, logger logx.Logger, vpsNameOrId string) (
 	// }
 
 	// 3 - get the Vps:OS:ImageId
+	logger.Infof("resolve %s to %s", vpsNameOrId, vpsId)
 	imageId, err := GetVpsImageId2(ctx, vpsId, logger)
 	if err != nil {
 		return nil, fmt.Errorf("resolving image id for VPS %s: %w", vpsId, err)
@@ -202,6 +203,10 @@ func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsId string) (boo
 //   - if input is already an Id (e.g., vps-xxx), return it directly
 //   - otherwise, treat input as nameDynamic (eg. o1u) and return the corresponding vps-xxx Id in the VPS list
 func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
+	// check parameters
+	if vpsNameOrId == "" {
+		return "", fmt.Errorf("vpsNameOrId is empty in GetVPSId")
+	}
 
 	// 1 — If input is already an Id (e.g., vps-xxxxxxx.vps.ovh.net), return it directly
 	if strings.HasPrefix(vpsNameOrId, "vps-") {
@@ -216,7 +221,7 @@ func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
 
 	for _, vps := range *vpsList {
 		if vps.NameDynamic == vpsNameOrId {
-			return vps.NameId, nil
+			return vps.Name, nil
 		}
 	}
 

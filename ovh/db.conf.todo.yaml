@@ -1,0 +1,8 @@
+conf:
+  domain:
+    eu: eu.api.ovh.com # ovhEndpoint02 
+    std: www.ovh.com
+    com: api.ovh.com  # ovhEndpoint01
+  ns:
+    v1: v1
+    v2: v2

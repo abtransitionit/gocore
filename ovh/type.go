@@ -31,14 +31,6 @@ type CredentialStruct struct {
 	} `json:"serviceAccount"`
 }
 
-// Description: represents a VPS
-type Vps struct {
-	DisplayName string `json:"displayName"`
-	NameId      string `json:"nameId"`
-	Distro      string `json:"distro"`
-	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
-}
-
 type ListVpsStruct map[string]Vps
 
 type VpsReinstallParam struct {
@@ -52,15 +44,31 @@ type ImageDetail struct {
 	Id   string
 }
 
-// ------------------------------------------
-// -- struct for VPS Image YAML List --------
-// ------------------------------------------
+// -----------------------------------
+// -- struct to contain YAML file ----
+// -----------------------------------
 
-type VpsImgYamlList struct {
-	Image []VpsImage `yaml:"vpsImage"`
+// ##### VPS IMAGE DITRO INVENTORY #######
+
+type DistroYaml struct {
+	Distro []Distro
 }
 
-type VpsImage struct {
-	Id   string `yaml:"id"`
-	Name string `yaml:"name"`
+type Distro struct {
+	Id   string
+	Name string
+}
+
+// ##### VPS  INVENTORY #######
+
+type VpsYaml struct {
+	Vps map[string]Vps
+}
+
+// Description: represents a VPS
+type Vps struct {
+	Name        string
+	Id          string
+	Distro      string
+	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
 }

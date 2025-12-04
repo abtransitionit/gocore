@@ -129,7 +129,7 @@ func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
 	found := false
 	// loop over all vps object
 	for key, candidate := range *listVps {
-		if candidate.NameId == vpsNameId {
+		if candidate.Name == vpsNameId {
 			vps = candidate
 			vpsKey = key
 			found = true
@@ -159,33 +159,30 @@ func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
 
 // Description: get the os image id of a VPS
 func GetVpsImageId2(ctx context.Context, vpsId string, logger logx.Logger) (string, error) {
-	var image VpsOsImage
-	// var vpsDetail map[string]any
-	// 1 - get VPS:Image:list:Available
-	// vpsImageList, err := VpsImageGetList(ctx, vpsId, logger)
-	// if err != nil {
-	// 	return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
-	// }
-	// // jsonx.PrettyPrintColor(vpsImageList)
+	// 1 - get the list of OVH VPS of the organization (cached file read)
+	vpsList, err := getVpsList()
+	if err != nil {
+		return "", fmt.Errorf("getting organization's list of VPS > %w", err)
+	}
+	logger.Infof("vpsList: %s", vpsList)
 
-	vpsImageListDb, err := getVpsImageList()
+	// 2 - get the list of OVH distro used by the organization for the VPS (cached file read)
+	vpsDistroList, err := getVpsDistroList()
+	if err != nil {
+		return "", fmt.Errorf("getting organization's list of distro > %w", err)
+	}
+	logger.Infof("vpsDistroList: %s", vpsDistroList)
+
+	//	3 - get the list of OVH distro available for the vps
+	vpsImageDistroList, err := VpsImageGetList(ctx, vpsId, logger)
 	if err != nil {
 		return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
 	}
-	logger.Infof("vpsImageName: %s", vpsImageListDb)
-
-	// // loop over all images
-	// for _, vpsImage := range vpsImageList {
-	// 	logger.Infof("vpsImageName: %s", vpsImage.Name)
-	// }
-
-	// distro, ok := vpsDetail["state"].(string)
-	// if !ok {
-	// 	return false, fmt.Errorf("unexpected state format in VPS detail")
-	// }
+	logger.Infof("vpsDistroAvailable: %s", vpsImageDistroList)
+	// jsonx.PrettyPrintColor(vpsImageDistroList)
 
 	// handle success
-	return image.Id, nil
+	return "", nil
 
 }
 
