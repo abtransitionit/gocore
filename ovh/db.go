@@ -18,22 +18,22 @@ var listVpsRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
 var vpsOsImageReference = MapVpsOsImage{
 	"alma9": {
 		Name: "AlmaLinux 9",
-		Id:   "b8d58142-d568-4ff0-b5ef-10e9f1b65cf2",
+		Id:   "4160a29f-bee5-41d9-865b-86acb6b03fe9",
 	},
 	"Fedora42": {Name: "Fedora 42",
-		Id: "216873ec-b939-4b6b-9d6a-ec9d4c2aca33",
+		Id: "e3db5837-26ae-4a9e-bfab-344d5ad06388",
 	},
 	"ubuntu2504": {
 		Name: "Ubuntu 25.04",
-		Id:   "0f814e64-6ced-43d9-824b-467d46e00688",
+		Id:   "89581538-39cd-4855-9e37-f6b11d954d18",
 	},
 	"debian12": {
 		Name: "Debian 12",
-		Id:   "c8206049-3c17-4d6b-983a-3970f53b9ff5",
+		Id:   "51fa6918-b1be-4922-a783-a989e1ff4925",
 	},
-	"rocky9": {
-		Name: "Rocky Linux 9",
-		Id:   "4862102e-029e-498e-917b-9fa16751c91d",
+	"rocky10": {
+		Name: "Rocky Linux 10",
+		Id:   "9449995a-1525-4bda-838e-d8c9d3f974d5",
 	},
 }
 

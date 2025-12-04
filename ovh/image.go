@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
 	"github.com/abtransitionit/gocore/logx"
@@ -45,21 +46,27 @@ func ImageGetList(ctx context.Context, logger logx.Logger) ([]ImageDetail, error
 	}
 
 	var images []ImageDetail
+	var wg sync.WaitGroup
+	// nbItem := len(resp)
 	for _, v := range resp {
-		// logger.Infof("Found image %s", v)
-		detail, err := ImageGetDetail(ctx, v, logger)
-		if err != nil {
-			return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
-		}
-		// logger.Infof("image detail:%s", detail)
-		images = append(images, *detail)
-	}
+		wg.Add(1)
+		go func(v string) {
+			defer wg.Done()
+			logger.Infof("requesting image %s", v)
+			detail, err := imageGetDetail(ctx, v, logger)
+			if err != nil {
+				return
+			}
+			images = append(images, *detail)
+		}(v)
+	} // end for
+	wg.Wait()
 
 	// success
 	return images, nil
 }
 
-func ImageGetDetail(ctx context.Context, idImage string, logger logx.Logger) (*ImageDetail, error) {
+func imageGetDetail(ctx context.Context, idImage string, logger logx.Logger) (*ImageDetail, error) {
 	// define response type
 	var resp ImageDetail
 
