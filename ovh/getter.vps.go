@@ -2,7 +2,6 @@ package ovh
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -35,28 +34,14 @@ func getListVpsFilePath() (string, error) {
 
 // Description: get the content of the file into a Go structure
 func getlistVpsAsStruct() (*ListVpsStruct, error) {
-	// define dest structure
-	var listVpsStruct ListVpsStruct
 
-	// get file path
+	// 1 - get file path
 	filePath, err := getListVpsFilePath()
 	if err != nil {
 		return nil, err
 	}
-
-	// Read the entire file content.
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
-	}
-
-	// Map filecontent into the GO:struct (aka. Unmarshal the JSON)
-	if err := json.Unmarshal(fileContent, &listVpsStruct); err != nil {
-		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
-	}
-
-	// success - return credential as a pointer to a GO struct
-	return &listVpsStruct, nil
+	// 2 - return a pointer to the struct
+	return filex.LoadJsonFromFile[ListVpsStruct](filePath)
 }
 
 var (
@@ -129,7 +114,7 @@ func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
 	found := false
 	// loop over all vps object
 	for key, candidate := range *listVps {
-		if candidate.Name == vpsNameId {
+		if candidate.NameId == vpsNameId {
 			vps = candidate
 			vpsKey = key
 			found = true

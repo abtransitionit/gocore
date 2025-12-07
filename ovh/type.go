@@ -68,7 +68,14 @@ type VpsYaml struct {
 // Description: represents a VPS
 type Vps struct {
 	Name        string
-	Id          string
+	NameId      string
 	Distro      string
 	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
 }
+
+// type Vps struct {
+// 	Name        string
+// 	Id          string
+// 	Distro      string
+// 	NameDynamic string // computed field
+// }

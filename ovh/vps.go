@@ -222,7 +222,7 @@ func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
 
 	for _, vps := range *vpsList {
 		if vps.NameDynamic == vpsNameOrId {
-			return vps.Name, nil
+			return vps.NameId, nil
 		}
 	}
 
