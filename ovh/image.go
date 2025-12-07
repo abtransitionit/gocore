@@ -13,97 +13,108 @@ func GetListImageAvailable() string {
 	return ""
 }
 
+// Description: get the list of images available for a VPS
+//
+// Notes:
+//   - each VPS has its own set of images.
 func VpsImageGetList(ctx context.Context, vpsNameOrId string, logger logx.Logger) ([]ImageDetail, error) {
-	// define response type
-	var resp []string
+	// 1 - define response structure
+	var respData []string
 
-	// 1 - normalize input (can be o1u or nameId)
+	// 2 - normalize input (can be oxy or vps-xxx)
 	vpsId, err := GetVpsId(vpsNameOrId, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2 - define the api action
+	// 3 - define the api endpoint
 	action := "VpsImageGetList"
 	ep, ok := endpointReference[action]
 	if !ok {
 		return nil, fmt.Errorf("looking up. Action %q not found", action)
 	}
-	// 3 - define the endpoint
+
+	// 31 - define the endpoint
 	endpoint, err := ep.BuildPath(map[string]string{"id": vpsId})
 	if err != nil {
 		return nil, fmt.Errorf("building path for %s: %w", ep.Desc, err)
 	}
 
-	// define the request structure
+	// 4 - define the request
 	req := &apicli.Request{
 		Verb:     ep.Verb,
 		Endpoint: endpoint,
 	}
 
-	// create a client
+	// 5 - create a client
 	client := GetOvhClientCached(logger)
 
-	// Play the request and get response
+	// 6 - Play the request and get response
 	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(ctx, req, &resp)
+	err = client.Do(ctx, req, &respData)
 	if err != nil {
 		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 
 	// handle case
-	if len(resp) == 0 {
+	if len(respData) == 0 {
 		return nil, fmt.Errorf("no image found")
 	}
 
-	var images []ImageDetail
+	// 7 - get details for each image - do it in parallel ang display the result afterwards
+	var imageDetailList []ImageDetail
 	var wg sync.WaitGroup
-	// nbItem := len(resp)
-	for _, v := range resp {
+	for _, imdItem := range respData {
 		wg.Add(1)
-		go func(v string) {
+		go func(onItem string) {
 			defer wg.Done()
-			logger.Infof("requesting image %s", v)
-			detail, err := imageGetDetail(ctx, v, logger)
+			logger.Infof("getting detail for img %s", onItem)
+			detail, err := imageGetDetail(ctx, vpsId, onItem, logger)
 			if err != nil {
 				return
 			}
-			images = append(images, *detail)
-		}(v)
+			imageDetailList = append(imageDetailList, *detail)
+		}(imdItem)
 	} // end for
 	wg.Wait()
 
-	// success
-	return images, nil
+	// handle success
+	return imageDetailList, nil
 }
 
-func imageGetDetail(ctx context.Context, idImage string, logger logx.Logger) (*ImageDetail, error) {
-	// define response type
-	var resp ImageDetail
+func imageGetDetail(ctx context.Context, vpsNameOrId string, imgId string, logger logx.Logger) (*ImageDetail, error) {
+	// 1 - define response structure
+	var respData ImageDetail
 
-	// define the api action
+	// 2 - normalize input (can be oxy or vps-xxx)
+	vpsId, err := GetVpsId(vpsNameOrId, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3 - define the api action
 	ep := endpointReference["ImageGetDetail"]
-	endpoint, err := ep.BuildPath(map[string]string{"idv": "vps-a7a8f7f6.vps.ovh.net", "idi": idImage})
+	endpoint, err := ep.BuildPath(map[string]string{"idv": vpsId, "idi": imgId})
 	if err != nil {
 		return nil, fmt.Errorf("building path for %s: %w", ep.Desc, err)
 	}
 
-	// define the request structure
+	// 4 - define the request
 	req := &apicli.Request{
 		Verb:     ep.Verb,
 		Endpoint: endpoint,
 	}
 
-	// create a client
+	// 5 - create a client
 	client := GetOvhClientCached(logger)
 
-	// Play the request and get response
-	// logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
-	err = client.Do(ctx, req, &resp)
+	// 6 - Play the request and get response
+	logger.Infof("%s using endpoint %s", ep.Desc, endpoint)
+	err = client.Do(ctx, req, &respData)
 	if err != nil {
 		return nil, fmt.Errorf("API request failed to %s : %w", ep.Desc, err)
 	}
 
 	// success
-	return &resp, nil
+	return &respData, nil
 }

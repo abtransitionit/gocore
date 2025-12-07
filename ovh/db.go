@@ -13,7 +13,7 @@ const NS_V1 = "v1"
 const NS_V2 = "v2"
 
 var credentialRelPath = filepath.Join("wkspc", ".config", "ovh", "credential.json")
-var listVpsRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
+var vpsListRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
 
 var endpointReference = apicli.MapEndpoint{
 	"CreateToken":     {Verb: "POST", Desc: "ceate SA:token", Path: "/auth/oauth2/token"},

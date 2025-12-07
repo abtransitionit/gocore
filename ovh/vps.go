@@ -137,8 +137,9 @@ func VpsReinstall(ctx context.Context, vpsNameOrId string, logger logx.Logger) (
 
 	// check parameters
 	if strings.TrimSpace(vpsNameOrId) == "" {
-		return nil, fmt.Errorf("vpsNameOrId is empty in VpsReinstall")
+		return nil, fmt.Errorf("((VpsReinstall))vpsNameOrId is empty")
 	}
+
 	// 1 - normalize input (can be o1u or vps-xxx)
 	vpsId, err := GetVpsId(vpsNameOrId, logger)
 	if err != nil {
@@ -204,8 +205,8 @@ func CheckVpsIsReady(ctx context.Context, logger logx.Logger, vpsId string) (boo
 //   - otherwise, treat input as nameDynamic (eg. o1u) and return the corresponding vps-xxx Id in the VPS list
 func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
 	// check parameters
-	if vpsNameOrId == "" {
-		return "", fmt.Errorf("vpsNameOrId is empty in GetVPSId")
+	if strings.TrimSpace(vpsNameOrId) == "" {
+		return "", fmt.Errorf("((GetVpsId))vpsNameOrId is empty")
 	}
 
 	// 1 — If input is already an Id (e.g., vps-xxxxxxx.vps.ovh.net), return it directly

@@ -1,13 +1,13 @@
 
 # Purpose
-This `ovh` package is built on top of `apicli` package. It provides a (Go) OVH Client that covers:
+
+`OVH` is a cloud provider like `AWS`, `GCP`, `Azure`, .... This `ovh` package is built on top of the `apicli` package. It provides a (Go) OVH Client that covers:
+- credential and token handling
 - client creation
 - caching
-- token handling
-- and VPS operations
+- OVH-specific endpoints
 
-
-Everything in the `ovh` package relies on `apicli` package and build a  **OVH-specific endpoints, credential handling, and caching**, making it easy to operate on OVH objects like **VPS** without manually building, creating or defining HTTP requests.
+making it easy to operate on OVH objects like **VPS** without manually building, creating or defining HTTP requests.
 
 | Concept              | apicli usage                                      |
 | -------------------- | ------------------------------------------------- |
@@ -16,7 +16,6 @@ Everything in the `ovh` package relies on `apicli` package and build a  **OVH-sp
 | Request execution    | `client.Do(ctx, &apicli.Request{...}, &response)` |
 | Cached tokens        | `WithBearerToken(func() string)`                  |
 
-Essentially, `ovh` **wraps apicli** to provide
 
 # Termiology
 
@@ -26,6 +25,10 @@ Essentially, `ovh` **wraps apicli** to provide
 |AT|**A**ccess **T**oken|
 
 
+## Vps
+- represents a remote VM in the OVH cloud
+- example of `vpsId`: o1u, o2a, o3r, ...
+- example of `vpsName`: vps-a7a8f7f6.vps.ovh.net
 ## Domains
 
 In OVH, APIs are served under different domains:
@@ -323,10 +326,6 @@ logger.Infof("VPS %s ready? %v", vpsName, ready)
 
 * `VpsReinstallHelper` internally calls **cached clients, SSH key retrieval, and OS image mapping**
 * Uses `apicli.Client.Do` to perform all API requests
-
-
-
-
 
 
 

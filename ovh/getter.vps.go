@@ -20,17 +20,17 @@ func getListVpsFilePath() (string, error) {
 		return "", fmt.Errorf("failed to resolve home directory %w", err)
 	}
 
-	listVpsPath := filepath.Join(home, listVpsRelPath)
+	vpsListFilePath := filepath.Join(home, vpsListRelPath)
 
-	ok, err := filex.ExistsFile(listVpsPath)
+	ok, err := filex.ExistsFile(vpsListFilePath)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", fmt.Errorf("credential file not found: %s", listVpsPath)
+		return "", fmt.Errorf("credential file not found: %s", vpsListFilePath)
 	}
 
-	return listVpsPath, nil
+	return vpsListFilePath, nil
 }
 
 // Description: get the content of the file into a Go structure
@@ -166,20 +166,19 @@ func GetVpsImageId2(ctx context.Context, vpsId string, logger logx.Logger) (stri
 	}
 	logger.Infof("vpsList: %s", vpsList)
 
-	// 2 - get the list of OVH distro used by the organization for the VPS (cached file read)
+	// 2 - get the list of OVH VPS distro used by the organization (cached file read)
 	vpsDistroList, err := getVpsDistroList()
 	if err != nil {
 		return "", fmt.Errorf("getting organization's list of distro > %w", err)
 	}
 	logger.Infof("vpsDistroList: %s", vpsDistroList)
 
-	//	3 - get the list of OVH distro available for the vps
-	vpsImageDistroList, err := VpsImageGetList(ctx, vpsId, logger)
+	//	3 - get the list of OVH VPS distro available for the vps
+	vpsDistroAvailableList, err := VpsImageGetList(ctx, vpsId, logger)
 	if err != nil {
 		return "", fmt.Errorf("api getting vps list image available for %s: > %w", vpsId, err)
 	}
-	logger.Infof("vpsDistroAvailable: %s", vpsImageDistroList)
-	// jsonx.PrettyPrintColor(vpsImageDistroList)
+	logger.Infof("vpsDistroAvailableList: %s", vpsDistroAvailableList)
 
 	// handle success
 	return "", nil
