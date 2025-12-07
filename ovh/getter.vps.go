@@ -3,8 +3,6 @@ package ovh
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -12,46 +10,51 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// Description: get the file path of the static file containing the list of VPS
-func getListVpsFilePath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve home directory %w", err)
-	}
+// // Description: get the file path of the static file containing the list of VPS
+// func getListVpsFilePath() (string, error) {
+// 	home, err := os.UserHomeDir()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to resolve home directory %w", err)
+// 	}
 
-	vpsListFilePath := filepath.Join(home, vpsListRelPath)
+// 	vpsListFilePath := filepath.Join(home, vpsListRelPath)
 
-	ok, err := filex.ExistsFile(vpsListFilePath)
-	if err != nil {
-		return "", err
-	}
-	if !ok {
-		return "", fmt.Errorf("credential file not found: %s", vpsListFilePath)
-	}
+// 	ok, err := filex.ExistsFile(vpsListFilePath)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if !ok {
+// 		return "", fmt.Errorf("credential file not found: %s", vpsListFilePath)
+// 	}
 
-	return vpsListFilePath, nil
-}
+// 	return vpsListFilePath, nil
+// }
 
 // Description: get the content of the file into a Go structure
-func getlistVpsAsStruct() (*ListVpsStruct, error) {
-
-	// 1 - get file path
-	filePath, err := getListVpsFilePath()
+func getlistVpsAsStruct() (*VpsYaml, error) {
+	theYaml, err := filex.LoadYamlIntoStruct[VpsYaml](yamlVpsList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting YAML config file in package: %w", err)
 	}
+	return theYaml, nil
+
+	// // 1 - get file path
+	// filePath, err := getListVpsFilePath()
+	// if err != nil {
+	// 	return nil, err
+	// }
 	// 2 - return a pointer to the struct
-	return filex.LoadJsonFromFile[ListVpsStruct](filePath)
+	// return filex.LoadJsonFromFile[ListVpsStruct](filePath)
 }
 
 var (
 	listVpsOnce sync.Once
-	listVpsVal  *ListVpsStruct
+	listVpsVal  *VpsYaml
 	listVpsErr  error
 )
 
 // Description: get the content of the file into a Go structure (cached)
-func getlistVpsCached() (*ListVpsStruct, error) {
+func getlistVpsCached() (*VpsYaml, error) {
 	listVpsOnce.Do(func() {
 		listVpsVal, listVpsErr = getlistVpsAsStruct()
 	})
@@ -59,28 +62,28 @@ func getlistVpsCached() (*ListVpsStruct, error) {
 }
 
 // Description: add/inject a dynamic field into the struct
-func (listVps ListVpsStruct) addField() {
+func (listVps VpsYaml) addField() {
 	// inject the dynamic field to the copy
-	for key, vps := range listVps {
+	for key, vps := range listVps.Vps {
 		if len(vps.Distro) > 0 {
 			vps.NameDynamic = key + strings.ToLower(string(vps.Distro[0]))
-			listVps[key] = vps
+			listVps.Vps[key] = vps
 		}
 	}
 }
 
 // Description: return a clone of the struct
-func (l ListVpsStruct) clone() ListVpsStruct {
+func (l VpsYaml) clone() VpsYaml {
 	// clone the original
-	clone := make(ListVpsStruct)
-	for k, v := range l {
+	clone := make(map[string]Vps, len(l.Vps))
+	for k, v := range l.Vps {
 		clone[k] = v
 	}
-	return clone
+	return VpsYaml{Vps: clone}
 }
 
 // Description: get the list of VPS
-func GetListVps() (*ListVpsStruct, error) {
+func GetListVps() (*VpsYaml, error) {
 	// get file cached
 	listVps, err := getlistVpsCached()
 	if err != nil {
@@ -113,7 +116,7 @@ func GetVpsImageId(vpsNameId string, logger logx.Logger) (string, error) {
 
 	found := false
 	// loop over all vps object
-	for key, candidate := range *listVps {
+	for key, candidate := range *&listVps.Vps {
 		if candidate.NameId == vpsNameId {
 			vps = candidate
 			vpsKey = key

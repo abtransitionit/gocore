@@ -31,8 +31,6 @@ type CredentialStruct struct {
 	} `json:"serviceAccount"`
 }
 
-type ListVpsStruct map[string]Vps
-
 type VpsReinstallParam struct {
 	DoNotSendPassword bool   `json:"doNotSendPassword"`
 	ImageId           string `json:"imageId"`
@@ -66,16 +64,11 @@ type VpsYaml struct {
 }
 
 // Description: represents a VPS
+// type ListVpsStruct map[string]Vps
+
 type Vps struct {
 	Name        string
 	NameId      string
 	Distro      string
 	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
 }
-
-// type Vps struct {
-// 	Name        string
-// 	Id          string
-// 	Distro      string
-// 	NameDynamic string // computed field
-// }

@@ -5,7 +5,19 @@ import (
 	"path/filepath"
 
 	"github.com/abtransitionit/gocore/apicli"
+
+	_ "embed"
 )
+
+// -----------------------------------------
+// ------ define file location -------------
+// -----------------------------------------
+
+//go:embed db.list.vps.yaml
+var yamlVpsList []byte // automatically cache the raw yaml file in this var
+
+//go:embed db.list.distro.yaml
+var yamlDistroList []byte // automatically cache the raw yaml file in this var
 
 const DOMAIN_EU = "eu.api.ovh.com"
 const DOMAIN_STD = "www.ovh.com"
@@ -14,7 +26,7 @@ const NS_V2 = "v2"
 
 var credentialRelPath = filepath.Join("wkspc", ".config", "ovh", "credential.json")
 
-var vpsListRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
+// var vpsListRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.json")
 
 // var vpsListRelPath = filepath.Join("wkspc", ".config", "ovh", "vps.yaml")
 

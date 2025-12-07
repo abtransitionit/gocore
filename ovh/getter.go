@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/abtransitionit/gocore/yamlx"
+	"github.com/abtransitionit/gocore/filex"
 )
 
 // -----------------------------------------
@@ -24,7 +24,7 @@ var yamlVps []byte // cache the raw yaml file in this var
 // ####### of ovh vps distro manage by the organization #######
 
 func getVpsDistroList() (*DistroYaml, error) {
-	theYaml, err := yamlx.LoadTplYamlFileEmbed[DistroYaml](yamlVpsDistro, "")
+	theYaml, err := filex.LoadTplYamlFileEmbed[DistroYaml](yamlVpsDistro, "")
 	if err != nil {
 		return nil, fmt.Errorf("getting YAML file in package > %w", err)
 	}
@@ -34,7 +34,7 @@ func getVpsDistroList() (*DistroYaml, error) {
 // ####### of ovh vps manage by the organization #######
 
 func getVpsList() (*VpsYaml, error) {
-	theYaml, err := yamlx.LoadTplYamlFileEmbed[VpsYaml](yamlVps, "")
+	theYaml, err := filex.LoadTplYamlFileEmbed[VpsYaml](yamlVps, "")
 	if err != nil {
 		return nil, fmt.Errorf("getting YAML file in package > %w", err)
 	}

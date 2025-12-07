@@ -220,7 +220,7 @@ func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
 		return "", fmt.Errorf("getting list vps: %w", err)
 	}
 
-	for _, vps := range *vpsList {
+	for _, vps := range vpsList.Vps {
 		if vps.NameDynamic == vpsNameOrId {
 			return vps.NameId, nil
 		}
