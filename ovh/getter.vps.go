@@ -3,6 +3,8 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -10,25 +12,25 @@ import (
 	"github.com/abtransitionit/gocore/logx"
 )
 
-// // Description: get the file path of the static file containing the list of VPS
-// func getListVpsFilePath() (string, error) {
-// 	home, err := os.UserHomeDir()
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to resolve home directory %w", err)
-// 	}
+// Description: get the file path of the static file containing the list of VPS
+func getListVpsFilePath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve home directory %w", err)
+	}
 
-// 	vpsListFilePath := filepath.Join(home, vpsListRelPath)
+	vpsListFilePath := filepath.Join(home, vpsListRelPath)
 
-// 	ok, err := filex.ExistsFile(vpsListFilePath)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	if !ok {
-// 		return "", fmt.Errorf("credential file not found: %s", vpsListFilePath)
-// 	}
+	ok, err := filex.ExistsFile(vpsListFilePath)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", fmt.Errorf("credential file not found: %s", vpsListFilePath)
+	}
 
-// 	return vpsListFilePath, nil
-// }
+	return vpsListFilePath, nil
+}
 
 // Description: get the content of the file into a Go structure
 func getlistVpsAsStruct() (*VpsYaml, error) {
