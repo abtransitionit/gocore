@@ -53,7 +53,7 @@ func LoadTplYamlFile[T any](filePath string, ctx any) (*T, error) {
 	return LoadTplYamlFileEmbed[T](data, ctx)
 }
 
-// Description: renders a YAML file in memeory (as []byte) using a ctx structure and converts it back into a custom type T
+// Description: renders a YAML file in memory (as []byte) using a ctx structure and converts it back into a custom type T
 func LoadTplYamlFileEmbed[T any](data []byte, ctx any) (*T, error) {
 	// 1 - parse and execute the template
 	tmpl, err := template.New("yaml").Parse(string(data))
