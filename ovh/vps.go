@@ -143,33 +143,29 @@ func VpsReinstall(ctx context.Context, vpsNameOrId string, logger logx.Logger) (
 	// 1 - normalize input (can be o1u or vps-xxx)
 	vpsId, err := GetVpsId(vpsNameOrId, logger)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting vps id from id %s > %w", vpsNameOrId, err)
 	}
-	// // 2 - get the Vps:SshKey:id
-	// keyId, err := GetSshKeyIdFromFileCached()
-	// if err != nil {
-	// 	logger.Errorf("failed to get ssh key id %v", err)
-	// 	os.Exit(1)
-	// }
-
-	// // 1 - get the Vps:SshKey:publicKey
-	// sshPubKey, err := SshKeyGetPublicKeyCached(context.Background(), logger, keyId)
-	// if err != nil {
-	// 	logger.Errorf("getting ssh public key %v", err)
-	// 	os.Exit(1)
-	// }
-
-	// 3 - get the Vps:OS:ImageId
-	logger.Infof("resolve %s to %s", vpsNameOrId, vpsId)
-	imageId, err := GetVpsImageId2(ctx, vpsId, logger)
+	// 2 - get the Vps:SshKey:id
+	keyId, err := GetSshKeyIdFromFileCached()
 	if err != nil {
-		return nil, fmt.Errorf("resolving image id for VPS %s: %w", vpsId, err)
+		return nil, fmt.Errorf("failed to get ssh key id > %v", err)
+	}
+
+	// 3 - get vps:Image:id
+	vpsImageId, err := GetImageId(ctx, vpsNameOrId, logger)
+	if err != nil {
+		return nil, fmt.Errorf("getting image id for vps %s > %v", vpsNameOrId, err)
+	}
+	// 1 - get the Vps:SshKey:publicKey
+	sshPubKey, err := SshKeyGetPublicKeyCached(context.Background(), logger, keyId)
+	if err != nil {
+		return nil, fmt.Errorf("getting ssh public key %v", err)
 	}
 
 	// define the reinstall parameter
 	reinstallParam := VpsReinstallParam{
 		DoNotSendPassword: true,
-		ImageId:           imageId,
+		ImageId:           vpsImageId,
 		PublicSshKey:      sshPubKey, // example
 	}
 
@@ -214,15 +210,15 @@ func GetVpsId(vpsNameOrId string, logger logx.Logger) (string, error) {
 		return vpsNameOrId, nil
 	}
 
-	// 2 — Otherwise, treat input as nameDynamic and resolve it
-	vpsList, err := GetListVps()
+	// 2 — Otherwise, treat input as nameDynamic (aka. o1u, o2a, ...) and resolve it
+	vpsList, err := GetVpsList()
 	if err != nil {
 		return "", fmt.Errorf("getting list vps: %w", err)
 	}
-
-	for _, vps := range vpsList.Vps {
-		if vps.NameDynamic == vpsNameOrId {
-			return vps.NameId, nil
+	// loop over all vps object and find the matching nameDynamic
+	for key, vps := range vpsList.Vps {
+		if vpsNameOrId == key+strings.ToLower(string(vps.Distro[0])) {
+			return vps.Id, nil
 		}
 	}
 

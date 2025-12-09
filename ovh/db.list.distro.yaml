@@ -1,11 +1,11 @@
 distro:
-  - id: alma9
+  - id: Alma9
     name: AlmaLinux 9
-  - id: debian13
+  - id: Debian13
     name: Debian 13
   - id: Fedora42
     name: Fedora 42
-  - id: rocky9
+  - id: Rocky9
     name: Rocky Linux 9
-  - id: ubuntu2504
+  - id: Ubuntu2504
     name: Ubuntu 25.04	

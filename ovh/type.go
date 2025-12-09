@@ -68,7 +68,7 @@ type VpsYaml struct {
 
 type Vps struct {
 	Name        string
-	NameId      string
+	Id          string
 	Distro      string
 	NameDynamic string `json:"nameDynamic,omitempty"` // computed field
 }

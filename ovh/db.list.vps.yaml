@@ -2,15 +2,15 @@ vps:
   o1:
     name: vm.ovh.01
     id: vps-9c33782a.vps.ovh.net
-    distro: ubuntu2504
+    distro: Ubuntu2504
   o2:
     name: vm.ovh.02
     id: vps-ff9b9706.vps.ovh.net
-    distro: alma9
+    distro: Alma9
   o3:
     name: vm.ovh.03
     id: vps-5b6ad1b7.vps.ovh.net
-    distro: rocky9
+    distro: Rocky9
   o4:
     name: vm.ovh.04
     id: vps-54f2f0c1.vps.ovh.ca
@@ -18,4 +18,4 @@ vps:
   o5:
     name: vm.ovh.05
     id: vps-a7a8f7f6.vps.ovh.net
-    distro: debian13
+    distro: Debian13

@@ -42,24 +42,24 @@ var endpointReference = apicli.MapEndpoint{
 	"SshKeyGetDetail": {Verb: "GET", Desc: "get SSHKey:Detail", Path: fmt.Sprintf("/%s/me/sshKey/{id}", NS_V1)},
 }
 
-var vpsOsImageReference = MapVpsOsImage{
-	"alma9": {
-		Name: "AlmaLinux 9",
-		Id:   "4160a29f-bee5-41d9-865b-86acb6b03fe9",
-	},
-	"debian13": {
-		Name: "Debian 13",
-		Id:   "24195a3e-7b12-44ef-ade3-22bcf245e7a7",
-	},
-	"Fedora42": {Name: "Fedora 42",
-		Id: "e3db5837-26ae-4a9e-bfab-344d5ad06388",
-	},
-	"rocky9": {
-		Name: "Rocky Linux 10",
-		Id:   "ccb9c787-3f0e-4590-a507-7a50b7261c8c",
-	},
-	"ubuntu2504": {
-		Name: "Ubuntu 25.04",
-		Id:   "89581538-39cd-4855-9e37-f6b11d954d18",
-	},
-}
+// var vpsOsImageReference = MapVpsOsImage{
+// 	"alma9": {
+// 		Name: "AlmaLinux 9",
+// 		Id:   "4160a29f-bee5-41d9-865b-86acb6b03fe9",
+// 	},
+// 	"debian13": {
+// 		Name: "Debian 13",
+// 		Id:   "24195a3e-7b12-44ef-ade3-22bcf245e7a7",
+// 	},
+// 	"Fedora42": {Name: "Fedora 42",
+// 		Id: "e3db5837-26ae-4a9e-bfab-344d5ad06388",
+// 	},
+// 	"rocky9": {
+// 		Name: "Rocky Linux 10",
+// 		Id:   "ccb9c787-3f0e-4590-a507-7a50b7261c8c",
+// 	},
+// 	"ubuntu2504": {
+// 		Name: "Ubuntu 25.04",
+// 		Id:   "89581538-39cd-4855-9e37-f6b11d954d18",
+// 	},
+// }
