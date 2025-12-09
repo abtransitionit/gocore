@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// Description: converts 	a file into memory (as []byte) into a custom struct into memory
+// Description: converts a file into memory (as []byte) into a custom struct into memory
 func LoadJsonIntoStruct[T any](data []byte) (*T, error) {
 	// 1 - Define the destination struct
 	var dest T
