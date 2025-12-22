@@ -16,12 +16,12 @@ import (
 // Notes:
 //
 // - Allow to view the workflow phases
-
 func (wf *Workflow) GetPhaseView() (string, error) {
 	var b strings.Builder
 
 	// Header
-	b.WriteString("Phase\tDescription\tHost\tFn\tParam\n")
+	// b.WriteString("Phase\tDescription\tHost\tFn\tParam\n")
+	b.WriteString("Phase\tDescription\tHost\tFn\n")
 
 	// Topologically sort phases
 	sorted, err := wf.topoSortByPhase()
@@ -44,11 +44,11 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 			fn = "none"
 		}
 
-		// param
-		params := "none"
-		if len(p.Param) > 0 {
-			params = strings.Join(p.Param, ", ")
-		}
+		// // param
+		// params := "none"
+		// if len(p.Param) > 0 {
+		// 	params = strings.Join(p.Param, ", ")
+		// }
 
 		// description
 		desc := p.Description
@@ -56,7 +56,8 @@ func (wf *Workflow) GetPhaseView() (string, error) {
 			desc = "none"
 		}
 
-		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\t%s\n", p.Name, p.Description, node, fn, params)
+		// fmt.Fprintf(&b, "%s\t%s\t%s\t%s\t%s\n", p.Name, p.Description, node, fn, params)
+		fmt.Fprintf(&b, "%s\t%s\t%s\t%s\n", p.Name, p.Description, node, fn)
 	}
 
 	return b.String(), nil
