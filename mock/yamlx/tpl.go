@@ -19,7 +19,7 @@ import (
 //	}
 //
 // renderedFileAsBute, err := ResolveTplConfig(templatedYamlAsByte, varsPlaceholder)
-func resolveTplConfig(tpl []byte, vars any) ([]byte, error) {
+func ResolveTplConfig(tpl []byte, vars any) ([]byte, error) {
 
 	// parse
 	t, err := template.New("cfg").
@@ -57,7 +57,7 @@ func LoadTplFile(embeddedTplFile []byte, fallbackPath string, vars any) ([]byte,
 		return nil, fmt.Errorf("template source is empty (no embedded data or valid fallback path)")
 	}
 
-	return resolveTplConfig(source, vars)
+	return ResolveTplConfig(source, vars)
 }
 
 // todo
