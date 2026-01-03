@@ -47,7 +47,7 @@ import (
 func (wkf *Workflow) Execute(ctx context.Context, cfg *viperx.Viperx, fnRegistry *FnRegistry, retainSkipRange string, logger logx.Logger) error {
 
 	// log
-	logger.Infof("🅦 Runing workflow %q to %s", wkf.Name, wkf.Description)
+	logger.Infof("🅦 Runing idempotent workflow %q to %s", wkf.Name, wkf.Description)
 	logger.Info("• Tier sequencing:    next tier starts after the previous one completes")
 	logger.Info("• Tier completion:    a tier completes when all its phases completes")
 	logger.Info("• Host concurrency:   each phase rus concurently on all hosts")
