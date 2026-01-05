@@ -1,0 +1,47 @@
+listRepo:
+  calico:
+    Desc: The calico operator Helm repository
+    Url:  https://docs.tigera.io/calico/charts
+  bitnami:
+    Desc: The bitnami  Helm repository
+    Url:  https://charts.bitnami.com/bitnami
+  cilium:
+    Desc: The cilium  Helm repository
+    Url:  https://helm.cilium.io/
+    Doc:  
+      - https://github.com/cilium
+      - https://github.com/cilium/cilium-cli 
+      - https://docs.cilium.io/en/stable/ https://cilium.io/
+  kdashb:
+    Desc: The standard kubernetes dashboard Helm repository
+    Url:  https://kubernetes.github.io/dashboard/
+    Doc:
+      - https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+      - https://github.com/kubernetes/dashboard
+  ingressNginx:
+    Desc: The nginx ingress controler Helm repository
+    Url:  https://kubernetes.github.io/ingress-nginx
+    Doc:
+      - https://github.com/kubernetes/ingress-nginx
+      - https://kubernetes.github.io/ingress-nginx/deploy/
+      - https://github.com/kubernetes/ingress-nginx/blob/main/README.md
+
+
+# // CiliumHelmRepoUrl   = https://helm.cilium.io/
+# // CiliumHelmRepoName  = cilium
+# // CiliumHelmChartName = cilium
+# // CiliumHelmChartVersion = 1.17  // compatible with K8s 1.32.x-1.33.x
+# // CiliumK8sNamespace  = kube-system
+# // CiliumHelmReleaseName = kbe-cilium
+
+# // // Kubernetes/Helm Dashboard conf
+# // KDashbHelmChartVersion = 7.12  // works with K8s 1.32.x
+# // KDashbK8sNamespace = kdashb
+# // KDashbHelmReleaseName = kbe-kdash
+
+# // // Kubernetes/Helm Nginx controller conf
+# // IngressNginxControllerHelmRepoName = ingnginx
+# // IngressNginxControllerHelmChartName = ingress-nginx
+# // IngressNginxControllerHelmChartVersion = 4.12
+# // IngressNginxControllerK8sNamespace = ingress-nginx
+# // IngressNginxControllerHelmReleaseName = kbe-ingress-nginx
