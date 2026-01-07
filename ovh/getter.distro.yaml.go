@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/mock/filex"
 )
 
 // Description: reads in memory YAML and returns the DistroYaml struct

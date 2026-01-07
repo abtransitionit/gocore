@@ -8,8 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/abtransitionit/gocore/filex"
+	lold "github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/mock/filex"
 )
 
 // Description: get the file path of the static file containing the list of VPS
@@ -21,7 +22,7 @@ func getListVpsFilePath() (string, error) {
 
 	vpsListFilePath := filepath.Join(home, vpsListRelPath)
 
-	ok, err := filex.ExistsFile(vpsListFilePath)
+	ok, err := lold.ExistsFile(vpsListFilePath)
 	if err != nil {
 		return "", err
 	}

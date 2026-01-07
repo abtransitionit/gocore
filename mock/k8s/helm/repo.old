@@ -27,6 +27,25 @@ func (i *Repo) List(hostName string, logger logx.Logger) error {
 	logger.Debugf("%s:%s > started OS service for the current session", hostName, i.Name)
 	return nil
 }
+func (i *Repo) DeleteAll(hostName string, logger logx.Logger) error {
+	// 1 - get and play cli
+	if _, err := run.RunCli(hostName, i.cliToDeleteAll(), logger); err != nil {
+		return err
+	}
+	// handle success
+	logger.Debugf("%s:%s > started OS service for the current session", hostName, i.Name)
+	return nil
+}
+
+func (i *Repo) Delete(hostName string, logger logx.Logger) error {
+	// 1 - get and play cli
+	if _, err := run.RunCli(hostName, i.cliToDelete(), logger); err != nil {
+		return err
+	}
+	// handle success
+	logger.Debugf("%s:%s > started OS service for the current session", hostName, i.Name)
+	return nil
+}
 
 func (i *Repo) ListChart(hostName string, logger logx.Logger) error {
 	// 1 - get and play cli
@@ -40,6 +59,7 @@ func (i *Repo) ListChart(hostName string, logger logx.Logger) error {
 
 func (i *Repo) cliToAdd() (string, error) {
 	var cmds = []string{
+		`. ~/.profile`,
 		fmt.Sprintf(`helm repo add %s %s`, i.Name, i.Url),
 		`helm repo update`,
 	}
@@ -50,7 +70,19 @@ func (i *Repo) cliToAdd() (string, error) {
 
 func (i *Repo) cliToDelete() (string, error) {
 	var cmds = []string{
+		`. ~/.profile`,
 		fmt.Sprintf(`helm repo remove %s`, i.Name),
+	}
+	cli := strings.Join(cmds, " && ")
+	return cli, nil
+
+}
+
+func (i *Repo) cliToDeleteAll() (string, error) {
+	var cmds = []string{
+		`rm -rf ~/.config/helm/repositories.yaml`,
+		`rm -rf ~/.cache/helm/repository`,
+		`rm -rf ~/.local/share/helm`,
 	}
 	cli := strings.Join(cmds, " && ")
 	return cli, nil
