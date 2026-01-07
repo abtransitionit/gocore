@@ -96,7 +96,3 @@ func Download(cliName string, url string) (string, error) {
 
 	return tmpFile.Name(), nil
 }
-
-// func DownloadLocalArtifact(ctx context.Context, url string, prefix string) (string, error) {
-// 	return DownloadArtifact(ctx, "", url, prefix)
-// }
