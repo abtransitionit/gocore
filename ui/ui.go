@@ -19,6 +19,10 @@ func AskUserInt(prompt string) (int, error) {
 	input := AskUser(prompt)
 	return strconv.Atoi(input)
 }
+func AskUserString(prompt string) string {
+	input := AskUser(prompt)
+	return strings.TrimSpace(input)
+}
 
 // func ConfirmAction(message string, args ...interface{}) bool {
 // 	fmt.Printf("\n"+message+"\n", args...)
