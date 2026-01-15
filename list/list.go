@@ -76,3 +76,23 @@ func GetFieldByID(rawContent string, id int, fieldIndex int) (string, error) {
 
 	return fields[fieldIndex], nil
 }
+
+func GetFieldByID2(raw string, id int, fieldIndex int) (string, error) {
+	lines := strings.Split(strings.TrimSpace(raw), "\n")
+	if len(lines) == 0 {
+		return "", fmt.Errorf("no data")
+	}
+
+	if id <= 0 || id > len(lines) {
+		return "", fmt.Errorf("id %d out of range", id)
+	}
+
+	line := lines[id]                   // IDs start at 1
+	fields := strings.Split(line, "\t") // split by tab
+
+	if fieldIndex < 0 || fieldIndex >= len(fields) {
+		return "", fmt.Errorf("field index %d out of range", fieldIndex)
+	}
+
+	return fields[fieldIndex], nil
+}
