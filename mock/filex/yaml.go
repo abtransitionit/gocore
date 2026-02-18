@@ -3,7 +3,6 @@ package filex
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -107,22 +106,4 @@ func LoadExternalYamlIntoStruct[T any](externalPath string) (*T, error) {
 	}
 
 	return cfg, nil
-}
-
-// description: build a absolute file path from a relative path
-//
-// note:
-// - default base path is the user home directory
-func GetUserFilePath(relPath string) (string, error) {
-	var userFileFullPath string
-	// 1 - get user home directory
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve user home directory > %w", err)
-	}
-	// 2 - build absolute path
-	userFileFullPath = filepath.Join(userHome, relPath)
-
-	// handle success
-	return userFileFullPath, nil
 }

@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/abtransitionit/gocore/apicli"
-	"github.com/abtransitionit/gocore/filex"
 	"github.com/abtransitionit/gocore/logx"
+	"github.com/abtransitionit/gocore/mock/filex"
 )
 
 // ovh_client.go (OVH-specific)
@@ -85,12 +84,10 @@ func CreateAccessTokenForServiceAccount(ctx context.Context, logger logx.Logger)
 
 // Name: getCredentialFilePath
 func getCredentialFilePath() (string, error) {
-	home, err := os.UserHomeDir()
+	credentialPath, err := filex.GetUserFilePath(credentialRelPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve home directory %w", err)
 	}
-
-	credentialPath := filepath.Join(home, credentialRelPath)
 
 	ok, err := filex.ExistsFile(credentialPath)
 	if err != nil {
