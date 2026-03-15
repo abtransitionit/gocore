@@ -1,12 +1,17 @@
 # Intro
-This package defines library to manage Logging. The purpose of logging is
-  - to record **events** (aka. **logs**) that occur in a **software system**
+This package defines a library to manage Logging. 
+
+## Whatis Logging
+The purpose of logging is
+  - record **events** (aka. **logs**) that occur in a **software system**
   - essential for:
     - **Debugging**: Identifying the root cause of issues.
     - **Monitoring**: Tracking application health, performance, and usage.
     - **Auditing**: Providing a record of significant actions for **security** or **compliance** purposes.
 
 **Logs** are often categorized by severity levels, such as `DEBUG`, `INFO`, `WARN`, and `ERROR`, to help developers filter and prioritize information and so action.
+
+
 
 # The code
 ## `interface.go`
